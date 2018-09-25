@@ -26,6 +26,7 @@ let
     };
 
   in [
+    ply
     alabaster
     Babel
     click
