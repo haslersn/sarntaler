@@ -58,6 +58,13 @@ class ScriptInterpreter:
 
     # operation implementations
 
+    def op_dup(self):
+        if not self.stack:
+            logging.warning("Stack is empty")
+            return False
+        self.stack.append(self.stack.pop())
+        
+
     def op_sha256(self):
         #The input is hashed using SHA-256.
 
