@@ -8,10 +8,22 @@ Click the link below for the full documentation.
 
 http://labchain.readthedocs.io/en/latest/
 
+## Contents
+
+<!-- TOC -->
+
+- [labChain](#labchain)
+    - [Contents](#contents)
+    - [Running the Code](#running-the-code)
+        - [Ubuntu / Debian GNU/Linux](#ubuntu--debian-gnulinux)
+        - [Nix / NixOS](#nix--nixos)
+
+<!-- /TOC -->
+
 ## Running the Code
 
 You need `python3` to be able to run the code.
-To install the requirements, that are listed in the [requirements.txt](requirements.txt), file you should run the command `pip install -r requirements.txt`.
+To install the requirements (that are listed in [requirements.txt](requirements.txt)) with pip, you should run the command `pip install -r requirements.txt`.
 
 ### Ubuntu / Debian GNU/Linux
 
@@ -22,3 +34,7 @@ sudo apt-get install python3
 sudo apt-get install python3-pip
 sudo python3 -m pip install -r requirements.txt
 ```
+
+### Nix / NixOS
+
+If you are on NixOS or have the Nix package manager installed, just execute `nix run` from inside the repository root folder.
