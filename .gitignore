@@ -6,3 +6,9 @@ __pycache__
 *.wallet
 *.pem
 *.json.gz
+
+# vim files
+*~
+*.swp
+*.
+tags
