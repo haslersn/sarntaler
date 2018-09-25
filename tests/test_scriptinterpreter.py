@@ -26,6 +26,11 @@ def test_dup_emptystack():
     res = si.op_dup()
     assert res == False
 
+def test_dup2():
+    si = ScriptInterpreter("3 2 OP_DUP", "", None)
+    res = si.execute_script()
+    assert si.stack == ['3', '2', '2']
+
 def test_swap():
     si = ScriptInterpreter(None, None, None)
     si.stack = ['3', '2', '1']

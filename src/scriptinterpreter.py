@@ -47,7 +47,7 @@ class ScriptInterpreter:
         'OP_CHECKSIG',
         'OP_RETURN',
         'OP_CHECKLOCKTIME',
-        'OP_SWAP'
+        'OP_SWAP',
         'OP_DUP'
     }
 
