@@ -8,6 +8,18 @@ Click the link below for the full documentation.
 
 http://labchain.readthedocs.io/en/latest/
 
+## Contents
+
+<!-- TOC -->
+
+- [labChain](#labchain)
+    - [Contents](#contents)
+    - [Running the Code](#running-the-code)
+        - [Ubuntu / Debian GNU/Linux](#ubuntu--debian-gnulinux)
+        - [Nix / NixOS](#nix--nixos)
+
+<!-- /TOC -->
+
 ## Running the Code
 
 You need `python3` to be able to run the code.
