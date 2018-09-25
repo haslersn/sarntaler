@@ -5,7 +5,7 @@ from .crypto import *
 from binascii import hexlify, unhexlify
 from datetime import datetime
 
-    
+
 class ScriptInterpreter:
     """
     ScriptInterpreter is a simple imperative stack-based script language. This class
@@ -54,7 +54,7 @@ class ScriptInterpreter:
 
     def to_string(self):
         return " ".join(self.stack)
-        
+
 
     # operation implementations
 
@@ -71,7 +71,7 @@ class ScriptInterpreter:
         self.stack.append(sha256.decode('utf-8'))
         return True
 
- 
+
     def op_checksig(self):
         # The signature used by OP_CHECKSIG must be a valid signature for
         # this hash and public key.
@@ -153,6 +153,19 @@ class ScriptInterpreter:
 
         return True
 
+
+    def op_swap(self):
+        if (len(self.stack) < 2):
+            logging.warning("Not enough arguments")
+            self.stack.append(str(0))
+            return False
+
+        old_first = self.stack.pop()
+        old_second = self.stack.pop()
+
+        self.stack.append(old_first)
+        self.stack.append(old_second)
+        return True
 
     def execute_script(self):
         """
