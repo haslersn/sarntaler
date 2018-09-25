@@ -95,6 +95,8 @@ Indices and tables
 The labVM is a stack-based Virtual Machine. The Stack can hold references to either Integer or Strings of arbitrary size.
 
 ## Registers and Data Structures
+ PC, FP, SP
+ Stack(, Memory?)
 
 ## Syntax
 The syntax of labVM Script is very simple. A labVM script consist of two kind of elements each seperated by a newline: data and machine instructions. Empty lines will be ignored.
@@ -139,16 +141,23 @@ Boolean values are ints. 1 represents true and 0 represents false.
 
 |Instruction | Constraints | Description | 
 | ---------- | ----------- | ----------- |
-| OP_ADD |- | consumes the two highest stack cells and pushes s_2 + s_1 |
-| OP_SUB |- | consumes the two highest stack cells and pushes s_2 - s_1 |
-| OP_MUL |- | consumes the two highest stack cells and pushes s_2 * s_1 |
-| OP_DIV |- | consumes the two highest stack cells and pushes s_2 / s_1 |
-| OP_MOD |- | consumes the two highest stack cells and pushes s_2 % s_1 |
-| OP_AND |- | consumes the two highest stack cells and pushes s_2 & s_1 |
-| OP_OR | -| consumes the two highest stack cells and pushes s_2 \| s_1 |
-| OP_XOR |- | consumes the two highest stack cells and pushes s_2 ^ s_1 |
-| OP_NEG |- | consumes the highest stack cell and pushes -s_1 |
-| OP_NOT |- | consumes the highest stack cell and pushes 1 - s_1 |
+| OP_ADD |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 + s_1 |
+| OP_SUB |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 - s_1 |
+| OP_MUL |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 * s_1 |
+| OP_DIV |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 / s_1 |
+| OP_MOD |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 % s_1 |
+| OP_AND |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 & s_1 |
+| OP_OR | s_1 and s_2 integers| consumes the two highest stack cells and pushes s_2 \| s_1 |
+| OP_XOR |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 ^ s_1 |
+| OP_EQU | - | consumes the two highest stack cells and pushes s_2 = s_1 |
+| OP_LE |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 <= s_1 |
+| OP_GE |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 >= s_1 |
+| OP_NEG |s_1 integer | consumes the highest stack cell and pushes -s_1 |
+| OP_NOT |s_1 integer | consumes the highest stack cell and pushes 1 - s_1 |
+| OP_JUMP | s_1 integer and line exists | absolute jump, consumes highest stack cell, PC = s_1 |
+| OP_JUMPR | s_1 integer and boundaries are kept | consumes highest stack cell, PC = s_1 + PC |
+| OP_JUMPC | s_1 integer and s_2 integer and line s_2 exists| absolute conditional Jump. Consumes 2 Arguments. If s_1 == 1, PC = s_2 else nothing happens | 
+| OP_JUMPRC | s_1 integer and s_2 integer and line s_2 keeps boundaries | relative conditional Jump. Consumes 2 Arguments. If s_1 == 1, PC = PC + s_2 else nothing happens | 
 | OP_SWAP | | Swaps s_1 and s_2|
 | OP_DUP |- | pushes s_1 |
 | OP_PUSHABS |- | pushes the the n-th cell of the stack. The lowest stack cell has index 0, the next one 1 and so on. |
@@ -156,5 +165,6 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_PUSHSP |- | pushes the StackPointer |
 | OP_POPFP |- | pops into the FramePointer |
 | OP_POPSP |- | pops into the StackPointer |
+| OP_PUSHPC | - | pushes the Program Counter |
 
 
