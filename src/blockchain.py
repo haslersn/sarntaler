@@ -70,8 +70,7 @@ class Blockchain:
                 unspent_coins.pop((inp.transaction_hash, inp.output_idx), None)
 
             for i, target in enumerate(t.targets):
-                if target.is_pay_to_pubkey or target.is_pay_to_pubkey_lock:
-                    unspent_coins[(t.get_hash(), i)] = target
+                unspent_coins[(t.get_hash(), i)] = target
 
         chain = Blockchain()
         chain.unspent_coins = unspent_coins
