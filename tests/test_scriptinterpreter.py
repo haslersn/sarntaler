@@ -45,3 +45,9 @@ def test_pushabs_ok():
     si = ScriptInterpreter("5 6 7 8 1 OP_PUSHABS", "", None)
     si.execute_script()
     assert si.stack == ['5', '6', '7', '8', '6']
+
+def test_pushabs_notok():
+    si = ScriptInterpreter(None, None, None)
+    si.stack = ['5', '6', '7', '8', '4']
+    res = si.op_pushabs()
+    assert res == False
