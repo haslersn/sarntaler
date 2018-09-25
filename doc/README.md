@@ -128,13 +128,9 @@ remark: For the highest element on the stack **before the execution** s_1, for t
 |       |
 | ----- |
 |  s_1  |
-| ----- |
 |  s_2  |
-| ----- |
 |  ...  |
-| ----- |
 |  s_n  |
-| ----- |
 
 The stack grows to the top in this figure.
 
@@ -142,23 +138,23 @@ Boolean values are ints. 1 represents true and 0 represents false.
 
 
 |Instruction | Constraints | Description | 
-| ---------- | ----------- |
-| OP_ADD | | consumes the two highest stack cells and pushes s_2 + s_1 |
-| OP_SUB | | consumes the two highest stack cells and pushes s_2 - s_1 |
-| OP_MUL | | consumes the two highest stack cells and pushes s_2 * s_1 |
-| OP_DIV | | consumes the two highest stack cells and pushes s_2 / s_1 |
-| OP_MOD | | consumes the two highest stack cells and pushes s_2 % s_1 |
-| OP_AND | | consumes the two highest stack cells and pushes s_2 & s_1 |
-| OP_OR | | consumes the two highest stack cells and pushes s_2 \| s_1 |
-| OP_XOR | | consumes the two highest stack cells and pushes s_2 ^ s_1 |
-| OP_NEG | | consumes the highest stack cell and pushes -s_1 |
-| OP_NOT | | consumes the highest stack cell and pushes 1 - s_1 |
+| ---------- | ----------- | ----------- |
+| OP_ADD |- | consumes the two highest stack cells and pushes s_2 + s_1 |
+| OP_SUB |- | consumes the two highest stack cells and pushes s_2 - s_1 |
+| OP_MUL |- | consumes the two highest stack cells and pushes s_2 * s_1 |
+| OP_DIV |- | consumes the two highest stack cells and pushes s_2 / s_1 |
+| OP_MOD |- | consumes the two highest stack cells and pushes s_2 % s_1 |
+| OP_AND |- | consumes the two highest stack cells and pushes s_2 & s_1 |
+| OP_OR | -| consumes the two highest stack cells and pushes s_2 \| s_1 |
+| OP_XOR |- | consumes the two highest stack cells and pushes s_2 ^ s_1 |
+| OP_NEG |- | consumes the highest stack cell and pushes -s_1 |
+| OP_NOT |- | consumes the highest stack cell and pushes 1 - s_1 |
 | OP_SWAP | | Swaps s_1 and s_2|
-| OP_DUP | | pushes s_1 |
-| OP_PUSHABS | | pushes the the n-th cell of the stack. The lowest stack cell has index 0, the next one 1 and so on. |
-| OP_PUSHFP | | pushes the FramePointer |
-| OP_PUSHSP | | pushes the StackPointer |
-| OP_POPFP | | pops into the FramePointer |
-| OP_POPSP | | pops into the StackPointer |
+| OP_DUP |- | pushes s_1 |
+| OP_PUSHABS |- | pushes the the n-th cell of the stack. The lowest stack cell has index 0, the next one 1 and so on. |
+| OP_PUSHFP |- | pushes the FramePointer |
+| OP_PUSHSP |- | pushes the StackPointer |
+| OP_POPFP |- | pops into the FramePointer |
+| OP_POPSP |- | pops into the StackPointer |
 
 
