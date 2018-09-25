@@ -160,7 +160,7 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_JUMPRC | s_1 integer and s_2 integer and line s_2 keeps boundaries | relative conditional Jump. Consumes 2 Arguments. If s_1 == 1, PC = PC + s_2 else nothing happens | 
 | OP_SWAP | | Swaps s_1 and s_2|
 | OP_DUP |- | pushes s_1 |
-| OP_PUSHABS |- | pushes the the n-th cell of the stack. The lowest stack cell has index 0, the next one 1 and so on. |
+| OP_PUSHABS |- | consumes the highest stack cell. Let n be its value. It pushes the n-th cell of the stack. The lowest stack cell has index 0, the next one 1 and so on. |
 | OP_PUSHFP |- | pushes the FramePointer |
 | OP_PUSHSP |- | pushes the StackPointer |
 | OP_POPFP |- | pops into the FramePointer |
