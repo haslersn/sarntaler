@@ -17,9 +17,17 @@ def t_newline(t):
     r'\n+'
     t.lexer.lineno+=len(t.value)
 
+# Helper function to calculate the current column number
+def column_number(token):
+    line_start = token.lexer.lexdata.rfind('\n', 0, token.lexpos) + 1
+    return (token.lexpos - line_start) + 1
+
 # Error handler
 def t_error(t):
-    print("Line {}: Unexpected character '{}'. Skipping.".format(t.lexer.lineno, t.value[0]))
+    print("Line {}, Column {}: Unexpected character '{}'. Skipping."
+          .format(t.lexer.lineno,
+                  column_number(t),
+                  t.value[0]))
     t.lexer.skip(1) # skip this character
     # TODO better error handling
 
