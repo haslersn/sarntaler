@@ -22,3 +22,7 @@ sudo apt-get install python3
 sudo apt-get install python3-pip
 sudo python3 -m pip install -r requirements.txt
 ```
+
+### Nix / NixOS
+
+If you are on NixOS or have the Nix package manager installed, just execute `nix run` from inside the repository root folder.
