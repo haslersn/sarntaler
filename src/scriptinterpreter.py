@@ -39,6 +39,7 @@ class ScriptInterpreter:
 
     """
     operations = {
+        'OP_DUP'
         'OP_SHA256',
         'OP_CHECKSIG',
         'OP_RETURN',
@@ -62,7 +63,8 @@ class ScriptInterpreter:
         if not self.stack:
             logging.warning("Stack is empty")
             return False
-        self.stack.append(self.stack.pop())
+        self.stack.append(self.stack[-1])
+        return True
         
 
     def op_sha256(self):
