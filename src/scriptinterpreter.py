@@ -41,6 +41,9 @@ class ScriptInterpreter:
             OP_SWAP
             OP_DUP
 
+        Control Flow:
+            OP_PUSHABS
+
     """
     operations = {
         'OP_SHA256',
@@ -48,7 +51,8 @@ class ScriptInterpreter:
         'OP_RETURN',
         'OP_CHECKLOCKTIME',
         'OP_SWAP',
-        'OP_DUP'
+        'OP_DUP',
+        'OP_PUSHABS'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -62,15 +66,7 @@ class ScriptInterpreter:
         return " ".join(self.stack)
 
 
-    # operation implementations
-
-    def op_dup(self):
-        if not self.stack:
-            logging.warning("Stack is empty")
-            return False
-        self.stack.append(self.stack[-1])
-        return True
-        
+    # operation implementations        
 
     def op_sha256(self):
         #The input is hashed using SHA-256.
@@ -167,6 +163,13 @@ class ScriptInterpreter:
 
         return True
 
+    def op_dup(self):
+        if not self.stack:
+            logging.warning("Stack is empty")
+            return False
+        self.stack.append(self.stack[-1])
+        return True
+
 
     def op_swap(self):
         if (len(self.stack) < 2):
@@ -180,6 +183,18 @@ class ScriptInterpreter:
         self.stack.append(old_first)
         self.stack.append(old_second)
         return True
+
+    def op_pushabs(self):
+        if not self.stack:
+            logging.warning("Stack is empty")
+            return False
+        index = int(self.stack.pop())
+        if index < 0 or index >= len(self.stack):
+            logging.warning("Argument of PUSHABS is not an index in the stack")
+            return False
+        self.stack.append(self.stack[index])
+        return True
+
 
     def execute_script(self):
         """

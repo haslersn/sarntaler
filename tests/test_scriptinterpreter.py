@@ -40,3 +40,8 @@ def test_swapWithOneElement():
     si = ScriptInterpreter(None, None, None)
     si.stack = ['1']
     assert not si.op_swap()
+
+def test_pushabs_ok():
+    si = ScriptInterpreter("5 6 7 8 1 OP_PUSHABS", "", None)
+    si.execute_script()
+    assert si.stack == ['5', '6', '7', '8', '6']
