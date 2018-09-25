@@ -39,15 +39,16 @@ class ScriptInterpreter:
 
         Stack:
             OP_SWAP
+            OP_DUP
 
     """
     operations = {
-        'OP_DUP'
         'OP_SHA256',
         'OP_CHECKSIG',
         'OP_RETURN',
         'OP_CHECKLOCKTIME',
         'OP_SWAP'
+        'OP_DUP'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
