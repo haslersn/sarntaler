@@ -43,6 +43,8 @@ class ScriptInterpreter:
 
         Control Flow:
             OP_PUSHABS
+            OP_PUSHFP
+            OP_POPFP
 
     """
     operations = {
@@ -52,6 +54,8 @@ class ScriptInterpreter:
         'OP_CHECKLOCKTIME',
         'OP_SWAP',
         'OP_DUP',
+        'OP_PUSHFP',
+        'OP_POPFP',
         'OP_PUSHABS'
     }
 
@@ -60,13 +64,14 @@ class ScriptInterpreter:
         self.input_script = input_script
         self.tx_hash = tx_hash
         self.stack = []
+        self.framepointer = 0  # maybe initialize with -1
 
 
     def to_string(self):
         return " ".join(self.stack)
 
 
-    # operation implementations        
+    # operation implementations
 
     def op_sha256(self):
         #The input is hashed using SHA-256.
@@ -194,6 +199,19 @@ class ScriptInterpreter:
             return False
         self.stack.append(self.stack[index])
         return True
+
+    def op_pushfp(self):
+        self.stack.append(self.framepointer)
+        return True
+
+    def op_popfp(self):
+        if not self.stack:
+            logging.warning("Stack is empty")
+            return False
+
+        self.framepointer = self.stack.pop()
+        return True
+
 
 
     def execute_script(self):
