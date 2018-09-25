@@ -40,3 +40,19 @@ def test_swapWithOneElement():
     si = ScriptInterpreter(None, None, None)
     si.stack = ['1']
     assert not si.op_swap()
+
+def test_pushFP():
+    si = ScriptInterpreter("3 2 1 OP_PUSHFP", "", None)
+    si.framepointer = '27'
+    si.execute_script()
+    assert si.stack == ['3', '2', '1', '27']
+
+def test_popFP():
+    si = ScriptInterpreter("3 2 42 OP_POPFP", "", None)
+    si.execute_script()
+    assert si.stack == ['3', '2']
+    assert si.framepointer == '42'
+
+def test_popFP_emptystack():
+    si = ScriptInterpreter("OP_POPFP", "", None)
+    assert not si.execute_script()

@@ -48,7 +48,9 @@ class ScriptInterpreter:
         'OP_RETURN',
         'OP_CHECKLOCKTIME',
         'OP_SWAP',
-        'OP_DUP'
+        'OP_DUP',
+        'OP_PUSHFP',
+        'OP_POPFP'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -56,6 +58,7 @@ class ScriptInterpreter:
         self.input_script = input_script
         self.tx_hash = tx_hash
         self.stack = []
+        self.framepointer = 0  # maybe initialize with -1
 
 
     def to_string(self):
@@ -63,6 +66,18 @@ class ScriptInterpreter:
 
 
     # operation implementations
+
+    def op_pushfp(self):
+        self.stack.append(self.framepointer)
+        return True
+
+    def op_popfp(self):
+        if not self.stack:
+            logging.warning("Stack is empty")
+            return False
+
+        self.framepointer = self.stack.pop()
+        return True
 
     def op_dup(self):
         if not self.stack:
