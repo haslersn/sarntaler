@@ -22,14 +22,22 @@ def column_number(token):
     line_start = token.lexer.lexdata.rfind('\n', 0, token.lexpos) + 1
     return (token.lexpos - line_start) + 1
 
-# Error handler
+# Error handling
+## class for lexer errors
+class LexerError(RuntimeError):
+    def __init__(self, token):
+        self.line = token.lexer.lineno
+        self.column = column_number(token)
+        self.error_token = token
+        # Useful error message
+        super().__init__("Line {}, Column {}: Invalid character '{}'."
+                         .format(self.line,
+                                 self.column,
+                                 self.error_token.value[0]))
+
+## error handler
 def t_error(t):
-    print("Line {}, Column {}: Unexpected character '{}'. Skipping."
-          .format(t.lexer.lineno,
-                  column_number(t),
-                  t.value[0]))
-    t.lexer.skip(1) # skip this character
-    # TODO better error handling
+    raise LexerError(t)
 
 # Generate lexer
 import ply.lex as lex
