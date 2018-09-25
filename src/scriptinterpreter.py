@@ -39,6 +39,7 @@ class ScriptInterpreter:
 
         Stack:
             OP_SWAP
+            OP_DUP
 
     """
     operations = {
@@ -47,6 +48,7 @@ class ScriptInterpreter:
         'OP_RETURN',
         'OP_CHECKLOCKTIME',
         'OP_SWAP'
+        'OP_DUP'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -61,6 +63,14 @@ class ScriptInterpreter:
 
 
     # operation implementations
+
+    def op_dup(self):
+        if not self.stack:
+            logging.warning("Stack is empty")
+            return False
+        self.stack.append(self.stack[-1])
+        return True
+        
 
     def op_sha256(self):
         #The input is hashed using SHA-256.
