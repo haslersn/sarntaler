@@ -30,15 +30,15 @@ def test_dup_emptystack():
 
 
 def test_dup2():
-    si = ScriptInterpreter("3 2 OP_DUP", "", None)
+    si = ScriptInterpreter("3 2 OP_DUP 1", "", None)
     res = si.execute_script()
-    assert si.stack == ['3', '2', '2']
+    assert si.stack == [3, 2, 2]
 
 
 def test_swap():
-    si = ScriptInterpreter("3 2 1 OP_SWAP", "", None)
+    si = ScriptInterpreter("3 2 1 OP_SWAP 1", "", None)
     si.execute_script()
-    assert si.stack == ['3', '1', '2']
+    assert si.stack == [3, 1, 2]
 
 
 def test_swapWithOneElement():
@@ -48,17 +48,17 @@ def test_swapWithOneElement():
 
 
 def test_pushFP():
-    si = ScriptInterpreter("3 2 1 OP_PUSHFP", "", None)
-    si.framepointer = '27'
+    si = ScriptInterpreter("3 2 1 OP_PUSHFP 1", "", None)
+    si.framepointer = 27
     si.execute_script()
-    assert si.stack == ['3', '2', '1', '27']
+    assert si.stack == [3, 2, 1, 27]
 
 
 def test_popFP():
-    si = ScriptInterpreter("3 2 42 OP_POPFP", "", None)
+    si = ScriptInterpreter("3 2 42 OP_POPFP 1", "", None)
     si.execute_script()
-    assert si.stack == ['3', '2']
-    assert si.framepointer == '42'
+    assert si.stack == [3, 2]
+    assert si.framepointer == 42
 
 
 def test_popFP_emptystack():
@@ -67,12 +67,69 @@ def test_popFP_emptystack():
 
 
 def test_pushabs_ok():
-    si = ScriptInterpreter("5 6 7 8 1 OP_PUSHABS", "", None)
+    si = ScriptInterpreter("5 6 7 8 1 OP_PUSHABS 1", "", None)
     si.execute_script()
-    assert si.stack == ['5', '6', '7', '8', '6']
+    assert si.stack == [5, 6, 7, 8, 6]
 
 def test_pushabs_notok():
     si = ScriptInterpreter(None, None, None)
-    si.stack = ['5', '6', '7', '8', '4']
+    si.stack = [5, 6, 7, 8, 4]
     res = si.op_pushabs()
     assert res == False
+
+def test_add():
+    si = ScriptInterpreter("3 2 42 OP_ADD 1", "", None)
+    si.execute_script()
+    assert si.stack == [3, 44]
+
+def test_add_emptystack():
+    si = ScriptInterpreter("OP_ADD", "", None)
+    assert not si.execute_script()
+
+def test_add_nonintegers():
+    si = ScriptInterpreter("a b OP_ADD 1", "", None)
+    assert not si.execute_script()
+
+def test_sub():
+    si = ScriptInterpreter("3 5 1 OP_SUB 1", "", None)
+    si.execute_script()
+    assert si.stack == [3, 4]
+
+def test_sub_emptystack():
+    si = ScriptInterpreter("OP_SUB", "", None)
+    assert not si.execute_script()
+
+def test_sub_nonintegers():
+    si = ScriptInterpreter("a b OP_SUB 1", "", None)
+    assert not si.execute_script()
+
+def test_mul():
+    si = ScriptInterpreter("3 5 2 OP_MUL 1", "", None)
+    si.execute_script()
+    assert si.stack == [3, 10]
+
+def test_mul_emptystack():
+    si = ScriptInterpreter("OP_MUL", "", None)
+    assert not si.execute_script()
+
+def test_mul_nonintegers():
+    si = ScriptInterpreter("a b OP_MUL 1", "", None)
+    assert not si.execute_script()
+
+def test_div():
+    si = ScriptInterpreter("3 10 2 OP_DIV 1", "", None)
+    si.execute_script()
+    assert si.stack == [3, 5]
+
+def test_div_noneven():
+    si = ScriptInterpreter("3 5 2 OP_DIV 1", "", None)
+    si.execute_script()
+    assert si.stack == [3, 2]
+
+def test_div_emptystack():
+    si = ScriptInterpreter("OP_DIV", "", None)
+    assert not si.execute_script()
+
+def test_div_nonintegers():
+    si = ScriptInterpreter("a b OP_DIV 1", "", None)
+    assert not si.execute_script()

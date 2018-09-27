@@ -75,7 +75,7 @@ class RPCClient:
 
         keyidx = resp['key_indices']
 
-        inputs = [(TransactionInput(inp.transaction_hash, inp.output_idx, temp_trans.sign(source_keys[keyidx[i]])))
+        inputs = [(TransactionInput(inp.transaction_hash, inp.output_idx, "s0x" + temp_trans.sign(source_keys[keyidx[i]])))
                   for i, inp in enumerate(temp_inputs)]
 
         return Transaction(inputs, targets, timestamp)
