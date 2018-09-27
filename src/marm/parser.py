@@ -2,7 +2,8 @@
 precedence=(
      ('right','ASSIGN'),
      ('right','HASH'),
-     ('right','ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP', 'MULOP', 'SUBOP')
+     ('right','ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP', 'MULOP', 'SUBOP'),
+     ('right','IF_WITHOUT_ELSE'),
 )
 
 start = 'translationunit'
@@ -51,8 +52,8 @@ def p_statementLOOPS(p):
     '''statement : WHILE LPAR boolex RPAR statement '''
 
 def p_elseprod(p):
-    '''elseprod : ELSE statement
-    |'''
+    '''elseprod : ELSE statement %prec ELSE
+    | %prec IF_WITHOUT_ELSE '''
 
 def p_statementBRANCHING(p):
     '''statement : IF LPAR boolex RPAR statement elseprod '''
