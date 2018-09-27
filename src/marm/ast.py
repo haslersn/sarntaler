@@ -78,8 +78,9 @@ class Statement(Node):
 
 
 class StatementReturn(Statement):
-    super().__init__()
-    pass
+    def __init__(self, returnValue):
+        super().__init__()
+        self.returnValue = returnValue
 
 
 class StatementWhile(Statement):
