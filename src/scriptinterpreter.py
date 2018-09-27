@@ -65,6 +65,10 @@ class ScriptInterpreter:
             OP_SUB
             OP_MUL
             OP_DIV
+            OP_MOD
+            OP_AND
+            OP_OR
+            OP_XOR
 
     """
 
@@ -88,7 +92,11 @@ class ScriptInterpreter:
         'OP_ADD',
         'OP_SUB',
         'OP_MUL',
-        'OP_DIV'
+        'OP_DIV',
+        'OP_MOD',
+        'OP_AND',
+        'OP_OR',
+        'OP_XOR'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -96,7 +104,7 @@ class ScriptInterpreter:
         self.input_script = input_script
         self.tx_hash = tx_hash
         self.stack = []
-        
+
         self.framepointer = 0  # maybe initialize with -1
         self.stackpointer = 0  # maybe initialize with -1
         self.pc = 0            # maybe initialize with -1
@@ -129,7 +137,7 @@ class ScriptInterpreter:
             return False
         sha256 = hashlib.sha256()
         sha256.update(param)
-        self.stack.append(__hash_wraper(sha256.digest()))
+        self.stack.append(Hash(sha256.digest()))
         return True
 
 
@@ -310,7 +318,7 @@ class ScriptInterpreter:
                 return False
             self.pc = index
         return True
-    
+
     def op_jumprc(self):
         if(len(self.stack) < 2):
             logging.warning("OP_JUMPRC: Not enough arguments")
@@ -326,7 +334,7 @@ class ScriptInterpreter:
             self.pc = new_index
         return True
 
-    
+
     def op_add(self):
         return self.math_operations(lambda first, second: second + first)
 
@@ -338,6 +346,18 @@ class ScriptInterpreter:
 
     def op_div(self):
         return self.math_operations(lambda first, second: second // first)
+
+    def op_mod(self):
+        return self.math_operations(lambda first, second: second % first)
+
+    def op_and(self):
+        return self.math_operations(lambda first, second: second & first)
+
+    def op_or(self):
+        return self.math_operations(lambda first, second: second | first)
+
+    def op_xor(self):
+        return self.math_operations(lambda first, second: second ^ first)
 
     def math_operations(self, op):
         if (len(self.stack) < 2):
