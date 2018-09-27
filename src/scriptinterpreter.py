@@ -298,7 +298,7 @@ class ScriptInterpreter:
             return False
 
         index = self.stack.pop()
-        if index < 0 or index >= len(self.program):
+        if index < 1 or index > len(self.program):
             logging.warning("OP_JUMP: Argument is not an index in the program")
             return False
         self.pc = index
@@ -310,9 +310,9 @@ class ScriptInterpreter:
             return False
 
         index = self.stack.pop()
-        new_index = self.pc + index -1
-        if new_index-1 < 0 or new_index-1 >= len(self.program):
-            logging.warning("OP_JUMPR: New program counter does not point in the program")
+        new_index = self.pc + index - 1
+        if new_index-1 < 1 or new_index-1 > len(self.program):
+            logging.warning("OP_JUMPR: New program counter does not point in the program "+str(new_index))
             return False
         self.pc = new_index
         return True
@@ -325,7 +325,7 @@ class ScriptInterpreter:
         index = self.stack.pop()
         cond = self.stack.pop()
         if cond == 1:
-            if index < 0 or index >= len(self.program):
+            if index < 1 or index > len(self.program):
                 logging.warning("OP_JUMPC: New program counter does not point in the program")
                 return False
             self.pc = index
@@ -340,7 +340,7 @@ class ScriptInterpreter:
         cond = self.stack.pop()
         if cond == 1:
             new_index = self.pc + index -1
-            if new_index-1 < 0 or new_index-1 >= len(self.program):
+            if new_index-1 < 1 or new_index-1 > len(self.program):
                 logging.warning("OP_JUMPRC: New program counter does not point in the program")
                 return False
             self.pc = new_index
@@ -438,7 +438,7 @@ class ScriptInterpreter:
             return False
 
         proc_addr = self.__pop_checked(int)  # get procedure address from the top of the stack
-        if proc_addr < 0 or proc_addr >= len(self.program):
+        if proc_addr < 1 or proc_addr > len(self.program):
             logging.warning("OP_CALL: Argument is not an index in the program")
             return False
 
@@ -572,7 +572,7 @@ class ScriptInterpreter:
             return True
 
         def execute(script: str):
-            self.pc = -1
+            self.pc = 1
             self.framepointer = -1
             self.program = split_script(script)
             while self.pc <= len(self.program):

@@ -2,5 +2,5 @@
 OP_JUMPR
 1
 op_ret
-2
+3
 op_call
