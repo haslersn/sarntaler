@@ -52,6 +52,14 @@ def test_popFP():
     assert si.framepointer == 42
     emptystack_test("OP_POPFP")
 
+def test_incfp():
+    si = ScriptInterpreter("3 2 7 OP_INCFP 1", "", None)
+    si.framepointer = 1
+    si.execute_script()
+    assert si.stack == [3, 2]
+    assert si.framepointer == 8
+    emptystack_test("OP_INCFP")
+
 
 def test_popVoid():
     script_finalstack_test("1 2 3 OP_POPVOID 1", [1, 2])

@@ -50,6 +50,7 @@ class ScriptInterpreter:
         'OP_POPABS',
         'OP_PUSHFP',
         'OP_POPFP',
+        'OP_INCFP',
         'OP_PUSHSP',
         'OP_POPSP',
         'OP_PUSHPC',
@@ -417,6 +418,11 @@ class ScriptInterpreter:
         self.op_pushfp()
         self.op_add()
         self.op_pushabs()
+
+    def op_incfp(self):
+        self.op_pushfp()
+        self.op_add()
+        self.op_popfp()
 
     def op_call():
         if not self.stack:
