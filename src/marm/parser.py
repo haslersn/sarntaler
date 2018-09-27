@@ -63,8 +63,24 @@ def p_statementDECL(p):
 def p_expr(p):
     'expr : INTCONST'
 
-def p_boolex(p):
-    'boolex : expr'
+def p_boolexCOMPARE(p):
+    '''boolex : expr EQ expr
+              | expr NEQ expr
+              | expr LEQ expr
+              | expr GEQ expr
+              | expr LT expr
+              | expr GT expr '''
+
+def p_boolexUNARY(p):
+    'boolex : NOT boolex'
+
+def p_boolexBINARY(p):
+    '''boolex : boolex OR boolex
+              | boolex AND boolex '''
+
+def p_boolexPAR(p):
+    'boolex : LPAR boolex RPAR'
+
 def p_declarator(p):
     'decl : IDENT' 
 def p_declaratorlist(p):
