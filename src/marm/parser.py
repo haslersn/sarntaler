@@ -19,12 +19,12 @@ def p_procdecl(p):
     'procdecl : type IDENT LPAR paramlistopt RPAR statementlistOPT'
     p[0] = Procdecl(p[1], p[2], p[4], p[6])
 
-def p_statementlistOPT(p):
+def p_statementlistOPT_body(p):
     'statementlistOPT : body'
     p[0] = p[1]
-def p_statementlistOPT(p):
+def p_statementlistOPT_empty(p):
     'statementlistOPT : SEMI'
-    p[0] = None
+    p[0] = []
 
 
 def p_statementlist(p):
@@ -68,7 +68,7 @@ def p_paramdecl(p):
 
 def p_type(p):
     'type : typename'
-    p[0] = p[2]
+    p[0] = p[1]
 
 
 def p_typename(p):
@@ -78,37 +78,48 @@ def p_typename(p):
 
 def p_statementRETURN(p):
     'statement : RETURN expr SEMI'
+    p[0] = StatementReturn(p[2])
 
 
 def p_statementLOOPS(p):
     '''statement : WHILE LPAR boolex RPAR statement '''
+    p[0] = StatementWhile(p[3],p[5])
 
 
 def p_elseprod(p):
     '''elseprod : ELSE statement %prec ELSE
     | %prec IF_WITHOUT_ELSE '''
+    if len(p)==1:
+        p[0] = None
+    else:
+        p[0] = p[2]
 
 
 def p_statementBRANCHING(p):
     '''statement : IF LPAR boolex RPAR statement elseprod '''
+    p[0] = StatementIf(p[3], p[5], p[6])
 
 
 def p_statementEXPRESSIONSTATEMENT(p):
     'statement : expr SEMI'
+    p[0] = StatementExpression(p[1])
 
 
 def p_statementNEWSCOPE(p):
     'statement : body'
+    p[0] = StatementBody(p[1])
 
 
-def p_statementLOOPkeywords(p):
-    '''statement : BREAK SEMI
-                 | CONTINUE  SEMI '''
+def p_statementBREAK(p):
+    'statement : BREAK SEMI'
+    p[0] = StatementBreak()
+def P_statementCONTINUE(p):
+    'statement: CONTINUE SEMI'
+    p[0] = StatementContinue()
 
 
 def p_statementDECL(p):
     'statement : type decllist SEMI'
-
 
 def p_expr(p):
     'expr : INTCONST'

@@ -93,9 +93,9 @@ class StatementDecl(Statement):
 
 
 class StatementReturn(Statement):
-    def __init__(self):
+    def __init__(self, returnValue):
         super().__init__()
-        pass
+        self.returnValue = returnValue
 
 
 class StatementWhile(Statement):
