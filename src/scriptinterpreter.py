@@ -60,6 +60,8 @@ class ScriptInterpreter:
             OP_SUB
             OP_MUL
             OP_DIV
+            OP_MOD
+            OP_AND
 
     """
 
@@ -76,7 +78,9 @@ class ScriptInterpreter:
         'OP_ADD',
         'OP_SUB',
         'OP_MUL',
-        'OP_DIV'
+        'OP_DIV',
+        'OP_MOD',
+        'OP_AND'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -248,6 +252,12 @@ class ScriptInterpreter:
 
     def op_div(self):
         return self.math_operations(lambda first, second: second // first)
+
+    def op_mod(self):
+        return self.math_operations(lambda first, second: second % first)
+
+    def op_and(self):
+        return self.math_operations(lambda first, second: second & first)
 
 
     def math_operations(self, op):

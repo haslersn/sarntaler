@@ -3,14 +3,12 @@ from src.transaction import Transaction
 
 
 def test_passWithOne():
-    t = Transaction([], [], timestamp=None)
-    si = ScriptInterpreter("1", "", t.get_hash())
+    si = ScriptInterpreter("1", "", None)
     assert si.execute_script()
 
 
 def test_failWithMoreThanOneStackElement():
-    t = Transaction([], [], timestamp=None)
-    si = ScriptInterpreter("1 2 3", "", t.get_hash())
+    si = ScriptInterpreter("1 2 3", "", None)
     assert not si.execute_script()
 
 
@@ -42,9 +40,8 @@ def test_swap():
 
 
 def test_swapWithOneElement():
-    si = ScriptInterpreter(None, None, None)
-    si.stack = ['1']
-    assert not si.op_swap()
+    si = ScriptInterpreter("1 OP_SWAP 1", None, None)
+    assert not si.execute_script()
 
 
 def test_pushFP():
@@ -132,4 +129,40 @@ def test_div_emptystack():
 
 def test_div_nonintegers():
     si = ScriptInterpreter("a b OP_DIV 1", "", None)
+    assert not si.execute_script()
+
+def test_mod():
+    si = ScriptInterpreter("3 10 2 OP_MOD 1", "", None)
+    si.execute_script()
+    assert si.stack == [3, 0]
+
+def test_mod_noneven():
+    si = ScriptInterpreter("3 5 2 OP_MOD 1", "", None)
+    si.execute_script()
+    assert si.stack == [3, 1]
+
+def test_mod_emptystack():
+    si = ScriptInterpreter("OP_MOD", "", None)
+    assert not si.execute_script()
+
+def test_mod_nonintegers():
+    si = ScriptInterpreter("a b OP_MOD 1", "", None)
+    assert not si.execute_script()
+
+def test_and():
+    si = ScriptInterpreter("3 5 2 OP_AND 1", "", None)
+    si.execute_script()
+    assert si.stack == [3, 0]
+
+def test_and_noneven():
+    si = ScriptInterpreter("3 3 2 OP_AND 1", "", None)
+    si.execute_script()
+    assert si.stack == [3, 2]
+
+def test_and_emptystack():
+    si = ScriptInterpreter("OP_AND", "", None)
+    assert not si.execute_script()
+
+def test_and_nonintegers():
+    si = ScriptInterpreter("a b OP_AND 1", "", None)
     assert not si.execute_script()
