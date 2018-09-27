@@ -47,11 +47,13 @@ class ScriptInterpreter:
         'OP_DUP',
         
         'OP_PUSHABS',
+        'OP_POPABS',
         'OP_PUSHFP',
         'OP_POPFP',
         'OP_PUSHSP',
         'OP_POPSP',
         'OP_PUSHPC',
+        
         'OP_JUMP',
         'OP_JUMPR',
         'OP_JUMPC',
@@ -227,6 +229,23 @@ class ScriptInterpreter:
             logging.warning("OP_PUSHABS: Argument is not an index in the stack")
             return False
         self.stack.append(self.stack[index])
+        return True
+
+    def op_popabs(self):
+        index = self.__pop_checked(int)
+        if index is None:
+            logging.warning("OP_POPABS: Stack is empty or top element not an int")
+            return False
+        if index < 0 or index >= len(self.stack):
+            logging.warning("OP_POPABS: Argument is not an index in the stack")
+            return False
+        
+        elem = self.pop()
+        if elem is None:
+            logging.warning("OP_POPABS: Stack has only one element")
+            return False
+
+        self.stack[index] = elem
         return True
 
     def op_pushpc(self):
