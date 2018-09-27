@@ -93,9 +93,9 @@ lines are numbered beginning with 1 and empty lines are not counted
 # Macros
 Macros that are implemented:
 
-`OP_PUSHR` (Push relative to FP) is equal to `OP_PUSHFP,OP_ADD,OP_PUSHABS`
+`OP_PUSHR` (Push relative to FP) is equal to `OP_PUSHFP, OP_ADD, OP_PUSHABS`
 
-`OP_POPR` (Store relative to FP) is equal to `OP_PUSHFP,OP_ADD,OP_POPABS`
+`OP_POPR` (Store relative to FP) is equal to `OP_PUSHFP, OP_ADD, OP_POPABS`
 
 `OP_INCFP` (In-/Decrement FP) is equal to `OP_PUSHFP, OP_ADD, OP_POPFP`
 
