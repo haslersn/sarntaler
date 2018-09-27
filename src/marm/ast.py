@@ -127,7 +127,7 @@ class BoolexBinary(Boolex):
 
 
 class BoolexNot(Boolex):
-    def __init__(self, operand):
-        super().__init__()
+    def __init__(self, op, operand):
+        super().__init__(op)
         self.operand = operand
 
