@@ -119,7 +119,7 @@ class Procdecl(Node):
 
     def __str__(self):
         return "[Procdecl: return_type=" + str(self.return_type) + ", name=" + str(self.name) + ", params=" +\
-               str(self.params) + ", body=" + str(self.body) + "]"
+               self.liststr(self.params) + ", body=" + self.liststr(self.body) + "]"
 
 
 class Statement(Node):
@@ -140,7 +140,7 @@ class StatementDecl(Statement):
         self.decllist = decllist
 
     def __str__(self):
-        return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + str(self.decllist) + "]"
+        return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + self.liststr(self.decllist) + "]"
 
 
 class StatementReturn(Statement):
@@ -194,7 +194,7 @@ class StatementBody(Statement):
         self.body = body
 
     def __str__(self):
-        return "[StatementBody: body={}]".format(self.body)
+        return "[StatementBody: body={}]".format(self.liststr(self.body))
 
 
 class StatementBreak(Statement):
