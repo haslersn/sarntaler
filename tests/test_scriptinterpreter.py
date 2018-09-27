@@ -122,13 +122,6 @@ def test_div_nonintegers():
     si = ScriptInterpreter("a b OP_DIV 1", "", None)
     assert not si.execute_script()
 
-def test_gcd_script():
-    gcdfile = open("./src/labvm/gcd.labvm","r")
-    gcdstr = gcdfile.read()
-    gcdfile.close()
-    si = ScriptInterpreter(gcdstr, "", None)
-    print("Stack after gcd script:" ,si.stack)
-
 def emptystack_noninteger_test(op: str):
     si_emptystack = ScriptInterpreter(op, "", None)
     assert not si_emptystack.execute_script()
@@ -136,3 +129,11 @@ def emptystack_noninteger_test(op: str):
     assert not si_noninteger.execute_script()
 
 # TODO SHA256 test
+def test_gcd_script():
+    gcdfile = open("./src/labvm/gcd.labvm","r")
+    gcdstr = gcdfile.read()
+    gcdfile.close()
+    si = ScriptInterpreter(gcdstr, "", None)
+    si.execute_script()
+    print("Stack after gcd script:" ,si.stack)
+
