@@ -58,6 +58,12 @@ class Translationunit(Node):
         self.proc=procdecl
 
 
+class Paramdecl(Node):
+    def __init__(self,paramType,name):
+        self.paramType = paramType
+        self.name = name
+
+
 class Procdecl(Node):
     def __init__(self,returnType,name,params,body):
         self.returnType = returnType
