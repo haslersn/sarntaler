@@ -7,12 +7,18 @@ class Expr(Node):
     def __init__(self):
         pass
 
+    def __str__(self):
+        return "[Expr]"
+
 
 class ConstExpr(Expr):
     """ p_expr """
     def __init__(self, value):
         super().__init__()
         self.value = value
+
+    def __str__(self):
+        return "[ConstExpr: value=" + self.value + "]"
 
 
 class BinExpr(Expr):
