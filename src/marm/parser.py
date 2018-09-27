@@ -46,8 +46,10 @@ if __name__=="__main__":
     import sys
     import argparse
     parser = argparse.ArgumentParser(description='Parse the given file')
-    parser.add_argument('--input', type=argparse.FileType('r'), default=sys.stdin)
-    parser.add_argument('--output', type=argparse.FileType('w'), default=sys.stdout)
+    parser.add_argument('--input', type=argparse.FileType('r'), default=sys.stdin,
+                        help="Input file. Defaults to stdin")
+    parser.add_argument('--output', type=argparse.FileType('w'), default=sys.stdout,
+                        help="Output file. Defaults to stdout")
     args = parser.parse_args()
 
     #TODO: actual parser test
