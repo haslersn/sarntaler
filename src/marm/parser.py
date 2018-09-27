@@ -238,7 +238,9 @@ def p_error(t):
         while True:
             tok = yacc.token()             # Get the next token
             if not tok or tok.type == 'SEMI' or tok.type =='END' or tok.type=='RBRAC': 
-                from lexer import column_number
+                if tok is None:
+                    print("{}:{}.{}: syntax error: unexpected token sequence {}".format(_____secret_filename,t.lexer.lineno,column_number(t),tokseq))
+                from .lexer import column_number
                 print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(_____secret_filename,t.lexer.lineno,column_number(t),tok.lexer.lineno,column_number(tok),tokseq))
                 break
             tokseq.append(tok.type)
