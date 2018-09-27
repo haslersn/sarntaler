@@ -42,3 +42,23 @@ def t_error(t):
 # Generate lexer
 import ply.lex as lex
 lexer = lex.lex()
+
+# Main for Debugging/Testing
+if __name__=="__main__":
+    # Parse Arguments
+    import sys
+    import argparse
+    parser = argparse.ArgumentParser(description='Lex the given file')
+    parser.add_argument('--input', type=argparse.FileType('r'), default=sys.stdin)
+    parser.add_argument('--output', type=argparse.FileType('w'), default=sys.stdout)
+    args = parser.parse_args()
+
+    # Read input into string and initialize lexer
+    lexer.input(args.input.read())
+
+    # Lex input and wrtie to output
+    token = lexer.token()
+    while not (token is None):
+        args.output.write(str(token))
+        args.output.write("\n")
+        token = lexer.token()
