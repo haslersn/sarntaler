@@ -1,4 +1,4 @@
-import ast as ast
+from src.marm import ast as ast
 import ply.yacc as yacc
 
 precedence = (
