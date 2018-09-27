@@ -134,6 +134,20 @@ def test_ge():
     emptystack_noninteger_test('OP_GE')
 
 
+def test_lt():
+    script_finalstack_test("3 5 1 OP_LT 1", [3, 0])
+    script_finalstack_test("3 5 6 OP_LT 1", [3, 1])
+    script_finalstack_test("3 5 5 OP_LT 1", [3, 0])
+    emptystack_noninteger_test('OP_LT')
+
+
+def test_gt():
+    script_finalstack_test("3 5 1 OP_GT 1", [3, 1])
+    script_finalstack_test("3 5 6 OP_GT 1", [3, 0])
+    script_finalstack_test("3 5 5 OP_GT 1", [3, 0])
+    emptystack_noninteger_test('OP_GT')
+
+
 def script_finalstack_test(script: str, finalstack: list):
     si = ScriptInterpreter(script, "", None)
     si.execute_script()

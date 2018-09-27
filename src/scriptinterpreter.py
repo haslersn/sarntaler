@@ -99,7 +99,9 @@ class ScriptInterpreter:
         'OP_XOR',
         'OP_EQU',
         'OP_LE',
-        'OP_GE'
+        'OP_GE',
+        'OP_LT',
+        'OP_GT'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -379,6 +381,12 @@ class ScriptInterpreter:
 
     def op_ge(self):
         return self.math_operations(lambda first, second: 1 if second >= first else 0)
+
+    def op_lt(self):
+        return self.math_operations(lambda first, second: 1 if second < first else 0)
+
+    def op_gt(self):
+        return self.math_operations(lambda first, second: 1 if second > first else 0)
 
     def math_operations(self, op):
         if (len(self.stack) < 2):
