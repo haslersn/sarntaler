@@ -1,6 +1,18 @@
 # Token types
 tokens = ( 'IDENT',
-           'NUMBER', 'COMMENT' )
+           'NUMBER', 
+           'LPAR',
+           'RPAR',
+           'BEGIN',
+           'END',
+           'SEMI',
+           'COMMA',
+           'ADDRESS',
+           'INT',
+           'RETURN',
+           'COMMENT'
+           )
+
 
 def t_COMMENT(t):
     r'(\/\*([^*]|\* + [^*\/])*\*+\/)|(\/\/[^\r\n]*(\r|\n|\r\n)?)'

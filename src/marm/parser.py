@@ -18,8 +18,8 @@ def p_statementlist(p):
                        | '''
 def p_paramlist(p):
     '''paramlist : paramdecl COMMA paramlist 
-                 | paramdecl 
-                 | paramlist'''
+                 | paramdecl '''
+                 
 def p_paramdecl(p):
     'paramdecl : type IDENT'
 
