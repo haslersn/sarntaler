@@ -228,6 +228,10 @@ def p_error(t):
 import ply.yacc as yacc
 yacc = yacc.yacc()
 
+def marmparser(filename):
+    from lexer import lexer
+    return yacc.parse(filename,lexer=lexer)
+
 # Main for Debugging/Testing
 if __name__=="__main__":
     # Parse Arguments
@@ -240,7 +244,5 @@ if __name__=="__main__":
                         help="Output file. Defaults to stdout")
     args = parser.parse_args()
 
-    #TODO: actual parser test
-    from lexer import lexer
-    result = yacc.parse(args.input.read(), lexer=lexer)
+    result = marmparser(args.input.read())
     args.output.write(str(result))
