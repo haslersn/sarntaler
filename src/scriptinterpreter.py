@@ -48,6 +48,7 @@ class ScriptInterpreter:
 
         Math:
             OP_ADD
+            OP_SUB
 
     """
     operations = {
@@ -60,7 +61,8 @@ class ScriptInterpreter:
         'OP_PUSHFP',
         'OP_POPFP',
         'OP_PUSHABS',
-        'OP_ADD'
+        'OP_ADD',
+        'OP_SUB'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -233,6 +235,23 @@ class ScriptInterpreter:
             return False
 
         self.stack.append(str(sum))
+        return True
+
+    def op_sub(self):
+        if (len(self.stack) < 2):
+            logging.warning("Not enough arguments")
+            return False
+
+        old_first = self.stack.pop()
+        old_second = self.stack.pop()
+
+        try:
+            result = int(old_second) - int(old_first)
+        except ValueError:
+            logging.warning("Wrong type of arguments. Could not convert " + old_first + " and " + old_second + " to integers")
+            return False
+
+        self.stack.append(str(result))
         return True
 
 

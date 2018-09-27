@@ -89,3 +89,16 @@ def test_add_emptystack():
 def test_add_nonintegers():
     si = ScriptInterpreter("a b OP_ADD", "", None)
     assert not si.execute_script()
+
+def test_sub():
+    si = ScriptInterpreter("3 5 1 OP_SUB", "", None)
+    si.execute_script()
+    assert si.stack == ['3', '4']
+
+def test_sub_emptystack():
+    si = ScriptInterpreter("OP_SUB", "", None)
+    assert not si.execute_script()
+
+def test_sub_nonintegers():
+    si = ScriptInterpreter("a b OP_SUB", "", None)
+    assert not si.execute_script()
