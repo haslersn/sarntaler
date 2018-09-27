@@ -1,6 +1,9 @@
 # Hash map for reserved maps
 keywords = {
     'if' : 'IF',
+    'while' : 'WHILE',
+    'break' : 'BREAK',
+    'continue' : 'CONTINUE'
 }
 
 # Token types
