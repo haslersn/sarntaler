@@ -21,3 +21,15 @@ class BinExpr(Expr):
         self.left = left
         self.right = right
 
+
+class UnaryExpr(Expr):
+    ''' p_exprUNARYEXPRESSIONS '''
+    def __init__(self, op, right):
+        self.op = op
+        self.right = right
+
+
+class LHSExpr(Expr):
+    ''' p_exprLHS '''
+    def __init__(self, lhs):
+        self.lhs = lhs
