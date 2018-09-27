@@ -1,13 +1,13 @@
 # Hash map for reserved keywords
 keywords = {
-    'if' : 'IF',
-    'while' : 'WHILE',
-    'break' : 'BREAK',
-    'continue' : 'CONTINUE',
-    'else' : 'ELSE',
-    'return' : 'RETURN',
-    'int' : 'INT',
-    'address' : 'ADDRESS',
+    'if': 'IF',
+    'while': 'WHILE',
+    'break': 'BREAK',
+    'continue': 'CONTINUE',
+    'else': 'ELSE',
+    'return': 'RETURN',
+    'int': 'INT',
+    'address': 'ADDRESS',
     #   'void' : 'VOID',
     #   'goto' : 'GOTO',
     #   'default' : 'DEFAULT',
@@ -17,16 +17,16 @@ keywords = {
 
 # Token types
 tokens = ['IDENT',
-           'BEGIN',
-           'END',
-           'SEMI',
-           'COMMA',
-           'ADDRESSVALUE',
-           'ASSIGN',
-           'INTCONST',
-           'ADDOP', 'SUBOP', 'MULOP', 'DIVOP',
-           'HASH', 'DOT', 'NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
-           'LPAR', 'RPAR'] + list(keywords.values())
+          'BEGIN',
+          'END',
+          'SEMI',
+          'COMMA',
+          'ADDRESSVALUE',
+          'ASSIGN',
+          'INTCONST',
+          'ADDOP', 'SUBOP', 'MULOP', 'DIVOP',
+          'HASH', 'DOT', 'NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
+          'LPAR', 'RPAR'] + list(keywords.values())
 
 
 def t_COMMENT(t):
@@ -53,7 +53,6 @@ def t_INTCONST(t):
     r'\d+'
     t.value = int(t.value)
     return t
-
 
 
 # HASH
@@ -88,6 +87,7 @@ def t_END(t):
     r'\}'
     return t
 
+
 # Assign
 t_ASSIGN = r'='
 
@@ -115,15 +115,18 @@ t_RPAR = r'\)'
 # Ignore whitespace
 t_ignore = " \t"
 
+
 # Track line numbers for better error messages
 def t_newline(t):
     r'\n+'
-    t.lexer.lineno+=len(t.value)
+    t.lexer.lineno += len(t.value)
+
 
 # Helper function to calculate the current column number
 def column_number(token):
     line_start = token.lexer.lexdata.rfind('\n', 0, token.lexpos) + 1
     return (token.lexpos - line_start) + 1
+
 
 # Error handling
 ## class for lexer errors
@@ -138,19 +141,23 @@ class LexerError(RuntimeError):
                                  self.column,
                                  self.error_token.value[0]))
 
+
 ## error handler
 def t_error(t):
     raise LexerError(t)
 
+
 # Generate lexer
 import ply.lex as lex
+
 lexer = lex.lex()
 
 # Main for Debugging/Testing
-if __name__=="__main__":
+if __name__ == "__main__":
     # Parse Arguments
     import sys
     import argparse
+
     parser = argparse.ArgumentParser(description='Lex the given file')
     parser.add_argument('--input', type=argparse.FileType('r'), default=sys.stdin,
                         help='the input file. defaults to stdin')

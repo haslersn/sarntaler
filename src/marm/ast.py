@@ -3,7 +3,7 @@ class Node:
 
 
 class Expr(Node):
-    """ Non terminal 13 (ABC) """
+    """ Non terminal 13 """
     def __init__(self):
         pass
 
@@ -60,17 +60,20 @@ class Typename(Node):
 
 
 class Translationunit(Node):
+    """ Non terminal 0 """
     def __init__(self, procdecl):
         self.proc = procdecl
 
 
 class Paramdecl(Node):
+    """ Non terminal 3 """
     def __init__(self, param_type, name):
         self.param_type = param_type
         self.name = name
 
 
 class Procdecl(Node):
+    """ Non terminal 4 """
     def __init__(self, return_type, name, params, body):
         self.return_type = return_type
         self.name = name
@@ -79,6 +82,7 @@ class Procdecl(Node):
 
 
 class Statement(Node):
+    """ Non terminal 12 """
     def __init__(self):
         super().__init__()
         pass
@@ -93,12 +97,14 @@ class StatementDecl(Statement):
 
 
 class StatementReturn(Statement):
+    """ p_statementRETURN """
     def __init__(self):
         super().__init__()
         pass
 
 
 class StatementWhile(Statement):
+    """ p_statementLOOPS """
     def __init__(self, boolex, statement):
         super().__init__()
         self.boolex = boolex
@@ -106,6 +112,7 @@ class StatementWhile(Statement):
 
 
 class StatementIf(Statement):
+    """ p_statementBRANCHING """
     def __init__(self, boolex, statement, elseprod):
         super().__init__()
         self.boolex = boolex
@@ -114,36 +121,42 @@ class StatementIf(Statement):
 
 
 class StatementExpression(Statement):
+    """ p_statementEXPRESSIONSTATEMENT """
     def __init__(self, expr):
         super().__init__()
         self.expr = expr
 
 
 class StatementBody(Statement):
+    """ p_body """
     def __init__(self, body):
         super().__init__()
         self.body = body
 
 
 class StatementBreak(Statement):
+    """ p_statementBREAK """
     def __init__(self):
         super().__init__()
         pass
 
 
 class StatementContinue(Statement):
+    """ p_statementCONTINUE """
     def __init__(self):
         super().__init__()
         pass
 
 
 class Boolex(Node):
+    """ Non terminal 15 """
     def __init__(self, op):
         super().__init__()
         self.op = op
 
 
 class BoolexBinary(Boolex):
+    """ p_boolexBINARY """
     def __init__(self, op, left, right):
         super().__init__(op)
         self.left = left
@@ -151,6 +164,7 @@ class BoolexBinary(Boolex):
 
 
 class BoolexNot(Boolex):
+    """ p_boolexUNARY """
     def __init__(self, op, operand):
         super().__init__(op)
         self.operand = operand
