@@ -55,8 +55,8 @@ class LHS(Node):
 
 class Typename(Node):
     """ Non terminal 18 """
-    def __init__(self, type):
-        self.type = type
+    def __init__(self, typee):
+        self.typee = typee
 
 
 class Translationunit(Node):
@@ -65,14 +65,14 @@ class Translationunit(Node):
 
 
 class Paramdecl(Node):
-    def __init__(self,paramType,name):
-        self.paramType = paramType
+    def __init__(self, param_type, name):
+        self.param_type = param_type
         self.name = name
 
 
 class Procdecl(Node):
-    def __init__(self, returnType, name, params, body):
-        self.returnType = returnType
+    def __init__(self, return_type, name, params, body):
+        self.return_type = return_type
         self.name = name
         self.params = params
         self.body = body
@@ -86,16 +86,16 @@ class Statement(Node):
 
 class StatementDecl(Statement):
     """ p_statementDECL """
-    def __init__(self, type, decllist):
+    def __init__(self, typee, decllist):
         super().__init__()
-        self.type = type
+        self.typee = typee
         self.decllist = decllist
 
 
 class StatementReturn(Statement):
-    def __init__(self, returnValue):
+    def __init__(self):
         super().__init__()
-        self.returnValue = returnValue
+        pass
 
 
 class StatementWhile(Statement):
