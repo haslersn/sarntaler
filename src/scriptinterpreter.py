@@ -53,6 +53,7 @@ class ScriptInterpreter:
         'OP_PUSHSP',
         'OP_POPSP',
         'OP_PUSHPC',
+        'OP_POPVOID',
 
         'OP_JUMP',
         'OP_JUMPR',
@@ -277,6 +278,14 @@ class ScriptInterpreter:
             return False
 
         self.stackpointer = self.stack.pop()
+        return True
+
+    def op_popvoid(self):
+        if not self.stack:
+            logging.warning("OP_POPVOID: Stack is empty")
+            return False
+
+        self.stack.pop()
         return True
 
     def op_jump(self):

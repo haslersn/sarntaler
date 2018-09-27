@@ -50,12 +50,12 @@ def test_popFP():
     si.execute_script()
     assert si.stack == [3, 2]
     assert si.framepointer == 42
+    emptystack_test("OP_POPFP")
 
 
-def test_popFP_emptystack():
-    si = ScriptInterpreter("OP_POPFP", "", None)
-    assert not si.execute_script()
-
+def test_popVoid():
+    script_finalstack_test("1 2 3 OP_POPVOID 1", [1, 2])
+    emptystack_test("OP_POPVOID")
 
 def test_pushabs_ok():
     script_finalstack_test("5 6 7 8 1 OP_PUSHABS 1", [5, 6, 7, 8, 6])
