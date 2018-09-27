@@ -67,6 +67,8 @@ class ScriptInterpreter:
             OP_DIV
             OP_MOD
             OP_AND
+            OP_OR
+            OP_XOR
 
     """
 
@@ -92,7 +94,9 @@ class ScriptInterpreter:
         'OP_MUL',
         'OP_DIV',
         'OP_MOD',
-        'OP_AND'
+        'OP_AND',
+        'OP_OR',
+        'OP_XOR'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -133,7 +137,7 @@ class ScriptInterpreter:
             return False
         sha256 = hashlib.sha256()
         sha256.update(param)
-        self.stack.append(__hash_wraper(sha256.digest()))
+        self.stack.append(Hash(sha256.digest()))
         return True
 
 
@@ -349,6 +353,11 @@ class ScriptInterpreter:
     def op_and(self):
         return self.math_operations(lambda first, second: second & first)
 
+    def op_or(self):
+        return self.math_operations(lambda first, second: second | first)
+
+    def op_xor(self):
+        return self.math_operations(lambda first, second: second ^ first)
 
     def math_operations(self, op):
         if (len(self.stack) < 2):

@@ -71,101 +71,59 @@ def test_pushabs_notok():
 
 def test_add():
     script_finalstack_test("3 2 42 OP_ADD 1", [3, 44])
-
-
-def test_add_emptystack():
-    si = ScriptInterpreter("OP_ADD", "", None)
-    assert not si.execute_script()
-
-
-def test_add_nonintegers():
-    si = ScriptInterpreter("a b OP_ADD 1", "", None)
-    assert not si.execute_script()
+    emptystack_noninteger_test('OP_ADD')
 
 
 def test_sub():
     script_finalstack_test("3 5 1 OP_SUB 1", [3, 4])
-
-
-def test_sub_emptystack():
-    si = ScriptInterpreter("OP_SUB", "", None)
-    assert not si.execute_script()
-
-
-def test_sub_nonintegers():
-    si = ScriptInterpreter("a b OP_SUB 1", "", None)
-    assert not si.execute_script()
+    emptystack_noninteger_test('OP_SUB')
 
 
 def test_mul():
     script_finalstack_test("3 5 2 OP_MUL 1", [3, 10])
-
-
-def test_mul_emptystack():
-    si = ScriptInterpreter("OP_MUL", "", None)
-    assert not si.execute_script()
-
-
-def test_mul_nonintegers():
-    si = ScriptInterpreter("a b OP_MUL 1", "", None)
-    assert not si.execute_script()
+    emptystack_noninteger_test('OP_MUL')
 
 
 def test_div():
     script_finalstack_test("3 10 2 OP_DIV 1", [3, 5])
-
-
-def test_div_noneven():
     script_finalstack_test("3 5 2 OP_DIV 1", [3, 2])
-
-
-def test_div_emptystack():
-    si = ScriptInterpreter("OP_DIV", "", None)
-    assert not si.execute_script()
-
-
-def test_div_nonintegers():
-    si = ScriptInterpreter("a b OP_DIV 1", "", None)
-    assert not si.execute_script()
+    emptystack_noninteger_test('OP_DIV')
 
 
 def test_mod():
     script_finalstack_test("3 10 2 OP_MOD 1", [3, 0])
-
-
-def test_mod_noneven():
     script_finalstack_test("3 5 2 OP_MOD 1", [3, 1])
-
-
-def test_mod_emptystack():
-    si = ScriptInterpreter("OP_MOD", "", None)
-    assert not si.execute_script()
-
-
-def test_mod_nonintegers():
-    si = ScriptInterpreter("a b OP_MOD 1", "", None)
-    assert not si.execute_script()
+    emptystack_noninteger_test('OP_MOD')
 
 
 def test_and():
     script_finalstack_test("3 5 2 OP_AND 1", [3, 0])
-
-
-def test_and_noneven():
     script_finalstack_test("3 3 2 OP_AND 1", [3, 2])
+    emptystack_noninteger_test('OP_AND')
 
 
-def test_and_emptystack():
-    si = ScriptInterpreter("OP_AND", "", None)
-    assert not si.execute_script()
+def test_or():
+    script_finalstack_test("3 5 1 OP_OR 1", [3, 5])
+    script_finalstack_test("3 5 3 OP_OR 1", [3, 7])
+    emptystack_noninteger_test('OP_OR')
 
 
-def test_and_nonintegers():
-    si = ScriptInterpreter("a b OP_AND 1", "", None)
-    assert not si.execute_script()
+def test_xor():
+    script_finalstack_test("3 5 1 OP_XOR 1", [3, 4])
+    script_finalstack_test("3 5 3 OP_XOR 1", [3, 6])
+    emptystack_noninteger_test('OP_XOR')
 
 
 def script_finalstack_test(script: str, finalstack: list):
     si = ScriptInterpreter(script, "", None)
     si.execute_script()
     assert si.stack == finalstack
+
+
+def emptystack_noninteger_test(op: str):
+    si_emptystack = ScriptInterpreter(op, "", None)
+    assert not si_emptystack.execute_script()
+    si_noninteger = ScriptInterpreter("a b " + op + " 1", "", None)
+    assert not si_noninteger.execute_script()
+
+# TODO SHA256 test
