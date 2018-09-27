@@ -1,6 +1,6 @@
 3
-OP_JUMP
+OP_JUMPR
 1
 op_ret
-3
+2
 op_call
