@@ -2,6 +2,8 @@ __pycache__
 .venv
 /doc/_autosummary/
 /doc/_build/
+/src/marm/parser.out
+/src/marm/parsetab.py
 .cache
 *.wallet
 *.pem

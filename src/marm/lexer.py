@@ -1,5 +1,10 @@
+# Hash map for reserved maps
+keywords = {
+    'if' : 'IF',
+}
+
 # Token types
-tokens = ( 'IDENT',
+tokens = ['IDENT',
            'NUMBER',
            'BEGIN',
            'END',
@@ -12,7 +17,7 @@ tokens = ( 'IDENT',
            'ASSIGN',
            'ADDOP', 'SUBOP', 'MULOP', 'DIVOP',
            'NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
-           'LPAR', 'RPAR')
+           'LPAR', 'RPAR'] + list(keywords.values())
 
 
 def t_COMMENT(t):
@@ -20,7 +25,12 @@ def t_COMMENT(t):
     pass
 
 # Token definitions
-t_IDENT = r'[A-Za-z][A-Za-z0-9_]*'
+def t_IDENT(t):
+    r'[A-Za-z][A-Za-z0-9_]*'
+    t.type = keywords.get(t.value, 'IDENT')
+    return t
+
+
 def t_NUMBER(t):
     r'\d+'
     t.value = int(t.value)
