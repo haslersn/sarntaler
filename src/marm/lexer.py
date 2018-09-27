@@ -40,18 +40,20 @@ def t_IDENT(t):
     return t
 
 
-def t_INTCONST(t):
-    r'\d+'
-    t.value = int(t.value)
-    return t
-
-
 # TODO: ADDRESS SHOULD INCLUDE VALID DEFINITION OF SUCH
 #       AS OF NOW AN ADDRESS IS ANY HEX NUMBER WITH MAX.
 #       64 DIGITS AND MIN. 1 DIGIT
 def t_ADDRESS(t):
     r'0x\d{1,64}'
     return t
+
+
+def t_INTCONST(t):
+    r'\d+'
+    t.value = int(t.value)
+    return t
+
+
 
 # HASH
 def t_HASH(t):
