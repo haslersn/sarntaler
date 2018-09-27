@@ -47,6 +47,13 @@ def t_INTCONST(t):
     return t
 
 
+# TODO: ADDRESS SHOULD INCLUDE VALID DEFINITION OF SUCH
+#       AS OF NOW AN ADDRESS IS ANY HEX NUMBER WITH MAX.
+#       64 DIGITS AND MIN. 1 DIGIT
+def t_ADDRESS(t):
+    r'0x\d{1,64}'
+    return t
+
 # HASH
 def t_HASH(t):
     r'\#'
