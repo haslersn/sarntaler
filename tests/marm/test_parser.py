@@ -50,7 +50,6 @@ class TestParserMethods(unittest.TestCase):
         self.generic_parse("(", 'LPAR', '(')
         self.generic_parse(")", 'RPAR', ')')
 
-
     def test_tokens_not_empty(self):
         self.assertFalse(lexer_source.tokens.__len__() == 0)
 
