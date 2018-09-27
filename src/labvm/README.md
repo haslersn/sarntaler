@@ -91,37 +91,37 @@ Maybe we will introduce macros. Possible ideas:
 	0
 	op_pushabs
 	1
-	op_pushabs
+	op_pushabs			// load both variables on the stack
 	op_equ
 	26
-	op_jumprc
+	op_jumprc			// if equal, jump to end
 	0
 	op_pushabs
 	1
 	op_pushabs
 	op_le
 	10
-	op_jumprc
-	0
+	op_jumprc			// if a <= b goto else part
+	0				// beginning of if part
 	op_pushabs
 	1
 	op_pushabs
-	op_sub
+	op_sub				// a - b
 	0
-	op_popabs
-	8
+	op_popabs			// store in a
+	8				// jump to end of if then else
 	op_jumpr
-	1
+	1				// beginning of else part
 	op_pushabs
 	0
 	op_pushabs
-	op_sub
+	op_sub				// b - a
 	1
-	op_popabs
+	op_popabs			// store in b
 	-31
-	op_jumpr
+	op_jumpr			// jump back to while condition
 
-
+Note: The comments are just for explaination. Right now, labVM script does not support comments.
 *Explanation:* This Code computes the gcd of two numbers already in the first two stack cells. It is based on the Euclid's algorithm:
 
 	bool gcd(int a, int b) {
