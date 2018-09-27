@@ -29,6 +29,9 @@ class BinExpr(Expr):
         self.left = left
         self.right = right
 
+    def __str__(self):
+        return "[BinExpr: op=" + self.op + ", left=" + self.left + ", right=" + self.right + "]"
+
 
 class UnaryExpr(Expr):
     """ p_exprUNARYEXPRESSIONS """
@@ -37,12 +40,18 @@ class UnaryExpr(Expr):
         self.op = op
         self.operand = operand
 
+    def __str__(self):
+        return "[UnaryExpr: op=" + self.op + ", operand=" + self.operand + "]"
+
 
 class LHSExpr(Expr):
     """ p_exprLHS """
     def __init__(self, lhs):
         super().__init__()
         self.lhs = lhs
+
+    def __str__(self):
+        return "[LHSExpr: lhs=" + self.lhs + "]"
 
 
 class StructExpr(Expr):
@@ -52,11 +61,17 @@ class StructExpr(Expr):
         self.expr = expr
         self.ident = ident
 
+    def __str__(self):
+        return "[StructExpr: expr=" + self.expr + ", ident=" + self.ident + "]"
+
 
 class LHS(Node):
     """ Non terminal 14 """
     def __init__(self, ident):
         self.ident = ident
+
+    def __str__(self):
+        return "[LHS: ident=" + self.ident + "]"
 
 
 class Typename(Node):
@@ -64,11 +79,17 @@ class Typename(Node):
     def __init__(self, typee):
         self.typee = typee
 
+    def __str__(self):
+        return "[Typename: typee=" + self.typee + "]"
+
 
 class Translationunit(Node):
     """ Non terminal 0 """
     def __init__(self, procdecl):
         self.proc = procdecl
+
+    def __str__(self):
+        return "[Translationunit: procdecl=" + self.proc + "]"
 
 
 class Paramdecl(Node):
@@ -76,6 +97,9 @@ class Paramdecl(Node):
     def __init__(self, param_type, name):
         self.param_type = param_type
         self.name = name
+
+    def __str__(self):
+        return "[Paramdecl: param_type=" + self.param_type + ", name=" + self.name + "]"
 
 
 class Procdecl(Node):
@@ -86,12 +110,19 @@ class Procdecl(Node):
         self.params = params
         self.body = body
 
+    def __str__(self):
+        return "[Procdecl: return_type=" + self.return_type + ", name=" + self.name + ", params=" +\
+               self.params + ", body=" + self.body + "]"
+
 
 class Statement(Node):
     """ Non terminal 12 """
     def __init__(self):
         super().__init__()
         pass
+
+    def __str__(self):
+        return "[Statement]"
 
 
 class StatementDecl(Statement):
@@ -101,6 +132,9 @@ class StatementDecl(Statement):
         self.typee = typee
         self.decllist = decllist
 
+    def __str__(self):
+        return "[StatementDecl: typee=" + self.typee + ", decllist=" + self.decllist + "]"
+
 
 class StatementReturn(Statement):
     """ p_statementRETURN """
@@ -109,6 +143,9 @@ class StatementReturn(Statement):
         self.return_value = return_value
         pass
 
+    def __str__(self):
+        return "[StatementReturn: return_value=" + self.return_value + "]"
+
 
 class StatementWhile(Statement):
     """ p_statementLOOPS """
@@ -116,6 +153,9 @@ class StatementWhile(Statement):
         super().__init__()
         self.boolex = boolex
         self.statement = statement
+
+    def __str__(self):
+        return "[StatementWhile: boolex=" + self.boolex + ", statement=" + self.statement + "]"
 
 
 class StatementIf(Statement):
