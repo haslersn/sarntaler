@@ -243,7 +243,7 @@ def p_error(t):
         from src.marm.lexer import column_number
         print("{}:{}.{}: syntax error: unexpected token {}:{}".format(
             yacc.filename,
-            t.lexer.lineno,
+            t.lexer.lineno+1,
             column_number(t),
             t.type,
             t.value
