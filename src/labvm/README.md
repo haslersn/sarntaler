@@ -72,13 +72,16 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_JUMPRC | s_1 integer and s_2 integer and line s_1 keeps boundaries | relative conditional Jump. Consumes 2 Arguments. If s_2 == 1, PC = PC + s_1 else nothing happens | 
 | OP_SWAP | | Swaps s_1 and s_2|
 | OP_DUP |- | pushes s_1 |
-| OP_PUSHABS |- | consumes the highest stack cell. Let n be its value. It pushes the n-th cell of the stack. The lowest stack cell has index 0, the next one 1 and so on. |
-| OP_POPABS  |- | consumes the two highest stack cells. Stores s_2 at the absolute stack index s_1 |
+| OP_PUSHABS | s_1 valid stack index | consumes the highest stack cell. Let n be its value. It pushes the n-th cell of the stack. The lowest stack cell has index 0, the next one 1 and so on. |
+| OP_POPABS  | s_1 valid stack index | consumes the two highest stack cells. Stores s_2 at the absolute stack index s_1 |
 | OP_PUSHFP |- | pushes the FramePointer |
+| OP_POPFP | s_1 non-negative integer or -1 | pops into the FramePointer |
 | OP_PUSHSP |- | pushes the StackPointer |
-| OP_POPFP |- | pops into the FramePointer |
-| OP_POPSP |- | pops into the StackPointer |
+| OP_POPSP | s_1 non-negative intefer or -1 | pops into the StackPointer |
 | OP_PUSHPC | - | pushes the Program Counter |
+| OP_POPPC | s_1 valid code line | pop into the Program Counter |
+| OP_CALL | s_1 valid code line | consumes s_1, pushes FP, sets FP = SP (points to old FP, pushes PC (return address), jumps |
+| OP_RETURN | - | s_1 will be interpreted as the return value. restores FP and PC, everything on the stack between the return address and the return value gets lost |
 
 # Macros
 Maybe we will introduce macros. Possible ideas:
@@ -122,6 +125,7 @@ Maybe we will introduce macros. Possible ideas:
 	op_jumpr			// jump back to while condition
 
 Note: The comments are just for explaination. Right now, labVM script does not support comments.
+
 *Explanation:* This Code computes the gcd of two numbers already in the first two stack cells. It is based on the Euclid's algorithm:
 
 	bool gcd(int a, int b) {
