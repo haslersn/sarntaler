@@ -22,7 +22,7 @@ class ScriptInterpreter:
     right. The items in the list of commands can be any data or an operation.
 
     USAGE:
-    The constructor is called using a string that represents the script. 
+    The constructor is called using a string that represents the script.
     This string is a long chain consisting of commands, which are arbitrary
     substrings, each separated by a whitespace. If a command substring matches
     an opcode string, as specified in the OPLIST below, the interpreter will
@@ -58,6 +58,8 @@ class ScriptInterpreter:
         Math:
             OP_ADD
             OP_SUB
+            OP_MUL
+            OP_DIV
 
     """
 
@@ -72,7 +74,9 @@ class ScriptInterpreter:
         'OP_POPFP',
         'OP_PUSHABS',
         'OP_ADD',
-        'OP_SUB'
+        'OP_SUB',
+        'OP_MUL',
+        'OP_DIV'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -227,17 +231,24 @@ class ScriptInterpreter:
         return True
 
     def op_popfp(self):
-        popped = __self.pop_checked(int)
+        popped = self.__pop_checked(int)
         if popped is None:
             return False
         self.framepointer = popped
         return True
 
     def op_add(self):
-        return self.math_operations(lambda first, second: first + second)
+        return self.math_operations(lambda first, second: second + first)
 
     def op_sub(self):
         return self.math_operations(lambda first, second: second - first)
+
+    def op_mul(self):
+        return self.math_operations(lambda first, second: second * first)
+
+    def op_div(self):
+        return self.math_operations(lambda first, second: second // first)
+
 
     def math_operations(self, op):
         if (len(self.stack) < 2):
