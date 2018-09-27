@@ -35,41 +35,6 @@ class ScriptInterpreter:
     of application.
     For more information go to https://en.bitcoin.it/wiki/Script
     or read the explanation within the op-implementation below:
-
-        Crypto:
-            OP_SHA256
-            OP_CHECKSIG
-            OP_RETURN
-
-        Locktime:
-            OP_CHECKLOCKTIME
-
-        Stack:
-            OP_SWAP
-            OP_DUP
-
-        Control Flow:
-            OP_JUMP
-            OP_JUMPR
-            OP_JUMPC
-            OP_JUMPRC
-            OP_PUSHABS
-            OP_PUSHFP
-            OP_POPFP
-            OP_PUSHSP
-            OP_POPSP
-            OP_PUSHPC
-
-        Math:
-            OP_ADD
-            OP_SUB
-            OP_MUL
-            OP_DIV
-            OP_MOD
-            OP_AND
-            OP_OR
-            OP_XOR
-
     """
 
     operations = {
@@ -77,8 +42,10 @@ class ScriptInterpreter:
         'OP_CHECKSIG',
         'OP_RETURN',
         'OP_CHECKLOCKTIME',
+        
         'OP_SWAP',
         'OP_DUP',
+        
         'OP_PUSHABS',
         'OP_PUSHFP',
         'OP_POPFP',
@@ -89,6 +56,7 @@ class ScriptInterpreter:
         'OP_JUMPR',
         'OP_JUMPC',
         'OP_JUMPRC',
+        
         'OP_ADD',
         'OP_SUB',
         'OP_MUL',
@@ -97,16 +65,22 @@ class ScriptInterpreter:
         'OP_AND',
         'OP_OR',
         'OP_XOR',
+        'OP_NOT',
+        'OP_NEG',
         'OP_EQU',
         'OP_LE',
-        'OP_GE'
+        'OP_GE',
+        'OP_LT',
+        'OP_GT'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
         self.output_script = output_script
         self.input_script = input_script
         self.tx_hash = tx_hash
+        
         self.stack = []
+        self.program = []
 
         self.framepointer = 0  # maybe initialize with -1
         self.stackpointer = 0  # maybe initialize with -1
@@ -288,11 +262,11 @@ class ScriptInterpreter:
             logging.warning("OP_JUMP: Stack is empty")
             return False
 
-        index = int(self.stack.pop())
-        if index < 0 or index >= len(self.stack):
-            logging.warning("OP_JUMP: Argument is not an index in the stack")
+        index = self.stack.pop()
+        if index < 0 or index >= len(self.program):
+            logging.warning("OP_JUMP: Argument is not an index in the program")
             return False
-        self.pc = self.stack[index]
+        self.pc = index
         return True
 
     def op_jumpr(self):
@@ -300,10 +274,10 @@ class ScriptInterpreter:
             logging.warning("OP_JUMPR: Stack is empty")
             return False
 
-        index = int(self.stack.pop())
+        index = self.stack.pop()
         new_index = self.pc + index
-        if new_index < 0 or new_index >= len(self.stack):
-            logging.warning("OP_JUMPR: New program counter does not point in the stack")
+        if new_index < 0 or new_index >= len(self.program):
+            logging.warning("OP_JUMPR: New program counter does not point in the program")
             return False
         self.pc = new_index
         return True
@@ -314,10 +288,10 @@ class ScriptInterpreter:
             return False
 
         cond = self.stack.pop()
-        index = int(self.stack.pop())
-        if cond == '1':
-            if index < 0 or index >= len(self.stack):
-                logging.warning("OP_JUMPC: New program counter does not point in the stack")
+        index = self.stack.pop()
+        if cond == 1:
+            if index < 0 or index >= len(self.program):
+                logging.warning("OP_JUMPC: New program counter does not point in the program")
                 return False
             self.pc = index
         return True
@@ -328,11 +302,11 @@ class ScriptInterpreter:
             return False
 
         cond = self.stack.pop()
-        index = int(self.stack.pop())
-        if cond == '1':
+        index = self.stack.pop()
+        if cond == 1:
             new_index = self.pc + index
-            if new_index < 0 or new_index >= len(self.stack):
-                logging.warning("OP_JUMPRC: New program counter does not point in the stack")
+            if new_index < 0 or new_index >= len(self.program):
+                logging.warning("OP_JUMPRC: New program counter does not point in the program")
                 return False
             self.pc = new_index
         return True
@@ -350,6 +324,15 @@ class ScriptInterpreter:
     def op_div(self):
         return self.math_operations(lambda first, second: second // first)
 
+    def op_neg(self):
+        param = self.__pop_checked(int)
+        if param is None:
+            logging.warning("OP_NEG: Stack is empty or top element not an integer")
+            return False
+
+        self.stack.append(-param)
+        return True
+
     def op_mod(self):
         return self.math_operations(lambda first, second: second % first)
 
@@ -361,6 +344,19 @@ class ScriptInterpreter:
 
     def op_xor(self):
         return self.math_operations(lambda first, second: second ^ first)
+
+    def op_not(self):
+        param = self.__pop_checked(int)
+        if param is None:
+            logging.warning("OP_NOT: Stack is empty or top element not an integer")
+            return False
+
+        if (param != 0 and param != 1):
+            logging.warning("OP_NOT: Top element not a bool (i.e. not 0 or 1)")
+            return False
+
+        self.stack.append(1 - param)
+        return True
 
     def op_equ(self):
         if (len(self.stack) < 2):
@@ -380,9 +376,15 @@ class ScriptInterpreter:
     def op_ge(self):
         return self.math_operations(lambda first, second: 1 if second >= first else 0)
 
+    def op_lt(self):
+        return self.math_operations(lambda first, second: 1 if second < first else 0)
+
+    def op_gt(self):
+        return self.math_operations(lambda first, second: 1 if second > first else 0)
+    
     def math_operations(self, op):
         if (len(self.stack) < 2):
-            logging.warning("Not enough arguments")
+            logging.warning("binary math operation: Not enough arguments")
             return False
 
         old_first = self.__pop_checked(int)
@@ -490,10 +492,10 @@ class ScriptInterpreter:
             return True
 
         def execute(script: str):
-            program = split_script(script)
-            while self.pc < len(program):
-                item = program[self.pc] # Fetch the next item (given by the program counter)
-                logging.warning("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
+            self.program = split_script(script)
+            while self.pc < len(self.program):
+                item = self.program[self.pc] # Fetch the next item (given by the program counter)
+                logging.info("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
                 self.pc = self.pc + 1
                 if not execute_item(item):
                     return False
