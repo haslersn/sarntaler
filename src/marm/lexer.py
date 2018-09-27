@@ -136,16 +136,22 @@ class LexerError(RuntimeError):
         self.column = column_number(token)
         self.error_token = token
         # Useful error message
-        super().__init__("Line {}, Column {}: Invalid character '{}'."
-                         .format(self.line,
+        super().__init__("{}:{}.{}: lexical error: Invalid character '{}'."
+                         .format(lexer.filename,
+                                 self.line,
                                  self.column,
                                  self.error_token.value[0]))
 
 
 ## error handler
 def t_error(t):
-    raise LexerError(t)
-
+    #raise LexerError(t)
+    print("{}:{}.{}: lexical error: Invalid character '{}'."
+                         .format(t.lexer.filename,
+                                 t.lexer.lineno+1,
+                                 column_number(t),
+                                 t.value[0]))
+    t.lexer.skip(1)
 
 # Generate lexer
 import ply.lex as lex
