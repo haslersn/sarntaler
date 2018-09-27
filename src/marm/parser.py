@@ -120,6 +120,7 @@ def P_statementCONTINUE(p):
 
 def p_statementDECL(p):
     'statement : type decllist SEMI'
+    p[0] = ast.StatementDecl(p[1], p[2])
 
 def p_expr(p):
     'expr : INTCONST'
@@ -167,20 +168,22 @@ def p_boolexCOMPARE(p):
               | expr GEQ expr
               | expr LT expr
               | expr GT expr'''
-
+    p[0] = ast.BoolexCMP(p[2], p[1], p[3])
 
 def p_boolexBINARY(p):
     '''boolex : boolex OR boolex
               | boolex AND boolex'''
+    p[0] = ast.BoolexBinary(p[2], p[1], p[3])
 
 
 def p_boolexUNARY(p):
     'boolex : NOT boolex'
+    p[0] = ast.BoolexNot(p[1], p[2])
 
 
 def p_boolexPAR(p):
     'boolex : LPAR boolex RPAR'
-
+    p[0] = p[2]
 
 def p_declarator(p):
     'decl : IDENT'
