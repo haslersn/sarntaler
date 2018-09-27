@@ -1,4 +1,4 @@
-import ast
+import marm.ast as ast
 import ply.yacc as yacc
 
 precedence = (
@@ -225,7 +225,7 @@ class EofError(ParserError):
 
 class UnexpectedTokenError(ParserError):
     def __init__(self, got):
-        from lexer import column_number
+        from marm.lexer import column_number
         super().__init__("Unexpected token '{}' ({}) at Line {}, Column {}"
                          .format(got.value, got.type,
                                  got.lineno, column_number(got)))
@@ -242,15 +242,15 @@ def p_error(t):
             if not tok or tok.type == 'SEMI' or tok.type =='END' or tok.type=='RBRAC': 
                 if tok is None:
                     print("{}:{}.{}: syntax error: unexpected token sequence {}".format(_____secret_filename,t.lexer.lineno,column_number(t),tokseq))
-                from lexer import column_number
+                from marm.lexer import column_number
                 print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(_____secret_filename,t.lexer.lineno,column_number(t),tok.lexer.lineno,column_number(tok),tokseq))
                 break
             tokseq.append(tok.type)
         yacc.restart()
 
 
-from lexer import lexer
-from lexer import tokens
+from marm.lexer import lexer
+from marm.lexer import tokens
 # Generate parser
 yacc = yacc.yacc()
 _____secret_filename='inmemory'
