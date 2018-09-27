@@ -1,4 +1,9 @@
 
+precedence=(
+     ('right','ASSIGN'),
+     ('right','ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP', 'MULOP', 'SUBOP', 'LSQ')
+)
+
 start = 'translationunit'
 
 from lexer import tokens
