@@ -13,11 +13,11 @@ import ast
 
 def p_translationunit(p):
     'translationunit : procdecl'
-    p[0] = Translationunit(p[1])
+    p[0] = ast.Translationunit(p[1])
 
 def p_procdecl(p):
     'procdecl : type IDENT LPAR paramlistopt RPAR statementlistOPT'
-    p[0] = Procdecl(p[1], p[2], p[4], p[6])
+    p[0] = ast.Procdecl(p[1], p[2], p[4], p[6])
 
 def p_statementlistOPT_body(p):
     'statementlistOPT : body'
@@ -63,7 +63,7 @@ def p_paramlist(p):
 
 def p_paramdecl(p):
     'paramdecl : type IDENT'
-    p[0] = Paramdecl(p[1],p[2])
+    p[0] = ast.Paramdecl(p[1],p[2])
 
 
 def p_type(p):
@@ -78,12 +78,12 @@ def p_typename(p):
 
 def p_statementRETURN(p):
     'statement : RETURN expr SEMI'
-    p[0] = StatementReturn(p[2])
+    p[0] = ast.StatementReturn(p[2])
 
 
 def p_statementLOOPS(p):
     '''statement : WHILE LPAR boolex RPAR statement '''
-    p[0] = StatementWhile(p[3],p[5])
+    p[0] = ast.StatementWhile(p[3],p[5])
 
 
 def p_elseprod(p):
@@ -97,25 +97,25 @@ def p_elseprod(p):
 
 def p_statementBRANCHING(p):
     '''statement : IF LPAR boolex RPAR statement elseprod '''
-    p[0] = StatementIf(p[3], p[5], p[6])
+    p[0] = ast.StatementIf(p[3], p[5], p[6])
 
 
 def p_statementEXPRESSIONSTATEMENT(p):
     'statement : expr SEMI'
-    p[0] = StatementExpression(p[1])
+    p[0] = ast.StatementExpression(p[1])
 
 
 def p_statementNEWSCOPE(p):
     'statement : body'
-    p[0] = StatementBody(p[1])
+    p[0] = ast.StatementBody(p[1])
 
 
 def p_statementBREAK(p):
     'statement : BREAK SEMI'
-    p[0] = StatementBreak()
+    p[0] = ast.StatementBreak()
 def P_statementCONTINUE(p):
     'statement: CONTINUE SEMI'
-    p[0] = StatementContinue()
+    p[0] = ast.StatementContinue()
 
 
 def p_statementDECL(p):
@@ -123,7 +123,7 @@ def p_statementDECL(p):
 
 def p_expr(p):
     'expr : INTCONST'
-    p[0] = ConstExpr(p[1])
+    p[0] = ast.ConstExpr(p[1])
 
 
 def p_exprBINARYEXPRESSIONS(p):
@@ -132,13 +132,13 @@ def p_exprBINARYEXPRESSIONS(p):
              | expr ADDOP expr
              | expr DIVOP expr
              | expr SUBOP expr '''
-     p[0] = BoolexBinary(p[2],p[1],p[3])
+     p[0] = ast.BoolexBinary(p[2],p[1],p[3])
 
 
 def p_exprUNARYEXPRESSIONS(p):
     '''expr : HASH expr
             | SUBOP expr '''
-    p[0] = UnaryExpr(p[1],p[2])
+    p[0] = ast.UnaryExpr(p[1],p[2])
 
 def p_exprLHS(p):
     'expr : lhsexpression'
@@ -152,12 +152,12 @@ def p_exprNESTED(p):
 
 def p_exprSTRUCTACCESS(p):
     'expr : expr DOT IDENT'
-    p[0] = StructExpr(p[1],p[3])
+    p[0] = ast.StructExpr(p[1],p[3])
 
 
 def p_lhsexpression(p):
     'lhsexpression : IDENT'
-    p[0] = LHS(p[1])
+    p[0] = ast.LHS(p[1])
 
 
 def p_boolexCOMPARE(p):
