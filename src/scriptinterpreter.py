@@ -319,7 +319,7 @@ class ScriptInterpreter:
         cond = self.stack.pop()
         index = int(self.stack.pop())
         if cond == '1':
-            new_index = pc.self + index
+            new_index = self.pc + index
             if new_index < 0 or new_index >= len(self.stack):
                 logging.warning("OP_JUMPRC: New program counter does not point in the stack")
                 return False
