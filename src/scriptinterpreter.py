@@ -48,8 +48,11 @@ class ScriptInterpreter:
 
         'OP_PUSHABS',
         'OP_POPABS',
+        'OP_PUSHR',
+        'OP_POPR',
         'OP_PUSHFP',
         'OP_POPFP',
+        'OP_INCFP',
         'OP_PUSHSP',
         'OP_POPSP',
         'OP_PUSHPC',
@@ -419,7 +422,17 @@ class ScriptInterpreter:
         self.op_add()
         self.op_pushabs()
 
-    def op_call(self):
+    def op_popr(self):
+        self.op_pushfp()
+        self.op_add()
+        self.op_popabs()
+
+    def op_incfp(self):
+        self.op_pushfp()
+        self.op_add()
+        self.op_popfp()
+
+    def op_call():
         if not self.stack:
             logging.warning("OP_CALL: Stack is empty")
             return False

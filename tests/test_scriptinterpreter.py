@@ -52,6 +52,14 @@ def test_popFP():
     assert si.framepointer == 42
     emptystack_test("OP_POPFP")
 
+def test_incfp():
+    si = ScriptInterpreter("3 2 7 OP_INCFP 1", "", None)
+    si.framepointer = 1
+    si.execute_script()
+    assert si.stack == [3, 2]
+    assert si.framepointer == 8
+    emptystack_test("OP_INCFP")
+
 
 def test_popVoid():
     script_finalstack_test("1 2 3 OP_POPVOID 1", [1, 2])
@@ -169,6 +177,13 @@ def test_pushr_2():
     si.execute_script()  # should push 0 (framepointer) + 3 (operand) = 3rd element
     assert si.stack == [0, 1, 2, "three", 4, 5, "three"]
 
+def test_popr():
+    si = ScriptInterpreter('0 1 2 3 4 "storethis" 2 OP_POPR 1', "", None)
+    si.framepointer = 1
+    si.execute_script()  # should store to 1 (framepointer) + 2 (operand) = 3rd element
+    assert si.stack == [0, 1, 2, "storethis", 4]
+    emptystack_test('OP_POPR')
+
 def script_finalstack_test(script: str, finalstack: list):
     si = ScriptInterpreter(script, "", None)
     si.execute_script()
@@ -210,3 +225,12 @@ def test_gcd_script():
     si.execute_script()
     print("Stack after gcd script:",si.stack)
     assert si.stack[0] == gcd(a,b)
+
+def test_call_test():
+    #please use -s to debug, should add 1 onto stack
+    f = open("./src/labvm/calltest.labvm","r")
+    fstr = f.read()
+    f.close()
+    si = ScriptInterpreter(fstr, "", None)
+    si.execute_script()
+
