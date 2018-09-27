@@ -1,7 +1,7 @@
 
 precedence=(
      ('right','ASSIGN'),
-     ('right','ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP', 'MULOP', 'SUBOP', 'LSQ')
+     ('right','ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP', 'MULOP', 'SUBOP')
 )
 
 start = 'translationunit'
