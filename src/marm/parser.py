@@ -77,7 +77,14 @@ def p_exprBINARYEXPRESSIONS(p):
 def p_exprUNARYEXPRESSIONS(p):
     '''expr : HASH expr
             | SUBOP expr '''
-
+def p_exprLHS(p):
+    'expr : lhsexpression'
+def p_exprNESTED(p):
+    'expr : LPAR expr RPAR'
+def p_exprSTRUCTACCESS(p):
+    'expr : expr DOT IDENT'
+def p_lhsexpression(p):
+    'lhsexpression : IDENT'
 def p_boolex(p):
     'boolex : expr'
 def p_declarator(p):
