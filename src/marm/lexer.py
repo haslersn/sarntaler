@@ -1,6 +1,10 @@
 # Token types
 tokens = ( 'IDENT',
-           'NUMBER', )
+           'NUMBER', 'COMMENT' )
+
+def t_COMMENT(t):
+    r'(\/\*([^*]|\* + [^*\/])*\*+\/)|(\/\/[^\r\n]*(\r|\n|\r\n)?)'
+    pass
 
 # Token definitions
 t_IDENT = r'[A-Za-z][A-Za-z0-9_]*'
