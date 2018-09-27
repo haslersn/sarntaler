@@ -48,6 +48,8 @@ class ScriptInterpreter:
 
         'OP_PUSHABS',
         'OP_POPABS',
+        'OP_PUSHR',
+        'OP_POPR',
         'OP_PUSHFP',
         'OP_POPFP',
         'OP_INCFP',
@@ -77,8 +79,7 @@ class ScriptInterpreter:
         'OP_LE',
         'OP_GE',
         'OP_LT',
-        'OP_GT',
-        'OP_PUSHR'
+        'OP_GT'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -418,6 +419,11 @@ class ScriptInterpreter:
         self.op_pushfp()
         self.op_add()
         self.op_pushabs()
+
+    def op_popr(self):
+        self.op_pushfp()
+        self.op_add()
+        self.op_popabs()
 
     def op_incfp(self):
         self.op_pushfp()

@@ -177,6 +177,13 @@ def test_pushr_2():
     si.execute_script()  # should push 0 (framepointer) + 3 (operand) = 3rd element
     assert si.stack == [0, 1, 2, "three", 4, 5, "three"]
 
+def test_popr():
+    si = ScriptInterpreter('0 1 2 3 4 "storethis" 2 OP_POPR 1', "", None)
+    si.framepointer = 1
+    si.execute_script()  # should store to 1 (framepointer) + 2 (operand) = 3rd element
+    assert si.stack == [0, 1, 2, "storethis", 4]
+    emptystack_test('OP_POPR')
+
 def script_finalstack_test(script: str, finalstack: list):
     si = ScriptInterpreter(script, "", None)
     si.execute_script()
