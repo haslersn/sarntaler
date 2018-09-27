@@ -25,6 +25,7 @@ class TestParserMethods(unittest.TestCase):
         self.generic_lex("else", 'ELSE', 'else')
         self.generic_lex("return", 'RETURN', 'return')
         self.generic_lex("int", 'INT', 'int')
+        self.generic_lex("address", 'ADDRESS', 'address')
         self.generic_lex("i", 'IDENT', 'i')
         self.generic_lex("{", 'BEGIN', '{')
         self.generic_lex("}", 'END', '}')
