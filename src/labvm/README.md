@@ -51,6 +51,7 @@ Boolean values are ints. 1 represents true and 0 represents false.
 
 |Instruction | Constraints | Description | 
 | ---------- | ----------- | ----------- |
+|_**Math**_|
 | OP_ADD |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 + s_1 |
 | OP_SUB |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 - s_1 |
 | OP_MUL |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 * s_1 |
@@ -59,6 +60,7 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_AND |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 & s_1 |
 | OP_OR | s_1 and s_2 integers| consumes the two highest stack cells and pushes s_2 \| s_1 |
 | OP_XOR |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 ^ s_1 |
+|_**Comparison**_|
 | OP_EQU | - | consumes the two highest stack cells and pushes s_2 = s_1 |
 | OP_LE |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 <= s_1 |
 | OP_GE |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 >= s_1 |
@@ -66,10 +68,14 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_GT |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 > s_1 |
 | OP_NEG |s_1 integer | consumes the highest stack cell and pushes -s_1 |
 | OP_NOT |s_1 integer | consumes the highest stack cell and pushes 1 - s_1 |
+|_**Flow Control**_|
 | OP_JUMP | s_1 integer and line exists | absolute jump, consumes highest stack cell, PC = s_1 |
 | OP_JUMPR | s_1 integer and boundaries are kept | consumes highest stack cell, PC = s_1 + PC |
 | OP_JUMPC | s_1 integer and s_2 integer and line s_1 exists| absolute conditional Jump. Consumes 2 Arguments. If s_2 == 1, PC = s_1 else nothing happens | 
 | OP_JUMPRC | s_1 integer and s_2 integer and line s_1 keeps boundaries | relative conditional Jump. Consumes 2 Arguments. If s_2 == 1, PC = PC + s_1 else nothing happens | 
+| OP_CALL | s_1 valid code line | consumes s_1, pushes FP, sets FP = SP (points to old FP, pushes PC (return address), jumps |
+| OP_RET | needs a valid stack frame | DO NOT USE OP_RETURN! s_1 will be interpreted as the return value. restores FP and PC, everything on the stack between the return address and the return value gets lost |
+|_**Stack**_|
 | OP_SWAP | | Swaps s_1 and s_2|
 | OP_DUP |- | pushes s_1 |
 | OP_PUSHABS | s_1 valid stack index | consumes the highest stack cell. Let n be its value. It pushes the n-th cell of the stack. The lowest stack cell has index 0, the next one 1 and so on. |
@@ -80,20 +86,16 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_POPSP | s_1 non-negative integer or -1 | pops into the StackPointer |
 | OP_PUSHPC | - | pushes the Program Counter |
 | OP_POPPC | s_1 valid code line | pop into the Program Counter |
-| OP_CALL | s_1 valid code line | consumes s_1, pushes FP, sets FP = SP (points to old FP, pushes PC (return address), jumps |
-| OP_RET | needs a valid stack frame | DO NOT USE OP_RETURN! s_1 will be interpreted as the return value. restores FP and PC, everything on the stack between the return address and the return value gets lost |
 | OP_POPVOID | stack not empty | removes s_1 |
 
 # Macros
-Macros a compiler might implement:
+Macros that are implemented:
 
 `OP_PUSHR` (Push relative to FP) is equal to `OP_PUSHFP,OP_ADD,OP_PUSHABS`
 
 `OP_POPR` (Store relative to FP) is equal to `OP_PUSHFP,OP_ADD,OP_POPABS`
 
 `OP_INCFP` (In-/Decrement FP) is equal to `OP_PUSHFP, OP_ADD, OP_POPFP`
-
-Actually, we implemented these, so you can call them
 
 # Examples
 
