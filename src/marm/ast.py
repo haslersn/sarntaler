@@ -98,8 +98,9 @@ class StatementDecl(Statement):
 
 class StatementReturn(Statement):
     """ p_statementRETURN """
-    def __init__(self):
+    def __init__(self, returnValue):
         super().__init__()
+        self.returnValue = returnValue
         pass
 
 
