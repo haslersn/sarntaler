@@ -1,33 +1,38 @@
-# Hash map for reserved maps
+# Hash map for reserved keywords
 keywords = {
     'if' : 'IF',
     'while' : 'WHILE',
     'break' : 'BREAK',
     'continue' : 'CONTINUE',
-    'else' : 'ELSE'
+    'else' : 'ELSE',
+    'return' : 'RETURN',
+    'int' : 'INT',
+    #   'void' : 'VOID',
+    #   'goto' : 'GOTO',
+    #   'default' : 'DEFAULT',
+    #   'for' : 'FOR',
+    #   'do' : 'DO',
 }
 
 # Token types
 tokens = ['IDENT',
-           'NUMBER',
            'BEGIN',
            'END',
            'SEMI',
            'COMMA',
            'ADDRESS',
-           'INT',
-           'RETURN',
            'COMMENT',
            'ASSIGN',
            'INTCONST',
            'ADDOP', 'SUBOP', 'MULOP', 'DIVOP',
-           'NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
+           'HASH', 'DOT', 'NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
            'LPAR', 'RPAR'] + list(keywords.values())
 
 
 def t_COMMENT(t):
     r'(\/\*([^*]|\* + [^*\/])*\*+\/)|(\/\/[^\r\n]*(\r|\n|\r\n)?)'
     pass
+
 
 # Token definitions
 def t_IDENT(t):
@@ -36,15 +41,39 @@ def t_IDENT(t):
     return t
 
 
-def t_NUMBER(t):
+def t_INTCONST(t):
     r'\d+'
     t.value = int(t.value)
     return t
+
+
+# HASH
+def t_HASH(t):
+    r'\#'
+    return t
+
+
+# DOT, COMMA, SEMI
+def t_DOT(t):
+    r'\.'
+    return t
+
+
+def t_COMMA(t):
+    r','
+    return t
+
+
+def t_SEMI(t):
+    r';'
+    return t
+
 
 # BEGIN and END
 def t_BEGIN(t):
     r'\{'
     return t
+
 
 def t_END(t):
     r'\}'
