@@ -17,12 +17,20 @@ def p_procdecl(p):
     'procdecl : type IDENT LPAR paramlistopt RPAR statementlistOPT'
 
 def p_statementlistOPT(p):
-    '''statementlistOPT : BEGIN statementlist END
-                        | SEMI '''
+    'statementlistOPT : body'
+    p[0] = p[1]
+def p_statementlistOPT(p):
+    'statementlistOPT : SEMI'
+    p[0] = None
 
 def p_statementlist(p):
     '''statementlist : statement statementlist
                        | '''
+    if len(p)==1:
+        p[0] = []
+    else:
+        p[2].insert(0, p[1])
+        p[0] = p[2]
 
 def p_body(p):
     'body : BEGIN statementlist END '
@@ -30,10 +38,19 @@ def p_body(p):
 def p_paramlistopt(p):
     '''paramlistopt : paramlist 
                     |  '''
+    if len(p)==1:
+        p[0] = []
+    else:
+        p[0] = p[1]
 
 def p_paramlist(p):
     '''paramlist : paramdecl COMMA paramlist
                  | paramdecl '''
+    if len(p)==2:
+        p[0] = [p[1]]
+    else:
+        p[2].insert(0,p[1])
+        p[0] = p[2]
 
 def p_paramdecl(p):
     'paramdecl : type IDENT'
@@ -116,6 +133,11 @@ def p_declarator(p):
 def p_declaratorlist(p):
     ''' decllist : decl COMMA decllist
                  | decl '''
+    if len(p)==2:
+        p[0] = [p[1]]
+    else:
+        p[3].insert(0,p[1])
+        p[0] = p[3]
 
 # Error handling
 class ParserError(RuntimeError):
