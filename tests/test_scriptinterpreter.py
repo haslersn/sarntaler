@@ -157,6 +157,18 @@ def test_gt():
     emptystack_noninteger_binaryop_test('OP_GT')
 
 
+def test_pushr():
+    si = ScriptInterpreter("0 1 2 3 4 5 2 OP_PUSHR 1", "", None)
+    si.framepointer = 3
+    si.execute_script()  # should push 3 (framepointer) + 2 (operand) = 5th element
+    assert si.stack == [0, 1, 2, 3, 4, 5, 5]
+
+def test_pushr_2():
+    si = ScriptInterpreter('0 1 2 \"three\" 4 5 3 OP_PUSHR 1', "", None)
+    si.framepointer = 0
+    si.execute_script()  # should push 0 (framepointer) + 3 (operand) = 3rd element
+    assert si.stack == [0, 1, 2, "three", 4, 5, "three"]
+
 def script_finalstack_test(script: str, finalstack: list):
     si = ScriptInterpreter(script, "", None)
     si.execute_script()
