@@ -99,7 +99,10 @@ class ScriptInterpreter:
         'OP_OR',
         'OP_XOR',
         'OP_NOT',
-        'OP_NEG'
+        'OP_NEG',
+        'OP_EQU',
+        'OP_LE',
+        'OP_GE'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -303,7 +306,7 @@ class ScriptInterpreter:
         index = int(self.stack.pop())
         new_index = self.pc + index
         if new_index < 0 or new_index >= len(self.stack):
-            logging.warning("OP_JUMPR: New program counter does not point in the stack")
+            logging.warning("OP_JUMPR: New program counter does not point in the program")
             return False
         self.pc = new_index
         return True
@@ -317,7 +320,7 @@ class ScriptInterpreter:
         index = int(self.stack.pop())
         if cond == '1':
             if index < 0 or index >= len(self.stack):
-                logging.warning("OP_JUMPC: New program counter does not point in the stack")
+                logging.warning("OP_JUMPC: New program counter does not point in the program")
                 return False
             self.pc = index
         return True
@@ -332,7 +335,7 @@ class ScriptInterpreter:
         if cond == '1':
             new_index = self.pc + index
             if new_index < 0 or new_index >= len(self.stack):
-                logging.warning("OP_JUMPRC: New program counter does not point in the stack")
+                logging.warning("OP_JUMPRC: New program counter does not point in the program")
                 return False
             self.pc = new_index
         return True
@@ -383,6 +386,24 @@ class ScriptInterpreter:
 
         self.stack.append(1 - param)
         return True
+
+    def op_equ(self):
+        if (len(self.stack) < 2):
+            logging.warning("Not enough arguments")
+            return False
+
+        old_first = self.stack.pop()
+        old_second = self.stack.pop()
+
+        result = 1 if old_first == old_second else 0
+        self.stack.append(result)
+        return True
+
+    def op_le(self):
+        return self.math_operations(lambda first, second: 1 if second <= first else 0)
+
+    def op_ge(self):
+        return self.math_operations(lambda first, second: 1 if second >= first else 0)
 
 
     def math_operations(self, op):
