@@ -38,6 +38,7 @@ def p_statementlist(p):
 
 def p_body(p):
     'body : BEGIN statementlist END '
+    p[0] = p[2]
 
 
 def p_paramlistopt(p):
@@ -65,6 +66,7 @@ def p_paramdecl(p):
 
 def p_type(p):
     'type : typename'
+    p[0] = p[2]
 
 
 def p_typename(p):
