@@ -432,7 +432,7 @@ class ScriptInterpreter:
         self.op_add()
         self.op_popfp()
 
-    def op_call():
+    def op_call(self):
         if not self.stack:
             logging.warning("OP_CALL: Stack is empty")
             return False
@@ -442,10 +442,10 @@ class ScriptInterpreter:
             logging.warning("OP_CALL: Argument is not an index in the program")
             return False
 
-        self.stack.append(proc_address, self.framepointer) # store the old frame pointer
-        self.framepointer = self.stackframe # set the new frame pointer
-        self.stack.append(self.pc)          # store the return address
-        self.pc = proc_address              # prepare for execution of the procedure
+        self.stack.append(self.framepointer)        # store the old frame pointer
+        self.framepointer = len(self.stack) - 1     # set the new frame pointer
+        self.stack.append(self.pc)                  # store the return address
+        self.pc = proc_addr                         # prepare for execution of the procedure
         return True
 
     def op_ret(self):
@@ -455,7 +455,7 @@ class ScriptInterpreter:
 
         result = self.stack.pop()
         self.pc = self.stack[self.framepointer + 1] # restore the program counter
-        del self.stack[self.framepointer:]          # reset the stack pointer
+        del self.stack[(self.framepointer+1):]          # reset the stack pointer
         self.framepointer = self.stack.pop()        # restore the framepointer
         self.stack.append(result)
         return True
@@ -579,7 +579,7 @@ class ScriptInterpreter:
                 self.pc = self.pc + 1
                 if not execute_item(item):
                     return False
-                logging.warning("PC: " + str(self.pc) + ", Stack: " + str(self.stack))
+                logging.warning("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
             return True
 
         if not execute(self.input_script) or not execute(self.output_script):
