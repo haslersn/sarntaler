@@ -81,13 +81,17 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_PUSHPC | - | pushes the Program Counter |
 | OP_POPPC | s_1 valid code line | pop into the Program Counter |
 | OP_CALL | s_1 valid code line | consumes s_1, pushes FP, sets FP = SP (points to old FP, pushes PC (return address), jumps |
-| OP_RETURN | needs a valid stack frame | s_1 will be interpreted as the return value. restores FP and PC, everything on the stack between the return address and the return value gets lost |
+| OP_RET | needs a valid stack frame | DO NOT USE OP_RETURN! s_1 will be interpreted as the return value. restores FP and PC, everything on the stack between the return address and the return value gets lost |
 | OP_POPVOID | stack not empty | removes s_1 |
 
 # Macros
-Maybe we will introduce macros. Possible ideas:
+Macros a compiler might implement:
 
 `OP_PUSHR` (Push relative to FP) is equal to `OP_PUSHFP,OP_ADD,OP_PUSHABS`
+`OP_POPR` (Store relative to FP) is equal to `OP_PUSHFP,OP_ADD,OP_POPABS`
+`OP_INCFP` (In-/Decrement FP) is equal to `OP_PUSHFP, OP_ADD, OP_POPFP`
+
+Actually, we implemented these, so you can call them
 
 # Examples
 
