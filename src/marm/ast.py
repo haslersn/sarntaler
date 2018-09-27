@@ -67,13 +67,15 @@ class Procdecl(Node):
 
 
 class Statement(Node):
-    super().__init__()
-    pass
+    def __init__(self):
+        super().__init__()
+        pass
 
 
 class StatementReturn(Statement):
-    super().__init__()
-    pass
+    def __init__(self):
+        super().__init__()
+        pass
 
 
 class StatementWhile(Statement):
@@ -104,13 +106,15 @@ class StatementBody(Statement):
 
 
 class StatementBreak(Statement):
-    super().__init__()
-    pass
+    def __init__(self):
+        super().__init__()
+        pass
 
 
 class StatementContinue(Statement):
-    super().__init__()
-    pass
+    def __init__(self):
+        super().__init__()
+        pass
 
 
 class Boolex(Node):
