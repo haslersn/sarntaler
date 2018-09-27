@@ -39,6 +39,15 @@ def t_NUMBER(t):
     t.value = int(t.value)
     return t
 
+# BEGIN and END
+def t_BEGIN(t):
+    r'\{'
+    return t
+
+def t_END(t):
+    r'\}'
+    return t
+
 # Assign
 t_ASSIGN = r'='
 
