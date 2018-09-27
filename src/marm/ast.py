@@ -126,12 +126,18 @@ class StatementIf(Statement):
         self.statement = statement
         self.elseprod = elseprod
 
+    def __str__(self):
+        return "[StatementIf: boolex={}, statement={}, elseprod={}]".format(self.boolex,self.statement,self.elseprod)
+
 
 class StatementExpression(Statement):
     """ p_statementEXPRESSIONSTATEMENT """
     def __init__(self, expr):
         super().__init__()
         self.expr = expr
+
+    def __str__(self):
+        return "[StatementExpression: expr={}]".format(self.expr)
 
 
 class StatementBody(Statement):
@@ -140,12 +146,18 @@ class StatementBody(Statement):
         super().__init__()
         self.body = body
 
+    def __str__(self):
+        return "[StatementBody: body={}]".format(self.body)
+
 
 class StatementBreak(Statement):
     """ p_statementBREAK """
     def __init__(self):
         super().__init__()
         pass
+
+    def __str__(self):
+        return "[StatementBreak]"
 
 
 class StatementContinue(Statement):
@@ -154,12 +166,18 @@ class StatementContinue(Statement):
         super().__init__()
         pass
 
+    def __str__(self):
+        return "[StatementContinue]"
+
 
 class Boolex(Node):
     """ Non terminal 15 """
     def __init__(self, op):
         super().__init__()
         self.op = op
+
+    def __str__(self):
+        return "[Boolex: op={}]".format(self.op)
 
 
 class BoolexCMP(Boolex):
@@ -169,6 +187,9 @@ class BoolexCMP(Boolex):
         self.left = left
         self.right = right
 
+    def __str__(self):
+        return "[BoolexCMP: op={}, left={}, right={}]".format(self.op,self.left,self.right)
+
 
 class BoolexBinary(Boolex):
     """ p_boolexBINARY """
@@ -177,10 +198,16 @@ class BoolexBinary(Boolex):
         self.left = left
         self.right = right
 
+    def __str__(self):
+        return "[BoolexBinary: op={}, left={}, right={}]".format(self.op,self.left,self.right)
+
 
 class BoolexNot(Boolex):
     """ p_boolexUNARY """
     def __init__(self, op, operand):
         super().__init__(op)
         self.operand = operand
+
+    def __str__(self):
+        return "[BoolexNot: operand={}]".format(str(self.operand))
 
