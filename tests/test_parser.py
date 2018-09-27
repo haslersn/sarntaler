@@ -1,11 +1,10 @@
 import unittest
-import src.marm.lexer as lexer_source
-from src.marm.parser import marmparser, ParserError
+import src.marm
 
 
 class TestParserMethods(unittest.TestCase):
     def setUp(self):
-        self.lexer = lexer_source.lexer
+        self.lexer = src.marm.lexer.lexer
 
     def generic_lex(self, t_text, t_type, t_value, t_lineno=1, t_lexpos=0):
         try:
@@ -15,7 +14,7 @@ class TestParserMethods(unittest.TestCase):
             self.assertEqual(t_value, token.value)
             self.assertEqual(t_lineno, token.lineno)
             self.assertEqual(t_lexpos, token.lexpos)
-        except lexer_source.LexerError as e:
+        except src.marm.lexer.LexerError as e:
             unittest.fail(msg=t_text + " could not be lexed. " + str(e))
 
     def test_lex_tokens(self):
@@ -55,12 +54,12 @@ class TestParserMethods(unittest.TestCase):
         self.generic_lex(")", 'RPAR', ')')
 
     def test_tokens_not_empty(self):
-        self.assertFalse(lexer_source.tokens.__len__() == 0)
+        self.assertFalse(src.marm.lexer.tokens.__len__() == 0)
 
     def test_parse_file(self):
         try:
-            marmparser("test.marm")
-        except ParserError:
+            src.marm.parser.marmparser("test.marm")
+        except src.marm.parser.ParserError:
             unittest.fail(msg="Couldn't parse file.")
 
 

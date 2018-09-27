@@ -1,4 +1,8 @@
 import src.marm.ast as ast
+import src.marm.ast as ast
+=======
+import ast as ast
+>>>>>>> kinda fixed imports i guess?
 import ply.yacc as yacc
 
 precedence = (
@@ -226,6 +230,10 @@ class EofError(ParserError):
 class UnexpectedTokenError(ParserError):
     def __init__(self, got):
         from src.marm.lexer import column_number
+        from src.marm.lexer import column_number
+=======
+        from .lexer import column_number
+>>>>>>> kinda fixed imports i guess?
         super().__init__("Unexpected token '{}' ({}) at Line {}, Column {}"
                          .format(got.value, got.type,
                                  got.lineno, column_number(got)))
@@ -239,6 +247,7 @@ def p_error(t):
         # Read ahead looking for a closing '}/;/)'
         tokseq = [t.type]
         while True:
+            from src.marm.lexer import column_number
             tok = yacc.token()             # Get the next token
             if not tok or tok.type == 'SEMI' or tok.type =='END' or tok.type=='RBRAC': 
                 if tok is None:
@@ -250,8 +259,12 @@ def p_error(t):
         yacc.restart()
 
 
+<<<<<<< 9c5887573d407d8465aa25ade16d1219aa211410
 from src.marm.lexer import lexer
 from src.marm.lexer import tokens
+=======
+from src.marm.lexer import lexer, tokens
+>>>>>>> kinda fixed imports i guess?
 # Generate parser
 yacc = yacc.yacc()
 _____secret_filename='inmemory'
