@@ -77,7 +77,7 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_PUSHFP |- | pushes the FramePointer |
 | OP_POPFP | s_1 non-negative integer or -1 | pops into the FramePointer |
 | OP_PUSHSP |- | pushes the StackPointer |
-| OP_POPSP | s_1 non-negative intefer or -1 | pops into the StackPointer |
+| OP_POPSP | s_1 non-negative integer or -1 | pops into the StackPointer |
 | OP_PUSHPC | - | pushes the Program Counter |
 | OP_POPPC | s_1 valid code line | pop into the Program Counter |
 | OP_CALL | s_1 valid code line | consumes s_1, pushes FP, sets FP = SP (points to old FP, pushes PC (return address), jumps |

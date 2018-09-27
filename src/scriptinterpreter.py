@@ -54,6 +54,7 @@ class ScriptInterpreter:
         'OP_POPSP',
         'OP_PUSHPC',
         'OP_POPVOID',
+        'OP_PUSHR'
 
         'OP_JUMP',
         'OP_JUMPR',
@@ -61,6 +62,7 @@ class ScriptInterpreter:
         'OP_JUMPRC',
 
         'OP_CALL',
+        'OP_RET',
 
         'OP_ADD',
         'OP_SUB',
@@ -76,8 +78,7 @@ class ScriptInterpreter:
         'OP_LE',
         'OP_GE',
         'OP_LT',
-        'OP_GT',
-        'OP_PUSHR'
+        'OP_GT'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -89,7 +90,6 @@ class ScriptInterpreter:
         self.program = []
 
         self.framepointer = 0  # maybe initialize with -1
-        self.stackpointer = 0  # maybe initialize with -1
         self.pc = 0            # maybe initialize with -1
 
 
@@ -269,7 +269,7 @@ class ScriptInterpreter:
         return True
 
     def op_pushsp(self):
-        self.stack.append(self.stackpointer)
+        self.stack.append(len(self.stack) - 1)
         return True
 
     def op_popsp(self):
@@ -277,7 +277,8 @@ class ScriptInterpreter:
             logging.warning("OP_POPSP: Stack is empty")
             return False
 
-        self.stackpointer = self.stack.pop()
+        index = self.stack.pop()
+        del self.stack[(index+1):] 
         return True
 
     def op_popvoid(self):
@@ -418,7 +419,7 @@ class ScriptInterpreter:
         self.op_add()
         self.op_pushabs()
 
-    def op_call():
+    def op_call(self):
         if not self.stack:
             logging.warning("OP_CALL: Stack is empty")
             return False
@@ -428,12 +429,24 @@ class ScriptInterpreter:
             logging.warning("OP_CALL: Argument is not an index in the program")
             return False
 
-        self.stack.append(result, self.framepointer) # store the old frame pointer
+        self.stack.append(proc_address, self.framepointer) # store the old frame pointer
         self.framepointer = self.stackframe # set the new frame pointer
-        self.stack.append(result, self.pc)  # store the return address
-        self.pc = proc_addres               # prepare for execution of the procedure
+        self.stack.append(self.pc)          # store the return address
+        self.pc = proc_address              # prepare for execution of the procedure
         return True
 
+    def op_ret(self):
+        if not self.stack:
+            logging.warning("OP_RET: Stack is empty")
+            return False
+
+        result = self.stack.pop()
+        self.pc = self.stack[self.framepointer + 1] # restore the program counter
+        del self.stack[self.framepointer:]          # reset the stack pointer
+        self.framepointer = self.stack.pop()        # restore the framepointer
+        self.stack.append(result)
+        return True
+        
     def math_operations(self, op):
         if (len(self.stack) < 2):
             logging.warning("binary math operation: Not enough arguments")
