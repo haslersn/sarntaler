@@ -1,5 +1,4 @@
 from src.scriptinterpreter import ScriptInterpreter
-from src.transaction import Transaction
 
 
 def test_passWithOne():
@@ -28,15 +27,11 @@ def test_dup_emptystack():
 
 
 def test_dup2():
-    si = ScriptInterpreter("3 2 OP_DUP 1", "", None)
-    res = si.execute_script()
-    assert si.stack == [3, 2, 2]
+    script_finalstack_test("3 2 OP_DUP 1", [3, 2, 2])
 
 
 def test_swap():
-    si = ScriptInterpreter("3 2 1 OP_SWAP 1", "", None)
-    si.execute_script()
-    assert si.stack == [3, 1, 2]
+    script_finalstack_test("3 2 1 OP_SWAP 1", [3, 1, 2])
 
 
 def test_swapWithOneElement():
@@ -64,9 +59,8 @@ def test_popFP_emptystack():
 
 
 def test_pushabs_ok():
-    si = ScriptInterpreter("5 6 7 8 1 OP_PUSHABS 1", "", None)
-    si.execute_script()
-    assert si.stack == [5, 6, 7, 8, 6]
+    script_finalstack_test("5 6 7 8 1 OP_PUSHABS 1", [5, 6, 7, 8, 6])
+
 
 def test_pushabs_notok():
     si = ScriptInterpreter(None, None, None)
@@ -74,95 +68,104 @@ def test_pushabs_notok():
     res = si.op_pushabs()
     assert res == False
 
+
 def test_add():
-    si = ScriptInterpreter("3 2 42 OP_ADD 1", "", None)
-    si.execute_script()
-    assert si.stack == [3, 44]
+    script_finalstack_test("3 2 42 OP_ADD 1", [3, 44])
+
 
 def test_add_emptystack():
     si = ScriptInterpreter("OP_ADD", "", None)
     assert not si.execute_script()
 
+
 def test_add_nonintegers():
     si = ScriptInterpreter("a b OP_ADD 1", "", None)
     assert not si.execute_script()
 
+
 def test_sub():
-    si = ScriptInterpreter("3 5 1 OP_SUB 1", "", None)
-    si.execute_script()
-    assert si.stack == [3, 4]
+    script_finalstack_test("3 5 1 OP_SUB 1", [3, 4])
+
 
 def test_sub_emptystack():
     si = ScriptInterpreter("OP_SUB", "", None)
     assert not si.execute_script()
 
+
 def test_sub_nonintegers():
     si = ScriptInterpreter("a b OP_SUB 1", "", None)
     assert not si.execute_script()
 
+
 def test_mul():
-    si = ScriptInterpreter("3 5 2 OP_MUL 1", "", None)
-    si.execute_script()
-    assert si.stack == [3, 10]
+    script_finalstack_test("3 5 2 OP_MUL 1", [3, 10])
+
 
 def test_mul_emptystack():
     si = ScriptInterpreter("OP_MUL", "", None)
     assert not si.execute_script()
 
+
 def test_mul_nonintegers():
     si = ScriptInterpreter("a b OP_MUL 1", "", None)
     assert not si.execute_script()
 
+
 def test_div():
-    si = ScriptInterpreter("3 10 2 OP_DIV 1", "", None)
-    si.execute_script()
-    assert si.stack == [3, 5]
+    script_finalstack_test("3 10 2 OP_DIV 1", [3, 5])
+
 
 def test_div_noneven():
-    si = ScriptInterpreter("3 5 2 OP_DIV 1", "", None)
-    si.execute_script()
-    assert si.stack == [3, 2]
+    script_finalstack_test("3 5 2 OP_DIV 1", [3, 2])
+
 
 def test_div_emptystack():
     si = ScriptInterpreter("OP_DIV", "", None)
     assert not si.execute_script()
 
+
 def test_div_nonintegers():
     si = ScriptInterpreter("a b OP_DIV 1", "", None)
     assert not si.execute_script()
 
+
 def test_mod():
-    si = ScriptInterpreter("3 10 2 OP_MOD 1", "", None)
-    si.execute_script()
-    assert si.stack == [3, 0]
+    script_finalstack_test("3 10 2 OP_MOD 1", [3, 0])
+
 
 def test_mod_noneven():
-    si = ScriptInterpreter("3 5 2 OP_MOD 1", "", None)
-    si.execute_script()
-    assert si.stack == [3, 1]
+    script_finalstack_test("3 5 2 OP_MOD 1", [3, 1])
+
 
 def test_mod_emptystack():
     si = ScriptInterpreter("OP_MOD", "", None)
     assert not si.execute_script()
 
+
 def test_mod_nonintegers():
     si = ScriptInterpreter("a b OP_MOD 1", "", None)
     assert not si.execute_script()
 
+
 def test_and():
-    si = ScriptInterpreter("3 5 2 OP_AND 1", "", None)
-    si.execute_script()
-    assert si.stack == [3, 0]
+    script_finalstack_test("3 5 2 OP_AND 1", [3, 0])
+
 
 def test_and_noneven():
-    si = ScriptInterpreter("3 3 2 OP_AND 1", "", None)
-    si.execute_script()
-    assert si.stack == [3, 2]
+    script_finalstack_test("3 3 2 OP_AND 1", [3, 2])
+
 
 def test_and_emptystack():
     si = ScriptInterpreter("OP_AND", "", None)
     assert not si.execute_script()
 
+
 def test_and_nonintegers():
     si = ScriptInterpreter("a b OP_AND 1", "", None)
     assert not si.execute_script()
+
+
+def script_finalstack_test(script: str, finalstack: list):
+    si = ScriptInterpreter(script, "", None)
+    si.execute_script()
+    assert si.stack == finalstack
