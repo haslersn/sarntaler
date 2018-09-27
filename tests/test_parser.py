@@ -56,9 +56,10 @@ class TestParserMethods(unittest.TestCase):
     def test_tokens_not_empty(self):
         self.assertFalse(lexer.tokens.__len__() == 0)
 
+    @unittest.skip("No error raised")
     def test_parse_file(self):
         try:
-            testfile = open("./marm/test.marm", mode='r')
+            testfile = open("./marm/notvalid.marm", mode='r')
             parser.marmparser("test.marm", testfile.read())
         except parser.ParserError:
             self.fail(msg="Couldn't parse file.")

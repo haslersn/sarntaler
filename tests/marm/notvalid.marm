@@ -1,0 +1,15 @@
+/Testprogram to parse v0.1
+ int int test(int x){
+	i;
+	i = 0;
+	x = 1;
+	while(i < 1){
+		x = x * 2;
+		i = i + 1;
+	}
+	return x;
+}
+
+float test2(int t){
+    return t;
+}

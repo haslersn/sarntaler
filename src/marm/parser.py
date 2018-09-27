@@ -130,6 +130,10 @@ def p_statementDECL(p):
     'statement : type decllist SEMI'
     p[0] = ast.StatementDecl(p[1], p[2])
 
+def p_statementERROR(p):
+    'statement : error SEMI'
+    print ('error in statement')
+
 
 def p_expr(p):
     'expr : INTCONST'
@@ -227,7 +231,7 @@ class UnexpectedTokenError(ParserError):
     def __init__(self, got):
         from src.marm.lexer import column_number
         super().__init__("{}:{}.{}: syntax error: unexpected token {}"
-                                        .format(yacc.filename,t.lexer.lineno,column_number(t),t))
+                                        .format(yacc.filename,got.lexer.lineno+1,column_number(got),got))
 
 
 def p_error(t):
@@ -236,18 +240,26 @@ def p_error(t):
         raise EofError()
     else:
         # Read ahead looking for a closing '}/;/)'
-        tokseq = [t.type]
-        while True:
-            from src.marm.lexer import column_number
-            tok = yacc.token()             # Get the next token
-            if not tok or tok.type == 'SEMI' or tok.type =='END' or tok.type=='RBRAC': 
-                if tok is None:
-                    print("{}:{}.{}: syntax error: unexpected token sequence {}".format(yacc.filename,t.lexer.lineno,column_number(t),tokseq))
-                else:
-                    print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(yacc.filename,t.lexer.lineno,column_number(t),tok.lexer.lineno,column_number(tok),tokseq))
-                break
-            tokseq.append(tok.type)
-        yacc.restart()
+        from src.marm.lexer import column_number
+        print("{}:{}.{}: syntax error: unexpected token {}:{}".format(
+            yacc.filename,
+            t.lexer.lineno+1,
+            column_number(t),
+            t.type,
+            t.value
+        ))
+        # tokseq = [t.type]
+        # while True:
+        #     from src.marm.lexer import column_number
+        #     tok = yacc.token()             # Get the next token
+        #     if not tok or tok.type == 'SEMI' or tok.type =='END' or tok.type=='RBRAC': 
+        #         if tok is None:
+        #             print("{}:{}.{}: syntax error: unexpected token sequence {}".format(yacc.filename,t.lexer.lineno,column_number(t),tokseq))
+        #         else:
+        #             print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(yacc.filename,t.lexer.lineno,column_number(t),tok.lexer.lineno,column_number(tok),tokseq))
+        #         break
+        #     tokseq.append(tok.type)
+        # yacc.restart()
 
 
 from src.marm.lexer import lexer, tokens
