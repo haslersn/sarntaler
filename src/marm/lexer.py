@@ -53,8 +53,10 @@ if __name__=="__main__":
     import sys
     import argparse
     parser = argparse.ArgumentParser(description='Lex the given file')
-    parser.add_argument('--input', type=argparse.FileType('r'), default=sys.stdin)
-    parser.add_argument('--output', type=argparse.FileType('w'), default=sys.stdout)
+    parser.add_argument('--input', type=argparse.FileType('r'), default=sys.stdin,
+                        help='the input file. defaults to stdin')
+    parser.add_argument('--output', type=argparse.FileType('w'), default=sys.stdout,
+                        help='the output file. defaults to stdout')
     args = parser.parse_args()
 
     # Read input into string and initialize lexer
