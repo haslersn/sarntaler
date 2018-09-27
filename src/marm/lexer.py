@@ -10,6 +10,8 @@ keywords = {
     #   'void' : 'VOID',
     #   'goto' : 'GOTO',
     #   'default' : 'DEFAULT',
+    #   'for' : 'FOR',
+    #   'do' : 'DO',
 }
 
 # Token types
@@ -31,31 +33,47 @@ def t_COMMENT(t):
     r'(\/\*([^*]|\* + [^*\/])*\*+\/)|(\/\/[^\r\n]*(\r|\n|\r\n)?)'
     pass
 
+
 # Token definitions
 def t_IDENT(t):
     r'[A-Za-z][A-Za-z0-9_]*'
     t.type = keywords.get(t.value, 'IDENT')
     return t
 
+
 def t_INTCONST(t):
     r'\d+'
     t.value = int(t.value)
     return t
+
 
 # HASH
 def t_HASH(t):
     r'\#'
     return t
 
-# DOT
+
+# DOT, COMMA, SEMI
 def t_DOT(t):
     r'\.'
     return t
+
+
+def t_COMMA(t):
+    r','
+    return t
+
+
+def t_SEMI(t):
+    r';'
+    return t
+
 
 # BEGIN and END
 def t_BEGIN(t):
     r'\{'
     return t
+
 
 def t_END(t):
     r'\}'
