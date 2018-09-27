@@ -1,27 +1,32 @@
+import ast
 
-precedence=(
-     ('right','ASSIGN'),
-     ('right','HASH','NOT'),
-     ('right','ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP', 'MULOP', 'SUBOP'),
-     ('right','IF_WITHOUT_ELSE'),
+
+precedence = (
+     ('right', 'ASSIGN'),
+     ('right', 'HASH', 'NOT'),
+     ('right', 'ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP', 'MULOP', 'SUBOP'),
+     ('right', 'IF_WITHOUT_ELSE'),
 )
+
 
 start = 'translationunit'
 
-from lexer import tokens
-import ast
 
 def p_translationunit(p):
     'translationunit : procdecl'
     p[0] = ast.Translationunit(p[1])
 
+
 def p_procdecl(p):
     'procdecl : type IDENT LPAR paramlistopt RPAR statementlistOPT'
     p[0] = ast.Procdecl(p[1], p[2], p[4], p[6])
 
+
 def p_statementlistOPT_body(p):
     'statementlistOPT : body'
     p[0] = p[1]
+
+
 def p_statementlistOPT_empty(p):
     'statementlistOPT : SEMI'
     p[0] = []
@@ -113,6 +118,8 @@ def p_statementNEWSCOPE(p):
 def p_statementBREAK(p):
     'statement : BREAK SEMI'
     p[0] = ast.StatementBreak()
+
+
 def P_statementCONTINUE(p):
     'statement: CONTINUE SEMI'
     p[0] = ast.StatementContinue()
@@ -120,6 +127,7 @@ def P_statementCONTINUE(p):
 
 def p_statementDECL(p):
     'statement : type decllist SEMI'
+
 
 def p_expr(p):
     'expr : INTCONST'
@@ -132,13 +140,13 @@ def p_exprBINARYEXPRESSIONS(p):
              | expr ADDOP expr
              | expr DIVOP expr
              | expr SUBOP expr '''
-     p[0] = ast.BoolexBinary(p[2],p[1],p[3])
+     p[0] = ast.BoolexBinary(p[2], p[1], p[3])
 
 
 def p_exprUNARYEXPRESSIONS(p):
     '''expr : HASH expr
             | SUBOP expr '''
-    p[0] = ast.UnaryExpr(p[1],p[2])
+    p[0] = ast.UnaryExpr(p[1], p[2])
 
 def p_exprLHS(p):
     'expr : lhsexpression'
@@ -152,7 +160,7 @@ def p_exprNESTED(p):
 
 def p_exprSTRUCTACCESS(p):
     'expr : expr DOT IDENT'
-    p[0] = ast.StructExpr(p[1],p[3])
+    p[0] = ast.StructExpr(p[1], p[3])
 
 
 def p_lhsexpression(p):
@@ -189,25 +197,32 @@ def p_declarator(p):
 def p_declaratorlist(p):
     ''' decllist : decl COMMA decllist
                  | decl '''
-    if len(p)==2:
+    if len(p) == 2:
         p[0] = [p[1]]
     else:
-        p[3].insert(0,p[1])
+        p[3].insert(0, p[1])
         p[0] = p[3]
+
 
 # Error handling
 class ParserError(RuntimeError):
     def __init__(self, msg):
         super().__init__(msg)
+
+
 class EofError(ParserError):
     def __init__(self):
         super().__init__("Unexpected end of file.")
+
+
 class UnexpectedTokenError(ParserError):
     def __init__(self, got):
-        from lexer import column_number
+        from .lexer import column_number
         super().__init__("Unexpected token '{}' ({}) at Line {}, Column {}"
                          .format(got.value, got.type,
                                  got.lineno, column_number(got)))
+
+
 def p_error(t):
     if t is None:
         raise EofError()
@@ -216,9 +231,9 @@ def p_error(t):
         tokseq = [t.type]
         while True:
             tok = yacc.token()             # Get the next token
-            if not tok or tok.type == 'SEMI' or tok.type =='END' or tok.type=='RBRAC': 
-                from lexer import column_number
-                print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(args.input.name,t.lexer.lineno,column_number(t),tok.lexer.lineno,column_number(tok),tokseq))
+            if not tok or tok.type == 'SEMI' or tok.type == 'END' or tok.type == 'RBRAC':
+                from .lexer import column_number
+                print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(args.input.name, t.lexer.lineno, column_number(t), tok.lexer.lineno, column_number(tok), tokseq))
                 break
             tokseq.append(tok.type)
         yacc.restart()
@@ -229,7 +244,7 @@ import ply.yacc as yacc
 yacc = yacc.yacc()
 
 # Main for Debugging/Testing
-if __name__=="__main__":
+if __name__ == "__main__":
     # Parse Arguments
     import sys
     import argparse
@@ -241,6 +256,6 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     #TODO: actual parser test
-    from lexer import lexer
+    from .lexer import lexer
     result = yacc.parse(args.input.read(), lexer=lexer)
     args.output.write(str(result))
