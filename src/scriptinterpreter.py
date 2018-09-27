@@ -41,9 +41,7 @@ class ScriptInterpreter:
             OP_CHECKSIG
             OP_RETURN
 
-
         Locktime:
-
             OP_CHECKLOCKTIME
 
         Stack:
@@ -51,9 +49,16 @@ class ScriptInterpreter:
             OP_DUP
 
         Control Flow:
+            OP_JUMP
+            OP_JUMPR
+            OP_JUMPC
+            OP_JUMPRC
             OP_PUSHABS
             OP_PUSHFP
-            OP_POPFP    
+            OP_POPFP
+            OP_PUSHSP
+            OP_POPSP
+            OP_PUSHPC
 
         Math:
             OP_ADD
@@ -72,9 +77,16 @@ class ScriptInterpreter:
         'OP_CHECKLOCKTIME',
         'OP_SWAP',
         'OP_DUP',
+        'OP_PUSHABS',
         'OP_PUSHFP',
         'OP_POPFP',
-        'OP_PUSHABS',
+        'OP_PUSHSP',
+        'OP_POPSP',
+        'OP_PUSHPC',
+        'OP_JUMP',
+        'OP_JUMPR',
+        'OP_JUMPC',
+        'OP_JUMPRC',
         'OP_ADD',
         'OP_SUB',
         'OP_MUL',
@@ -88,7 +100,10 @@ class ScriptInterpreter:
         self.input_script = input_script
         self.tx_hash = tx_hash
         self.stack = []
+
         self.framepointer = 0  # maybe initialize with -1
+        self.stackpointer = 0  # maybe initialize with -1
+        self.pc = 0            # maybe initialize with -1
 
 
     def to_string(self):
@@ -114,6 +129,7 @@ class ScriptInterpreter:
         #The input is hashed using SHA-256.
         param = self.__pop_checked(str)
         if param is None:
+            logging.warning("OP_SHA256: Stack is empty or top element not a string")
             return False
         sha256 = hashlib.sha256()
         sha256.update(param)
@@ -127,17 +143,19 @@ class ScriptInterpreter:
         #If it is, 1 is returned, 0 otherwise.
         pubKey = self.__pop_checked(Key)
         if pubKey is None:
+            logging.warning("OP_CHECKSIG: Stack is empty or top element not a key")
             return False
 
         sig = self.__pop_checked(Signature)
         if sig is None:
+            logging.warning("OP_CHECKSIG: Stack is empty or top element not a signature")
             return False
 
         if pubKey.verify_sign(self.tx_hash, sig):
             self.stack.append(1)
             return True
 
-        logging.warning("Signature not verified")
+        logging.warning("OP_CHECKSIG: Signature not verified")
         self.stack.append(0)
         return True
 
@@ -202,15 +220,14 @@ class ScriptInterpreter:
 
     def op_dup(self):
         if not self.stack:
-            logging.warning("Stack is empty")
+            logging.warning("OP_DUP: Stack is empty")
             return False
         self.stack.append(self.stack[-1])
         return True
 
     def op_swap(self):
         if (len(self.stack) < 2):
-            logging.warning("Not enough arguments")
-            self.stack.append(str(0))
+            logging.warning("OP_SWAP: Not enough arguments")
             return False
 
         old_first = self.stack.pop()
@@ -223,11 +240,16 @@ class ScriptInterpreter:
     def op_pushabs(self):
         index = self.__pop_checked(int)
         if index is None:
+            logging.warning("OP_PUSHABS: Stack is empty or top element not an int")
             return False
         if index < 0 or index >= len(self.stack):
-            logging.warning("Argument of PUSHABS is not an index in the stack")
+            logging.warning("OP_PUSHABS: Argument is not an index in the stack")
             return False
         self.stack.append(self.stack[index])
+        return True
+
+    def op_pushpc(self):
+        self.stack.append(self.pc)
         return True
 
     def op_pushfp(self):
@@ -237,9 +259,77 @@ class ScriptInterpreter:
     def op_popfp(self):
         popped = self.__pop_checked(int)
         if popped is None:
+            logging.warning("OP_POPFP: Stack is empty or top element not an int")
             return False
         self.framepointer = popped
         return True
+
+    def op_pushsp(self):
+        self.stack.append(self.stackpointer)
+        return True
+
+    def op_popsp(self):
+        if not self.stack:
+            logging.warning("OP_POPSP: Stack is empty")
+            return False
+
+        self.stackpointer = self.stack.pop()
+        return True
+
+    def op_jump(self):
+        if not self.stack:
+            logging.warning("OP_JUMP: Stack is empty")
+            return False
+
+        index = int(self.stack.pop())
+        if index < 0 or index >= len(self.stack):
+            logging.warning("OP_JUMP: Argument is not an index in the stack")
+            return False
+        self.pc = self.stack[index]
+        return True
+
+    def op_jumpr(self):
+        if not self.stack:
+            logging.warning("OP_JUMPR: Stack is empty")
+            return False
+
+        index = int(self.stack.pop())
+        new_index = self.pc + index
+        if new_index < 0 or new_index >= len(self.stack):
+            logging.warning("OP_JUMPR: New program counter does not point in the stack")
+            return False
+        self.pc = new_index
+        return True
+
+    def op_jumpc(self):
+        if(len(self.stack) < 2):
+            logging.warning("OP_JUMPC: Not enough arguments")
+            return False
+
+        cond = self.stack.pop()
+        index = int(self.stack.pop())
+        if cond == '1':
+            if index < 0 or index >= len(self.stack):
+                logging.warning("OP_JUMPC: New program counter does not point in the stack")
+                return False
+            self.pc = index
+        return True
+
+    def op_jumprc(self):
+        if(len(self.stack) < 2):
+            logging.warning("OP_JUMPRC: Not enough arguments")
+            return False
+
+        cond = self.stack.pop()
+        index = int(self.stack.pop())
+        if cond == '1':
+            new_index = pc.self + index
+            if new_index < 0 or new_index >= len(self.stack):
+                logging.warning("OP_JUMPRC: New program counter does not point in the stack")
+                return False
+            self.pc = new_index
+        return True
+
 
     def op_add(self):
         return self.math_operations(lambda first, second: second + first)
@@ -355,19 +445,26 @@ class ScriptInterpreter:
             # Check if item is data or opcode
             if (item.upper() in ScriptInterpreter.operations):
                 # Execute the operation
+                logging.warning(item + " is an opcode")
                 op = getattr(self, item.lower())
                 if not op():
                     return False
             else:
                 # Push data onto the stack
+                logging.warning(item + " is data")
                 typed_item = parse_data_item(item)
                 if typed_item is None:
+                    logging.warning(item + " could not be parsed")
                     return False
                 self.stack.append(typed_item)
             return True
 
         def execute(script: str):
-            for item in split_script(script):
+            program = split_script(script)
+            while self.pc < len(program):
+                item = program[self.pc] # Fetch the next item (given by the program counter)
+                logging.warning("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
+                self.pc = self.pc + 1
                 if not execute_item(item):
                     return False
             return True
