@@ -2,17 +2,18 @@ import json
 
 from collections import namedtuple
 from ..crypto import get_hasher
+from typing import Tuple # needed for the type hint "Tuple[bytes]"
+from binascii import hexlify, unhexlify
 
 class TransactionInput(namedtuple("TransactionInput", ["address", "value"])):
 
-    def __init__(self, address: 'bytes', value: int):
-        self.address = address
-        self.value = value
+    def __new__(self, address: bytes, value: int):
+        return super().__new__(self, address, value)
 
     def to_json_compatible(self):
         """ Returns a JSON-serializable representation of this object. """
         val = {}
-        val["address"] = self.address
+        val["address"] = hexlify(self.address).decode()
         val["value"] = self.value
         return val
 
@@ -22,21 +23,19 @@ class TransactionOutput(namedtuple("TransactionOutput", ["address", "value", "pa
     account's contract code
     :vartype params: List[str]
     """
-    def __init__(self, address: bytes, value: int, params: str):
-        self.address = address
-        self.value = value
-        self.params = params
+    def __new__(self, address: bytes, value: int, params: str = None):
+        return super().__new__(self, address, value, params)
 
     def to_json_compatible(self):
         """ Returns a JSON-serializable representation of this object. """
         val = {}
-        val["address"] = self.address
+        val["address"] = hexlify(self.address).decode()
         val["value"] = self.value
         val["params"] = self.params
         return val
 
 
-class TransactionData(namedtuple("TransactionData", ["inputs", "outputs", "fee", "params"])):
+class TransactionData(namedtuple("TransactionData", ["inputs", "outputs", "fee", "nonce"])):
     """
     This class contains all data that belongs to a transaction, except for the
     signature. This is to separate the data that needs to be signed from the
@@ -56,15 +55,21 @@ class TransactionData(namedtuple("TransactionData", ["inputs", "outputs", "fee",
     :ivar _hash: The data's hash, this is computed at construction and saved
     :vartype hash: bytes
     """
+    def compute_hash(self) -> bytes:
+        """ Computes the hash by just hashing the object's JSON representation """
+        h = get_hasher()
+        h.update(json.dumps(self.to_json_compatible()))
+        return h.digest()
 
-    def __init__(self, inputs: 'List[TransactionInput]', outputs: 'List[TransactionOutput]', fee: int, nonce: bytes):
+    def __new__(cls, inputs: 'List[TransactionInput]', outputs: 'List[TransactionOutput]', fee: int, nonce: bytes):
         if fee < 0:
             raise ValueError("Fee can't be negative")
         if len(nonce) != 32:
             raise ValueError('Nonce has to be 32 bytes')
-        if len(inputs) <= 0 or len(output) <= 0:
+        if len(inputs) <= 0 or len(outputs) <= 0:
             raise ValueError("Must have at least one input and one output")
 
+        val_sum = 0
         for input in inputs:
             val_sum += input.value
         for output in outputs:
@@ -72,35 +77,36 @@ class TransactionData(namedtuple("TransactionData", ["inputs", "outputs", "fee",
         if fee != val_sum:
             raise ValueError("Fee must be equal to the total difference of input and output values")
 
-        self.inputs = inputs
-        self.outputs = outputs
-        self.nonce = nonce
-        get_hash()
+        return super().__new__(cls, inputs, outputs, fee, nonce)
 
     def compute_hash(self) -> bytes:
         """ Computes the hash by just hashing the object's JSON representation """
-        if self._hash is None:
-            h = get_hasher()
-            h.update(json.dump(self.to_json_compatible()))
-            self._hash = h.digest()
-        return self._hash
+        h = get_hasher()
+        h.update(json.dumps(self.to_json_compatible()))
+        return h.digest()
 
     def to_json_compatible(self):
         """ Returns a JSON-serializable representation of this object. """
         val = {}
         val["inputs"] = []
         for input in self.inputs:
-            val.append(input.to_json_compatible())
+            val["inputs"].append(input.to_json_compatible())
         val["outputs"] = []
         for output in self.outputs:
-            val.append(output.to_json_compatible())
+            val["outputs"].append(output.to_json_compatible())
         val["fee"] = self.fee
-        val["nonce"] = self.nonce
+        val["nonce"] = hexlify(self.nonce).decode()
         return val
 
+    @property
+    def hash(self):
+        if not self.hasattr('_hash'):
+            self._hash = compute_hash()
+        return self._hash
 
 
-class Transaction(namedtuple("Transaction", ["tx_data", "signature"])):
+
+class Transaction(namedtuple("Transaction", ["tx_data", "signatures"])):
     """
     :ivar tx_data: See above, this is where the actual transaction data is stored
     :vartype tx_data: TransactionData
@@ -109,16 +115,18 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signature"])):
     :vartype signatures: List[bytes]
 
     """
-    def __init__(self, tx_data: TransactionData):
-        self.tx_data = tx_data
-        # signature 0 means 'not signed yet', so init signatures with all zeroes
-        self.signatures = [bytes(1)] * len(self.tx_data.inputs)
+
+    def __new__(self, tx_data: TransactionData, signatures: Tuple[bytes]=None):
+        if signatures is None:
+            signatures = (bytes(32),) * len(tx_data.inputs)
+        return super().__new__(self, tx_data, signatures)
 
     def sign(self, index, private_key):
         """ Signs the transaction input at the given index using the given key """
         if index < 0 or index >= len(self.signatures):
             raise InputError("Invalid input index: " + index + ". Either negative or too large")
-        self.signatures[index] = signing_key.sign(tx_data.get_hash())
+        new_sig = signing_key.sign(tx_data.get_hash())
+        return Transaction(self, tx_data, signatures[0:index:] + (new_sig,) + signatures[index +1:len(signatures):])
 
     def get_hash(self):
         """ Computes the hash by just hasing the object's JSON representation
@@ -130,8 +138,8 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signature"])):
     def to_json_compatible(self):
         """ Returns a JSON-serializable representation of this object. """
         val = {}
-        val["tx_data"] = input.to_json_compatible()
+        val["tx_data"] = self.tx_data.to_json_compatible()
         val["signatures"] = []
         for sig in self.signatures:
-            val["signatures"].append(sig)
+            val["signatures"].append(hexlify(sig).decode())
         return val
