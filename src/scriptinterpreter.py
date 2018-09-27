@@ -42,10 +42,10 @@ class ScriptInterpreter:
         'OP_CHECKSIG',
         'OP_RETURN',
         'OP_CHECKLOCKTIME',
-        
+
         'OP_SWAP',
         'OP_DUP',
-        
+
         'OP_PUSHABS',
         'OP_POPABS',
         'OP_PUSHFP',
@@ -53,12 +53,12 @@ class ScriptInterpreter:
         'OP_PUSHSP',
         'OP_POPSP',
         'OP_PUSHPC',
-        
+
         'OP_JUMP',
         'OP_JUMPR',
         'OP_JUMPC',
         'OP_JUMPRC',
-        
+
         'OP_ADD',
         'OP_SUB',
         'OP_MUL',
@@ -73,14 +73,15 @@ class ScriptInterpreter:
         'OP_LE',
         'OP_GE',
         'OP_LT',
-        'OP_GT'
+        'OP_GT',
+        'OP_PUSHR'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
         self.output_script = output_script
         self.input_script = input_script
         self.tx_hash = tx_hash
-        
+
         self.stack = []
         self.program = []
 
@@ -239,7 +240,7 @@ class ScriptInterpreter:
         if index < 0 or index >= len(self.stack):
             logging.warning("OP_POPABS: Argument is not an index in the stack")
             return False
-        
+
         elem = self.stack.pop()
         if elem is None:
             logging.warning("OP_POPABS: Stack has only one element")
@@ -400,7 +401,13 @@ class ScriptInterpreter:
 
     def op_gt(self):
         return self.math_operations(lambda first, second: 1 if second > first else 0)
-    
+
+    def op_pushr(self):
+        self.op_pushfp()
+        self.op_add()
+        self.op_pushabs()
+
+
     def math_operations(self, op):
         if (len(self.stack) < 2):
             logging.warning("binary math operation: Not enough arguments")
@@ -433,11 +440,13 @@ class ScriptInterpreter:
                 if not script:
                     break
                 if script[0] in [ '"', '\'' ]:
-                    first = min(script.find('"'), script.find('\''))
+                    first_quote = script[0]
+                    first = script[1:].find(first_quote)
                     if first == -1:
                         logging.warning("[!] Error: Invalid Tx: Missing closing quote in script")
                         return False
-                    result.append(script[:first+1])  # Include the quote
+                    result.append(script[:first+2])  # Include the quote
+                    first += 1
                 else:
                     first = next(i for i, chr in enumerate(script) if chr in [ ' ', '\t', '\n' ])
                     result.append(script[:first])  # Don't include the whitespace
