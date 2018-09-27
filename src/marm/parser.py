@@ -1,4 +1,8 @@
-import marm.ast as ast
+<<<<<<< 9c5887573d407d8465aa25ade16d1219aa211410
+import src.marm.ast as ast
+=======
+import ast as ast
+>>>>>>> kinda fixed imports i guess?
 import ply.yacc as yacc
 
 precedence = (
@@ -225,32 +229,42 @@ class EofError(ParserError):
 
 class UnexpectedTokenError(ParserError):
     def __init__(self, got):
-        from marm.lexer import column_number
+<<<<<<< 9c5887573d407d8465aa25ade16d1219aa211410
+        from src.marm.lexer import column_number
+=======
+        from .lexer import column_number
+>>>>>>> kinda fixed imports i guess?
         super().__init__("Unexpected token '{}' ({}) at Line {}, Column {}"
                          .format(got.value, got.type,
                                  got.lineno, column_number(got)))
 
 
 def p_error(t):
+    from src.marm.lexer import column_number
     if t is None:
         raise EofError()
     else:
         # Read ahead looking for a closing '}/;/)'
         tokseq = [t.type]
         while True:
+            from src.marm.lexer import column_number
             tok = yacc.token()             # Get the next token
             if not tok or tok.type == 'SEMI' or tok.type =='END' or tok.type=='RBRAC': 
                 if tok is None:
                     print("{}:{}.{}: syntax error: unexpected token sequence {}".format(_____secret_filename,t.lexer.lineno,column_number(t),tokseq))
-                from marm.lexer import column_number
-                print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(_____secret_filename,t.lexer.lineno,column_number(t),tok.lexer.lineno,column_number(tok),tokseq))
+                else:
+                    print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(_____secret_filename,t.lexer.lineno,column_number(t),tok.lexer.lineno,column_number(tok),tokseq))
                 break
             tokseq.append(tok.type)
         yacc.restart()
 
 
-from marm.lexer import lexer
-from marm.lexer import tokens
+<<<<<<< 9c5887573d407d8465aa25ade16d1219aa211410
+from src.marm.lexer import lexer
+from src.marm.lexer import tokens
+=======
+from src.marm.lexer import lexer, tokens
+>>>>>>> kinda fixed imports i guess?
 # Generate parser
 yacc = yacc.yacc()
 _____secret_filename='inmemory'
