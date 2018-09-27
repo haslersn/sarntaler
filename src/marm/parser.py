@@ -1,6 +1,7 @@
 
 precedence=(
      ('right','ASSIGN'),
+     ('right','HASH'),
      ('right','ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP', 'MULOP', 'SUBOP')
 )
 
@@ -94,7 +95,7 @@ def p_lhsexpression(p):
 def p_boolexCOMPARE(p):
     '''boolex : expr EQ expr
               | expr NEQ expr
-              | expr lEQ expr
+              | expr LEQ expr
               | expr GEQ expr
               | expr LT expr
               | expr GT expr'''
