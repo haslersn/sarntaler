@@ -1,4 +1,4 @@
-<<<<<<< 9c5887573d407d8465aa25ade16d1219aa211410
+import src.marm.ast as ast
 import src.marm.ast as ast
 =======
 import ast as ast
@@ -229,7 +229,7 @@ class EofError(ParserError):
 
 class UnexpectedTokenError(ParserError):
     def __init__(self, got):
-<<<<<<< 9c5887573d407d8465aa25ade16d1219aa211410
+        from src.marm.lexer import column_number
         from src.marm.lexer import column_number
 =======
         from .lexer import column_number
