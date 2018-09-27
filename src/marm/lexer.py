@@ -1,8 +1,6 @@
 # Token types
 tokens = ( 'IDENT',
-           'NUMBER', 
-           'LPAR',
-           'RPAR',
+           'NUMBER',
            'BEGIN',
            'END',
            'SEMI',
@@ -10,8 +8,11 @@ tokens = ( 'IDENT',
            'ADDRESS',
            'INT',
            'RETURN',
-           'COMMENT'
-           )
+           'COMMENT',
+           'ASSIGN',
+           'ADDOP', 'SUBOP', 'MULOP', 'DIVOP',
+           'NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
+           'LPAR', 'RPAR')
 
 
 def t_COMMENT(t):
@@ -24,6 +25,30 @@ def t_NUMBER(t):
     r'\d+'
     t.value = int(t.value)
     return t
+
+# Assign
+t_ASSIGN = r'='
+
+# Numeric operations
+t_ADDOP = r'+'
+t_SUBOP = r'-'
+t_MULOP = r'*'
+t_DIVOP = r'/'
+
+# Bool operations
+t_OR = r'||'
+t_AND = r'&&'
+t_EQ = r'=='
+t_NEQ = r'!='
+t_GT = r'>'
+t_LT = r'<'
+t_GEQ = r'>='
+t_LEQ = r'<='
+t_NOT = r'!'
+
+# Parentheses
+t_LPAR = r'('
+t_RPAR = r')'
 
 # Ignore whitespace
 t_ignore = " \t"
