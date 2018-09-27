@@ -51,5 +51,6 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     #TODO: actual parser test
-    result = yacc.parse(args.input.read())
+    from lexer import lexer
+    result = yacc.parse(args.input.read(), lexer=lexer)
     args.output.write(result)
