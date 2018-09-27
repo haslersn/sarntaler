@@ -18,7 +18,7 @@ class ConstExpr(Expr):
         self.value = value
 
     def __str__(self):
-        return "[ConstExpr: value=" + self.value + "]"
+        return "[ConstExpr: value=" + str(self.value) + "]"
 
 
 class BinExpr(Expr):
@@ -30,7 +30,7 @@ class BinExpr(Expr):
         self.right = right
 
     def __str__(self):
-        return "[BinExpr: op=" + self.op + ", left=" + self.left + ", right=" + self.right + "]"
+        return "[BinExpr: op=" + str(self.op) + ", left=" + str(self.left) + ", right=" + str(self.right) + "]"
 
 
 class UnaryExpr(Expr):
@@ -41,7 +41,7 @@ class UnaryExpr(Expr):
         self.operand = operand
 
     def __str__(self):
-        return "[UnaryExpr: op=" + self.op + ", operand=" + self.operand + "]"
+        return "[UnaryExpr: op=" + str(self.op) + ", operand=" + str(self.operand) + "]"
 
 
 class LHSExpr(Expr):
@@ -51,7 +51,7 @@ class LHSExpr(Expr):
         self.lhs = lhs
 
     def __str__(self):
-        return "[LHSExpr: lhs=" + self.lhs + "]"
+        return "[LHSExpr: lhs=" + str(self.lhs) + "]"
 
 
 class StructExpr(Expr):
@@ -62,7 +62,7 @@ class StructExpr(Expr):
         self.ident = ident
 
     def __str__(self):
-        return "[StructExpr: expr=" + self.expr + ", ident=" + self.ident + "]"
+        return "[StructExpr: expr=" + str(self.expr) + ", ident=" + str(self.ident) + "]"
 
 
 class LHS(Node):
@@ -71,7 +71,7 @@ class LHS(Node):
         self.ident = ident
 
     def __str__(self):
-        return "[LHS: ident=" + self.ident + "]"
+        return "[LHS: ident=" + str(self.ident) + "]"
 
 
 class Typename(Node):
@@ -80,7 +80,7 @@ class Typename(Node):
         self.typee = typee
 
     def __str__(self):
-        return "[Typename: typee=" + self.typee + "]"
+        return "[Typename: typee=" + str(self.typee) + "]"
 
 
 class Translationunit(Node):
@@ -89,7 +89,7 @@ class Translationunit(Node):
         self.proc = procdecl
 
     def __str__(self):
-        return "[Translationunit: procdecl=" + self.proc + "]"
+        return "[Translationunit: procdecl=" + str(self.proc) + "]"
 
 
 class Paramdecl(Node):
@@ -99,7 +99,7 @@ class Paramdecl(Node):
         self.name = name
 
     def __str__(self):
-        return "[Paramdecl: param_type=" + self.param_type + ", name=" + self.name + "]"
+        return "[Paramdecl: param_type=" + str(self.param_type) + ", name=" + str(self.name) + "]"
 
 
 class Procdecl(Node):
@@ -111,8 +111,8 @@ class Procdecl(Node):
         self.body = body
 
     def __str__(self):
-        return "[Procdecl: return_type=" + self.return_type + ", name=" + self.name + ", params=" +\
-               self.params + ", body=" + self.body + "]"
+        return "[Procdecl: return_type=" + str(self.return_type) + ", name=" + str(self.name) + ", params=" +\
+               str(self.params) + ", body=" + str(self.body) + "]"
 
 
 class Statement(Node):
@@ -133,7 +133,7 @@ class StatementDecl(Statement):
         self.decllist = decllist
 
     def __str__(self):
-        return "[StatementDecl: typee=" + self.typee + ", decllist=" + self.decllist + "]"
+        return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + str(self.decllist) + "]"
 
 
 class StatementReturn(Statement):
@@ -144,7 +144,7 @@ class StatementReturn(Statement):
         pass
 
     def __str__(self):
-        return "[StatementReturn: return_value=" + self.return_value + "]"
+        return "[StatementReturn: return_value=" + str(self.return_value) + "]"
 
 
 class StatementWhile(Statement):
@@ -155,7 +155,7 @@ class StatementWhile(Statement):
         self.statement = statement
 
     def __str__(self):
-        return "[StatementWhile: boolex=" + self.boolex + ", statement=" + self.statement + "]"
+        return "[StatementWhile: boolex=" + str(self.boolex) + ", statement=" + str(self.statement) + "]"
 
 
 class StatementIf(Statement):
