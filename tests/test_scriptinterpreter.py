@@ -114,6 +114,26 @@ def test_xor():
     emptystack_noninteger_test('OP_XOR')
 
 
+def test_equ():
+    script_finalstack_test("3 4 5 OP_EQU 1", [3, 0])
+    script_finalstack_test("3 4 4 OP_EQU 1", [3, 1])
+    emptystack_test('OP_EQU')
+
+
+def test_le():
+    script_finalstack_test("3 5 1 OP_LE 1", [3, 0])
+    script_finalstack_test("3 5 6 OP_LE 1", [3, 1])
+    script_finalstack_test("3 5 5 OP_LE 1", [3, 1])
+    emptystack_noninteger_test('OP_LE')
+
+
+def test_ge():
+    script_finalstack_test("3 5 1 OP_GE 1", [3, 1])
+    script_finalstack_test("3 5 6 OP_GE 1", [3, 0])
+    script_finalstack_test("3 5 5 OP_GE 1", [3, 1])
+    emptystack_noninteger_test('OP_GE')
+
+
 def script_finalstack_test(script: str, finalstack: list):
     si = ScriptInterpreter(script, "", None)
     si.execute_script()
@@ -121,9 +141,13 @@ def script_finalstack_test(script: str, finalstack: list):
 
 
 def emptystack_noninteger_test(op: str):
-    si_emptystack = ScriptInterpreter(op, "", None)
-    assert not si_emptystack.execute_script()
+    emptystack_test(op)
     si_noninteger = ScriptInterpreter("a b " + op + " 1", "", None)
     assert not si_noninteger.execute_script()
+
+
+def emptystack_test(op: str):
+    si_emptystack = ScriptInterpreter(op, "", None)
+    assert not si_emptystack.execute_script()
 
 # TODO SHA256 test
