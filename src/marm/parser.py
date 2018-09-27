@@ -239,9 +239,11 @@ def p_error(t):
         tokseq = [t.type]
         while True:
             tok = yacc.token()             # Get the next token
-            if not tok or tok.type == 'SEMI' or tok.type == 'END' or tok.type == 'RBRAC':
+            if not tok or tok.type == 'SEMI' or tok.type =='END' or tok.type=='RBRAC': 
+                if tok is None:
+                    print("{}:{}.{}: syntax error: unexpected token sequence {}".format(_____secret_filename,t.lexer.lineno,column_number(t),tokseq))
                 from .lexer import column_number
-                print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(args.input.name, t.lexer.lineno, column_number(t), tok.lexer.lineno, column_number(tok), tokseq))
+                print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(_____secret_filename,t.lexer.lineno,column_number(t),tok.lexer.lineno,column_number(tok),tokseq))
                 break
             tokseq.append(tok.type)
         yacc.restart()
@@ -249,12 +251,13 @@ def p_error(t):
 
 # Generate parser
 yacc = yacc.yacc()
+_____secret_filename='inmemory'
 
 
 def marmparser(filename):
-    from .lexer import lexer
-    return yacc.parse(filename, lexer=lexer)
-
+    from lexer import lexer
+    _____secret_filename=filename
+    return yacc.parse(filename,lexer=lexer)
 
 # Main for Debugging/Testing
 if __name__ == "__main__":
