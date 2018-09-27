@@ -225,10 +225,9 @@ class EofError(ParserError):
 
 class UnexpectedTokenError(ParserError):
     def __init__(self, got):
-        from .lexer import column_number
-        super().__init__("Unexpected token '{}' ({}) at Line {}, Column {}"
-                         .format(got.value, got.type,
-                                 got.lineno, column_number(got)))
+        from src.marm.lexer import column_number
+        super().__init__("{}:{}.{}: syntax error: unexpected token {}"
+                                        .format(yacc.filename,t.lexer.lineno,column_number(t),t))
 
 
 def p_error(t):
@@ -271,6 +270,9 @@ if __name__ == "__main__":
     parser.add_argument('--output', type=argparse.FileType('w'), default=sys.stdout,
                         help="Output file. Defaults to stdout")
     args = parser.parse_args()
-
-    result = marmparser(args.input.name,args.input.read())
-    args.output.write(str(result))
+    try:
+        result = marmparser(args.input.name,args.input.read())
+    except ParserError as err:
+        print(err)
+    else:
+        args.output.write(str(result))
