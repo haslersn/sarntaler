@@ -46,7 +46,7 @@ def p_typename(p):
     | INT'''
 
 def p_statementRETURN(p):
-    'statement : RETURN SEMI'
+    'statement : RETURN expr SEMI'
 
 def p_statementLOOPS(p):
     '''statement : WHILE LPAR boolex RPAR statement '''
