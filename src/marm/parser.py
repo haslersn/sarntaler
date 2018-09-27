@@ -85,4 +85,4 @@ if __name__=="__main__":
     #TODO: actual parser test
     from lexer import lexer
     result = yacc.parse(args.input.read(), lexer=lexer)
-    args.output.write(result)
+    args.output.write(str(result))
