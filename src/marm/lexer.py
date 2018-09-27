@@ -3,7 +3,8 @@ keywords = {
     'if' : 'IF',
     'while' : 'WHILE',
     'break' : 'BREAK',
-    'continue' : 'CONTINUE'
+    'continue' : 'CONTINUE',
+    'else' : 'ELSE'
 }
 
 # Token types
@@ -18,6 +19,7 @@ tokens = ['IDENT',
            'RETURN',
            'COMMENT',
            'ASSIGN',
+           'INTCONST',
            'ADDOP', 'SUBOP', 'MULOP', 'DIVOP',
            'NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
            'LPAR', 'RPAR'] + list(keywords.values())
