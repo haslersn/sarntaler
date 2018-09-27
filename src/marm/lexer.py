@@ -6,7 +6,10 @@ keywords = {
     'continue' : 'CONTINUE',
     'else' : 'ELSE',
     'return' : 'RETURN',
-    'int' : 'INT'
+    'int' : 'INT',
+    #   'void' : 'VOID',
+    #   'goto' : 'GOTO',
+    #   'default' : 'DEFAULT',
 }
 
 # Token types
@@ -20,7 +23,7 @@ tokens = ['IDENT',
            'ASSIGN',
            'INTCONST',
            'ADDOP', 'SUBOP', 'MULOP', 'DIVOP',
-           'HASH','NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
+           'HASH', 'DOT', 'NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
            'LPAR', 'RPAR'] + list(keywords.values())
 
 
@@ -34,7 +37,6 @@ def t_IDENT(t):
     t.type = keywords.get(t.value, 'IDENT')
     return t
 
-
 def t_INTCONST(t):
     r'\d+'
     t.value = int(t.value)
@@ -47,7 +49,7 @@ def t_HASH(t):
 
 # DOT
 def t_DOT(t):
-    r'.'
+    r'\.'
     return t
 
 # BEGIN and END
