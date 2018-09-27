@@ -210,3 +210,12 @@ def test_gcd_script():
     si.execute_script()
     print("Stack after gcd script:",si.stack)
     assert si.stack[0] == gcd(a,b)
+
+def test_call_test():
+    #please use -s to debug, should add 1 onto stack
+    f = open("./src/labvm/calltest.labvm","r")
+    fstr = f.read()
+    f.close()
+    si = ScriptInterpreter(fstr, "", None)
+    si.execute_script()
+
