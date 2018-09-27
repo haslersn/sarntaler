@@ -32,7 +32,7 @@ Example Program:
 	op_add
 	"hallo"
 	0x1111111
-	OP_ADD
+	OP_ADD`
 
 ## Instructions
 remark: For the highest element on the stack **before the execution** s_1, for the second highest s_2, and so on:
@@ -71,6 +71,7 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_SWAP | | Swaps s_1 and s_2|
 | OP_DUP |- | pushes s_1 |
 | OP_PUSHABS |- | consumes the highest stack cell. Let n be its value. It pushes the n-th cell of the stack. The lowest stack cell has index 0, the next one 1 and so on. |
+| OP_POPABS  |- | consumes the two highest stack cells. Stores s_2 at the absolute stack index s_1 |
 | OP_PUSHFP |- | pushes the FramePointer |
 | OP_PUSHSP |- | pushes the StackPointer |
 | OP_POPFP |- | pops into the FramePointer |
