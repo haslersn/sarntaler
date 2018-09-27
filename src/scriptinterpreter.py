@@ -57,7 +57,7 @@ class ScriptInterpreter:
         'OP_POPSP',
         'OP_PUSHPC',
         'OP_POPVOID',
-        'OP_PUSHR'
+        'OP_PUSHR',
 
         'OP_JUMP',
         'OP_JUMPR',
@@ -418,19 +418,13 @@ class ScriptInterpreter:
         return self.math_operations(lambda first, second: 1 if second > first else 0)
 
     def op_pushr(self):
-        self.op_pushfp()
-        self.op_add()
-        self.op_pushabs()
+        return self.op_pushfp() and self.op_add() and self.op_pushabs()
 
     def op_popr(self):
-        self.op_pushfp()
-        self.op_add()
-        self.op_popabs()
+        return self.op_pushfp() and self.op_add() and self.op_popabs()
 
     def op_incfp(self):
-        self.op_pushfp()
-        self.op_add()
-        self.op_popfp()
+        return self.op_pushfp() and self.op_add() and self.op_popfp()
 
     def op_call(self):
         if not self.stack:

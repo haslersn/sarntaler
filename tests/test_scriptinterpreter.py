@@ -213,7 +213,7 @@ def emptystack_test(op: str):
 
 
 # TODO SHA256 test
-from math import gcd
+from math import gcd, factorial
 def test_gcd_script():
     a = 324432
     b = 2345223
@@ -232,5 +232,16 @@ def test_call_test():
     fstr = f.read()
     f.close()
     si = ScriptInterpreter(fstr, "", None)
-    si.execute_script()
+    assert si.execute_script()
+
+def test_factorial():
+    facoperand = 30
+    f = open("./src/labvm/factorial.labvm", "r")
+    fstr = f.read()
+    f.close()
+    fstr = fstr.replace('FACOPERAND', str(facoperand))
+    fstr = fstr.replace('FACRESULT', str(factorial(facoperand)))
+    si = ScriptInterpreter(fstr, "", None)
+    assert si.execute_script()
+
 
