@@ -32,9 +32,7 @@ class ScriptInterpreter:
             OP_CHECKSIG
             OP_RETURN
 
-
         Locktime:
-
             OP_CHECKLOCKTIME
 
         Stack:
@@ -42,10 +40,16 @@ class ScriptInterpreter:
             OP_DUP
 
         Control Flow:
+            OP_JUMP
+            OP_JUMPR
+            OP_JUMPC
+            OP_JUMPRC
             OP_PUSHABS
             OP_PUSHFP
             OP_POPFP
-
+            OP_PUSHSP
+            OP_POPSP
+            OP_PUSHPC
     """
     operations = {
         'OP_SHA256',
@@ -54,9 +58,16 @@ class ScriptInterpreter:
         'OP_CHECKLOCKTIME',
         'OP_SWAP',
         'OP_DUP',
+        'OP_PUSHABS',
         'OP_PUSHFP',
         'OP_POPFP',
-        'OP_PUSHABS'
+        'OP_PUSHSP',
+        'OP_POPSP',
+        'OP_PUSHPC',
+        'OP_JUMP',
+        'OP_JUMPR',
+        'OP_JUMPC',
+        'OP_JUMPRC'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -64,7 +75,10 @@ class ScriptInterpreter:
         self.input_script = input_script
         self.tx_hash = tx_hash
         self.stack = []
+        
         self.framepointer = 0  # maybe initialize with -1
+        self.stackpointer = 0  # maybe initialize with -1
+        self.pc = 0            # maybe initialize with -1
 
 
     def to_string(self):
@@ -77,7 +91,7 @@ class ScriptInterpreter:
         #The input is hashed using SHA-256.
 
         if not self.stack:
-            logging.warning("Stack is empty")
+            logging.warning("OP_SHA256: Stack is empty")
             return False
 
         sha256 = hashlib.sha256()
@@ -93,8 +107,7 @@ class ScriptInterpreter:
         #If it is, 1 is returned, 0 otherwise.
 
         if(len(self.stack) < 2):
-            logging.warning("Not enough arguments")
-            self.stack.append(str(0))
+            logging.warning("OP_CHECKSIG: Not enough arguments")
             return False
 
         pubKey = Key.from_json_compatible(self.stack.pop())
@@ -105,8 +118,7 @@ class ScriptInterpreter:
             self.stack.append(str(1))
             return True
 
-        logging.warning("Signature not verified")
-        self.stack.append(str(0))
+        logging.warning("OP_CHECKSIG: Signature not verified")
         return False
 
 
@@ -120,8 +132,7 @@ class ScriptInterpreter:
         than one OP_RETURN output or an OP_RETURN output with more than one pushdata op. """
 
         #DONE
-        self.stack.append(str(0))
-        logging.warning('Transaction can not be spent!')
+        logging.warning('OP_RETURN: Transaction can not be spent!')
         return False
 
     def op_checklocktime(self):
@@ -139,47 +150,41 @@ class ScriptInterpreter:
             timestamp = datetime.fromtimestamp(temp)
         except TypeError:
             logging.error("A timestamp needs to be supplied after the OP_CHECKLOCKTIME operation!")
-            self.stack.append(str(0))
             return False
 
         #TODO we need to make sure that the timezones are being taken care of
         if(timestamp > datetime.utcnow()):
-            print("You need to wait at least " + str(timestamp - datetime.utcnow()) + " to spend this Tx")
+            print("OP_CHECKLOCKTIME: You need to wait at least " + str(timestamp - datetime.utcnow()) + " to spend this Tx")
             error = 3
 
         if(error):
             #errno = 1 Stack is empty
             if(error == 1):
-                logging.warning('Stack is empty!')
-                self.stack.append(str(0))
+                logging.warning('OP_CHECKLOCKTIME: Stack is empty!')
                 return False
 
             #errno = 2 Top-Stack-Value < 0
             if(error == 2):
-                logging.warning('Top-Stack-Value < 0')
-                self.stack.append(str(0))
+                logging.warning('OP_CHECKLOCKTIME: Top-Stack-Value < 0')
                 return False
 
             #errno = 3 top stack item is greater than the transactions
             if(error == 3):
                 #logging.warning('you need to wait more to unlock the funds!')
-                self.stack.append(str(0))
                 return False
 
         return True
 
     def op_dup(self):
         if not self.stack:
-            logging.warning("Stack is empty")
+            logging.warning("OP_DUP: Stack is empty")
             return False
         self.stack.append(self.stack[-1])
         return True
 
-
     def op_swap(self):
         if (len(self.stack) < 2):
-            logging.warning("Not enough arguments")
-            self.stack.append(str(0))
+            logging.warning("OP_SWAP: Not enough arguments")
             return False
 
         old_first = self.stack.pop()
@@ -191,13 +196,18 @@ class ScriptInterpreter:
 
     def op_pushabs(self):
         if not self.stack:
-            logging.warning("Stack is empty")
+            logging.warning("OP_PUSHABS: Stack is empty")
             return False
+        
         index = int(self.stack.pop())
         if index < 0 or index >= len(self.stack):
-            logging.warning("Argument of PUSHABS is not an index in the stack")
+            logging.warning("OP_PUSHABS: Argument is not an index in the stack")
             return False
         self.stack.append(self.stack[index])
+        return True
+
+    def op_pushpc(self):
+        self.stack.append(self.pc)
         return True
 
     def op_pushfp(self):
@@ -206,31 +216,102 @@ class ScriptInterpreter:
 
     def op_popfp(self):
         if not self.stack:
-            logging.warning("Stack is empty")
+            logging.warning("OP_POPFP: Stack is empty")
             return False
 
         self.framepointer = self.stack.pop()
         return True
 
+    def op_pushsp(self):
+        self.stack.append(self.stackpointer)
+        return True
 
+    def op_popsp(self):
+        if not self.stack:
+            logging.warning("OP_POPSP: Stack is empty")
+            return False
 
+        self.stackpointer = self.stack.pop()
+        return True
+
+    def op_jump(self):
+        if not self.stack:
+            logging.warning("OP_JUMP: Stack is empty")
+            return False
+
+        index = int(self.stack.pop())
+        if index < 0 or index >= len(self.stack):
+            logging.warning("OP_JUMP: Argument is not an index in the stack")
+            return False
+        self.pc = self.stack[index]
+        return True
+
+    def op_jumpr(self):
+        if not self.stack:
+            logging.warning("OP_JUMPR: Stack is empty")
+            return False
+
+        index = int(self.stack.pop())
+        new_index = self.pc + index
+        if new_index < 0 or new_index >= len(self.stack):
+            logging.warning("OP_JUMPR: New program counter does not point in the stack")
+            return False
+        self.pc = new_index
+        return True
+
+    def op_jumpc(self):
+        if(len(self.stack) < 2):
+            logging.warning("OP_JUMPC: Not enough arguments")
+            return False
+
+        cond = self.stack.pop()
+        index = int(self.stack.pop())
+        if cond == '1':
+            if index < 0 or index >= len(self.stack):
+                logging.warning("OP_JUMPC: New program counter does not point in the stack")
+                return False
+            self.pc = index
+        return True
+    
+    def op_jumprc(self):
+        if(len(self.stack) < 2):
+            logging.warning("OP_JUMPRC: Not enough arguments")
+            return False
+
+        cond = self.stack.pop()
+        index = int(self.stack.pop())
+        if cond == '1':
+            new_index = pc.self + index
+            if new_index < 0 or new_index >= len(self.stack):
+                logging.warning("OP_JUMPRC: New program counter does not point in the stack")
+                return False
+            self.pc = new_index
+        return True
+
+    
     def execute_script(self):
         """
             Run the script with the input and output scripts
         """
         script = self.input_script.split() + self.output_script.split()
 
-        while script:
+        while self.pc < len(script):
 
-            next_item = script.pop(0) # Fetch next item (start reading from beginning of script)
+            next_item = script[self.pc] # Fetch the next item (given by the program counter)
+
+            self.pc = self.pc + 1
 
             # Check if item is data or opcode. If data, push onto stack.
             if (next_item not in ScriptInterpreter.operations):
+                logging.warning("pushing " + next_item + " on the stack")
                 self.stack.append(next_item)  # if it's data we add it to the stack
             else:
                 op = getattr(self, next_item.lower())  # Proper operation to be executed
-                op()  # execute the command!
-
+                res = op()  # execute the command!
+                if res == False:
+                    self.stack.append(0)
+                    logging.warning("[!] Error: Invalid Tx. An operation failed.")
+                    return False
 
         if (len(self.stack)==1 and self.stack[-1] == '1'):
             return True
