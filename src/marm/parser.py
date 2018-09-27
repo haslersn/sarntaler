@@ -1,6 +1,7 @@
 
 precedence=(
      ('right','ASSIGN'),
+     ('right','HASH'),
      ('right','ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP', 'MULOP', 'SUBOP')
 )
 
