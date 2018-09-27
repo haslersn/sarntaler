@@ -46,7 +46,7 @@ t_MULOP = r'\*'
 t_DIVOP = r'/'
 
 # Bool operations
-t_OR = r'||'
+t_OR = r'\|\|'
 t_AND = r'&&'
 t_EQ = r'=='
 t_NEQ = r'!='
