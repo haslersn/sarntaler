@@ -76,4 +76,11 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_POPSP |- | pops into the StackPointer |
 | OP_PUSHPC | - | pushes the Program Counter |
 
+# Macros
+Maybe we will introduce macros. Possible ideas:
 
+`OP_LT (Less than) is equal to OP_GE,OP_NOT`
+
+`OP_GT (greater than) is equal to OP_LE,OP_NOT`
+
+`OP_PUSHR (Push relative to FP) is equal to OP_PUSHFP,OP_ADD,OP_PUSHABS`
