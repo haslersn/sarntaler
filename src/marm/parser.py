@@ -123,6 +123,7 @@ def p_statementDECL(p):
 
 def p_expr(p):
     'expr : INTCONST'
+    p[0] = ConstExpr(p[1])
 
 
 def p_exprBINARYEXPRESSIONS(p):
@@ -131,15 +132,17 @@ def p_exprBINARYEXPRESSIONS(p):
              | expr ADDOP expr
              | expr DIVOP expr
              | expr SUBOP expr '''
+     p[0] = BoolexBinary(p[2],p[1],p[3])
 
 
 def p_exprUNARYEXPRESSIONS(p):
     '''expr : HASH expr
             | SUBOP expr '''
-
+    p[0] = UnaryExpr(p[1],p[2])
 
 def p_exprLHS(p):
     'expr : lhsexpression'
+    p[0] = p[1]
 
 
 def p_exprNESTED(p):
@@ -149,10 +152,12 @@ def p_exprNESTED(p):
 
 def p_exprSTRUCTACCESS(p):
     'expr : expr DOT IDENT'
+    p[0] = StructExpr(p[1],p[3])
 
 
 def p_lhsexpression(p):
     'lhsexpression : IDENT'
+    p[0] = LHS(p[1])
 
 
 def p_boolexCOMPARE(p):
