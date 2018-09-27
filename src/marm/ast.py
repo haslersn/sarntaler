@@ -1,5 +1,10 @@
 class Node:
-    pass
+    def liststr(self, param):
+        rv = "["
+        for p in param[:len(param)-1]:
+            rv += str(p) + ", "
+        rv += str(param[len(param)-1]) + "]"
+        return rv
 
 
 class Expr(Node):
