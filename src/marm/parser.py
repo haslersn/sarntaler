@@ -179,6 +179,7 @@ def p_boolexCOMPARE(p):
               | expr GT expr'''
     p[0] = ast.BoolexCMP(p[2], p[1], p[3])
 
+
 def p_boolexBINARY(p):
     '''boolex : boolex OR boolex
               | boolex AND boolex'''
@@ -193,6 +194,7 @@ def p_boolexUNARY(p):
 def p_boolexPAR(p):
     'boolex : LPAR boolex RPAR'
     p[0] = p[2]
+
 
 def p_declarator(p):
     'decl : IDENT'
