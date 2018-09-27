@@ -27,12 +27,12 @@ For Instructions, just write the name of the instruction. The interpreter is cas
 
 Example Program:
 
-	`123
+	123
 	0x41324
 	op_add
 	"hallo"
 	0x1111111
-	OP_ADD`
+	OP_ADD
 
 ## Instructions
 remark: For the highest element on the stack **before the execution** s_1, for the second highest s_2, and so on:
@@ -87,50 +87,50 @@ Maybe we will introduce macros. Possible ideas:
 
 # Examples
 
-`
-0
-op_pushabs
-1
-op_pushabs
-op_equ
-26
-op_jumprc
-0
-op_pushabs
-1
-op_pushabs
-op_le
-10
-op_jumprc
-0
-op_pushabs
-1
-op_pushabs
-op_sub
-0
-op_popabs
-8
-op_jumpr
-1
-op_pushabs
-0
-op_pushabs
-op_sub
-1
-op_popabs
--31
-op_jumpr
-`
 
-*Explanation:* This Code computes the gcd of two numbers already in the first two stack cells. It is based on the Euclid algorithm:
+	0
+	op_pushabs
+	1
+	op_pushabs
+	op_equ
+	26
+	op_jumprc
+	0
+	op_pushabs
+	1
+	op_pushabs
+	op_le
+	10
+	op_jumprc
+	0
+	op_pushabs
+	1
+	op_pushabs
+	op_sub
+	0
+	op_popabs
+	8
+	op_jumpr
+	1
+	op_pushabs
+	0
+	op_pushabs
+	op_sub
+	1
+	op_popabs
+	-31
+	op_jumpr
 
-`bool gcd(int a, int b) {
-    while(a != b) {
-        if(a > b) {
-            a = a - b;
-        } else {
-            b = b - a;
-        }
-    }
-    return a;
-}`
+
+*Explanation:* This Code computes the gcd of two numbers already in the first two stack cells. It is based on the Euclid's algorithm:
+
+	bool gcd(int a, int b) {
+	    while(a != b) {
+	        if(a > b) {
+	            a = a - b;
+	        } else {
+	            b = b - a;
+	        }
+	    }
+	    return a;
+	}
