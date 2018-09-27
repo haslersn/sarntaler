@@ -112,3 +112,31 @@ def mpt_get(root: MerklePatriciaTrie, encoded_path: bytes) -> bytes:
 
 def mpt_contains(root: MerklePatriciaTrie, encoded_path: bytes) -> bool:
     return mpt_get(root, encoded_path) is not None
+
+def _mpt_hashes_stack(root: MerklePatriciaTrie, encoded_path: bytes, deepness: int) -> tuple:
+    if root is None:
+        return None
+    if deepness == 64:
+        _mpt_check_is_leaf(root)
+        return () # empty tuple
+    child_index = _mpt_child_index(encoded_path, deepness)
+    child = root.children[child_index]
+    intermediate = _mpt_hashes_stack(child, encoded_path, deepness + 1)
+    return None if intermediate is None else intermediate + tuple(map_func(lambda c: _mpt_hash(c), root.children))
+
+class MerkleProof(namedtuple("MerkleProof", [ "encoded_path", "hashes_stack", "root_hash"])):
+    def __new__(cls, trie: MerklePatriciaTrie, encoded_path: bytes):
+        _mpt_check_is_encoded_path(encoded_path)
+        value = mpt_get(encoded_path)
+        hashes_stack = _mpt_hashes_stack(trie, encoded_path, 0)
+        root_hash = trie.hash
+        return super().__new__(cls, encoded_path, value, hashes_stack, root_hash)
+
+trie = MerklePatriciaTrie()
+print(trie)
+mpt_put(trie, bytes([0x55] * 32), bytes(32))
+print(trie)
+assert mpt_contains(trie, bytes([0x55] * 32))
+assert not mpt_contains(trie, [0x77] * 32)
+proof = MerkleProof(trie, [0x55] * 32)
+print(proof)
