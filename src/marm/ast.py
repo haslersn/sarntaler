@@ -58,6 +58,12 @@ class Translationunit(Node):
         self.proc=procdecl
 
 
+class Paramdecl(Node):
+    def __init__(self,paramType,name):
+        self.paramType = paramType
+        self.name = name
+
+
 class Procdecl(Node):
     def __init__(self,returnType,name,params,body):
         self.returnType = returnType
@@ -67,13 +73,15 @@ class Procdecl(Node):
 
 
 class Statement(Node):
-    super().__init__()
-    pass
+    def __init__(self):
+        super().__init__()
+        pass
 
 
 class StatementReturn(Statement):
-    super().__init__()
-    pass
+    def __init__(self):
+        super().__init__()
+        pass
 
 
 class StatementWhile(Statement):
@@ -104,13 +112,15 @@ class StatementBody(Statement):
 
 
 class StatementBreak(Statement):
-    super().__init__()
-    pass
+    def __init__(self):
+        super().__init__()
+        pass
 
 
 class StatementContinue(Statement):
-    super().__init__()
-    pass
+    def __init__(self):
+        super().__init__()
+        pass
 
 
 class Boolex(Node):
@@ -127,7 +137,7 @@ class BoolexBinary(Boolex):
 
 
 class BoolexNot(Boolex):
-    def __init__(self, operand):
-        super().__init__()
+    def __init__(self, op, operand):
+        super().__init__(op)
         self.operand = operand
 
