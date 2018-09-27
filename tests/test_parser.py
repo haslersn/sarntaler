@@ -58,9 +58,12 @@ class TestParserMethods(unittest.TestCase):
 
     def test_parse_file(self):
         try:
-            parser.marmparser("test.marm")
+            testfile = open("./marm/test.marm", mode='r')
+            parser.marmparser("test.marm", testfile.read())
         except parser.ParserError:
-            unittest.fail(msg="Couldn't parse file.")
+            self.fail(msg="Couldn't parse file.")
+        except IOError as e:
+            self.fail(msg="File error: " + str(e))
 
 
 if __name__ == '__main__':
