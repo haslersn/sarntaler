@@ -287,4 +287,4 @@ if __name__ == "__main__":
     except ParserError as err:
         print(err)
     else:
-        args.output.write(str(result))
+        args.output.write(result.toJSON())#str(result))

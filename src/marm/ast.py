@@ -1,3 +1,5 @@
+import json
+
 class Node:
     def liststr(self, param):
         rv = "["
@@ -8,11 +10,14 @@ class Node:
         rv += str(param[len(param)-1]) + "]"
         return rv
 
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
 
 class Expr(Node):
     """ Non terminal 13 """
     def __init__(self):
-        pass
+        self.classname = self.__class__.__name__
 
     def __str__(self):
         return "[Expr]"
@@ -22,6 +27,7 @@ class ConstExpr(Expr):
     """ p_expr """
     def __init__(self, value):
         super().__init__()
+        self.classname = self.__class__.__name__
         self.value = value
 
     def __str__(self):
@@ -32,6 +38,7 @@ class BinExpr(Expr):
     """ p_exprBINARYEXPRESSIONS """
     def __init__(self, op, left, right):
         super().__init__()
+        self.classname = self.__class__.__name__
         self.op = op
         self.left = left
         self.right = right
@@ -44,6 +51,7 @@ class UnaryExpr(Expr):
     """ p_exprUNARYEXPRESSIONS """
     def __init__(self, op, operand):
         super().__init__()
+        self.classname = self.__class__.__name__
         self.op = op
         self.operand = operand
 
@@ -55,6 +63,7 @@ class LHSExpr(Expr):
     """ p_exprLHS """
     def __init__(self, lhs):
         super().__init__()
+        self.classname = self.__class__.__name__
         self.lhs = lhs
 
     def __str__(self):
@@ -65,6 +74,7 @@ class StructExpr(Expr):
     """ p_exprSTRUCTACCESS """
     def __init__(self, expr, ident):
         super().__init__()
+        self.classname = self.__class__.__name__
         self.expr = expr
         self.ident = ident
 
@@ -75,6 +85,7 @@ class StructExpr(Expr):
 class LHS(Node):
     """ Non terminal 14 """
     def __init__(self, ident):
+        self.classname = self.__class__.__name__
         self.ident = ident
 
     def __str__(self):
@@ -84,6 +95,7 @@ class LHS(Node):
 class Typename(Node):
     """ Non terminal 18 """
     def __init__(self, typee):
+        self.classname = self.__class__.__name__
         self.typee = typee
 
     def __str__(self):
@@ -93,6 +105,7 @@ class Typename(Node):
 class Translationunit(Node):
     """ Non terminal 0 """
     def __init__(self, procdecl):
+        self.classname = self.__class__.__name__
         self.proc = procdecl
 
     def __str__(self):
@@ -102,6 +115,7 @@ class Translationunit(Node):
 class Paramdecl(Node):
     """ Non terminal 3 """
     def __init__(self, param_type, name):
+        self.classname = self.__class__.__name__
         self.param_type = param_type
         self.name = name
 
@@ -112,6 +126,7 @@ class Paramdecl(Node):
 class Procdecl(Node):
     """ Non terminal 4 """
     def __init__(self, return_type, name, params, body):
+        self.classname = self.__class__.__name__
         self.return_type = return_type
         self.name = name
         self.params = params
@@ -126,6 +141,7 @@ class Statement(Node):
     """ Non terminal 12 """
     def __init__(self):
         super().__init__()
+        self.classname = self.__class__.__name__
         pass
 
     def __str__(self):
@@ -136,6 +152,7 @@ class StatementDecl(Statement):
     """ p_statementDECL """
     def __init__(self, typee, decllist):
         super().__init__()
+        self.classname = self.__class__.__name__
         self.typee = typee
         self.decllist = decllist
 
@@ -147,6 +164,7 @@ class StatementReturn(Statement):
     """ p_statementRETURN """
     def __init__(self, return_value):
         super().__init__()
+        self.classname = self.__class__.__name__
         self.return_value = return_value
         pass
 
@@ -158,6 +176,7 @@ class StatementWhile(Statement):
     """ p_statementLOOPS """
     def __init__(self, boolex, statement):
         super().__init__()
+        self.classname = self.__class__.__name__
         self.boolex = boolex
         self.statement = statement
 
@@ -169,6 +188,7 @@ class StatementIf(Statement):
     """ p_statementBRANCHING """
     def __init__(self, boolex, statement, elseprod):
         super().__init__()
+        self.classname = self.__class__.__name__
         self.boolex = boolex
         self.statement = statement
         self.elseprod = elseprod
@@ -181,6 +201,7 @@ class StatementExpression(Statement):
     """ p_statementEXPRESSIONSTATEMENT """
     def __init__(self, expr):
         super().__init__()
+        self.classname = self.__class__.__name__
         self.expr = expr
 
     def __str__(self):
@@ -191,6 +212,7 @@ class StatementBody(Statement):
     """ p_body """
     def __init__(self, body):
         super().__init__()
+        self.classname = self.__class__.__name__
         self.body = body
 
     def __str__(self):
@@ -201,6 +223,7 @@ class StatementBreak(Statement):
     """ p_statementBREAK """
     def __init__(self):
         super().__init__()
+        self.classname = self.__class__.__name__
         pass
 
     def __str__(self):
@@ -211,6 +234,7 @@ class StatementContinue(Statement):
     """ p_statementCONTINUE """
     def __init__(self):
         super().__init__()
+        self.classname = self.__class__.__name__
         pass
 
     def __str__(self):
@@ -221,6 +245,7 @@ class Boolex(Node):
     """ Non terminal 15 """
     def __init__(self, op):
         super().__init__()
+        self.classname = self.__class__.__name__
         self.op = op
 
     def __str__(self):
@@ -231,6 +256,7 @@ class BoolexCMP(Boolex):
     """ p_boolexCOMPARE """
     def __init__(self, op, left, right):
         super().__init__(op)
+        self.classname = self.__class__.__name__
         self.left = left
         self.right = right
 
@@ -242,6 +268,7 @@ class BoolexBinary(Boolex):
     """ p_boolexBINARY """
     def __init__(self, op, left, right):
         super().__init__(op)
+        self.classname = self.__class__.__name__
         self.left = left
         self.right = right
 
@@ -253,6 +280,7 @@ class BoolexNot(Boolex):
     """ p_boolexUNARY """
     def __init__(self, op, operand):
         super().__init__(op)
+        self.classname = self.__class__.__name__
         self.operand = operand
 
     def __str__(self):
