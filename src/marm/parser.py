@@ -33,6 +33,22 @@ def p_typename(p):
 def p_statement(p):
     'statement : RETURN SEMI'
 
+def p_statementLOOPS(p):
+    '''statement : WHILE LPAR boolex RPAR statement '''
+
+def p_statementBRANCHING(p):
+    '''statement : IF LPAR boolex RPAR statement elseprod '''
+
+def p_statementEXPRESSIONSTATEMENT(p):
+    'statement : expr SEMI'
+
+def p_statementNEWSCOPE(p):
+    'statement : body'
+
+def p_statementLOOPkeywords(p): 
+    '''statement : BREAK SEMI
+                 | CONTINUE  SEMI '''
+
 def p_error(p):
     print("Syntax error at ('%s')" % p.error)
 
