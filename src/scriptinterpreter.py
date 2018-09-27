@@ -558,9 +558,11 @@ class ScriptInterpreter:
             return True
 
         def execute(script: str):
+            self.pc = -1
+            self.framepointer = -1
             self.program = split_script(script)
-            while self.pc < len(self.program):
-                item = self.program[self.pc] # Fetch the next item (given by the program counter)
+            while self.pc <= len(self.program):
+                item = self.program[self.pc - 1] # Fetch the next item (given by the program counter)
                 logging.info("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
                 self.pc = self.pc + 1
                 if not execute_item(item):

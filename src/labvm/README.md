@@ -84,6 +84,8 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_RET | needs a valid stack frame | DO NOT USE OP_RETURN! s_1 will be interpreted as the return value. restores FP and PC, everything on the stack between the return address and the return value gets lost |
 | OP_POPVOID | stack not empty | removes s_1 |
 
+lines are numbered beginning with 1 and empty lines are not counted
+
 # Macros
 Macros a compiler might implement:
 
