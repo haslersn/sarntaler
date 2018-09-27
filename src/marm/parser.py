@@ -63,8 +63,24 @@ def p_expr(p):
 def p_boolex(p):
     'boolex : expr'
 
-def p_error(p):
-    print("Syntax error at ('%s')" % p.error)
+# Error handling
+class ParserError(RuntimeError):
+    def __init__(self, msg):
+        super().__init__(msg)
+class EofError(ParserError):
+    def __init__(self):
+        super().__init__("Unexpected end of file.")
+class UnexpectedTokenError(ParserError):
+    def __init__(self, got):
+        from lexer import column_number
+        super().__init__("Unexpected token '{}' ({}) at Line {}, Column {}"
+                         .format(got.value, got.type,
+                                 got.lineno, column_number(got)))
+def p_error(t):
+    if t is None:
+        raise EofError()
+    else:
+        raise UnexpectedTokenError(t)
 
 # Generate parser
 import ply.yacc as yacc
