@@ -47,3 +47,7 @@ class StructExpr(Expr):
         self.ident = ident
 
 
+class LHS(Node):
+    ''' Non terminal 14 '''
+    def __init__(self, ident):
+        self.ident = ident
