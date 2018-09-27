@@ -35,42 +35,6 @@ class ScriptInterpreter:
     of application.
     For more information go to https://en.bitcoin.it/wiki/Script
     or read the explanation within the op-implementation below:
-
-        Crypto:
-            OP_SHA256
-            OP_CHECKSIG
-            OP_RETURN
-
-        Locktime:
-            OP_CHECKLOCKTIME
-
-        Stack:
-            OP_SWAP
-            OP_DUP
-
-        Control Flow:
-            OP_JUMP
-            OP_JUMPR
-            OP_JUMPC
-            OP_JUMPRC
-            OP_PUSHABS
-            OP_PUSHFP
-            OP_POPFP
-            OP_PUSHSP
-            OP_POPSP
-            OP_PUSHPC
-
-        Math:
-            OP_ADD
-            OP_SUB
-            OP_MUL
-            OP_DIV
-            OP_NEG
-            OP_MOD
-            OP_AND
-            OP_OR
-            OP_XOR
-
     """
 
     operations = {
@@ -78,8 +42,10 @@ class ScriptInterpreter:
         'OP_CHECKSIG',
         'OP_RETURN',
         'OP_CHECKLOCKTIME',
+        
         'OP_SWAP',
         'OP_DUP',
+        
         'OP_PUSHABS',
         'OP_PUSHFP',
         'OP_POPFP',
@@ -90,6 +56,7 @@ class ScriptInterpreter:
         'OP_JUMPR',
         'OP_JUMPC',
         'OP_JUMPRC',
+        
         'OP_ADD',
         'OP_SUB',
         'OP_MUL',
@@ -111,7 +78,9 @@ class ScriptInterpreter:
         self.output_script = output_script
         self.input_script = input_script
         self.tx_hash = tx_hash
+        
         self.stack = []
+        self.program = []
 
         self.framepointer = 0  # maybe initialize with -1
         self.stackpointer = 0  # maybe initialize with -1
@@ -293,11 +262,11 @@ class ScriptInterpreter:
             logging.warning("OP_JUMP: Stack is empty")
             return False
 
-        index = int(self.stack.pop())
-        if index < 0 or index >= len(self.stack):
-            logging.warning("OP_JUMP: Argument is not an index in the stack")
+        index = self.stack.pop()
+        if index < 0 or index >= len(self.program):
+            logging.warning("OP_JUMP: Argument is not an index in the program")
             return False
-        self.pc = self.stack[index]
+        self.pc = index
         return True
 
     def op_jumpr(self):
@@ -305,9 +274,9 @@ class ScriptInterpreter:
             logging.warning("OP_JUMPR: Stack is empty")
             return False
 
-        index = int(self.stack.pop())
+        index = self.stack.pop()
         new_index = self.pc + index
-        if new_index < 0 or new_index >= len(self.stack):
+        if new_index < 0 or new_index >= len(self.program):
             logging.warning("OP_JUMPR: New program counter does not point in the program")
             return False
         self.pc = new_index
@@ -319,9 +288,9 @@ class ScriptInterpreter:
             return False
 
         cond = self.stack.pop()
-        index = int(self.stack.pop())
-        if cond == '1':
-            if index < 0 or index >= len(self.stack):
+        index = self.stack.pop()
+        if cond == 1:
+            if index < 0 or index >= len(self.program):
                 logging.warning("OP_JUMPC: New program counter does not point in the program")
                 return False
             self.pc = index
@@ -333,10 +302,10 @@ class ScriptInterpreter:
             return False
 
         cond = self.stack.pop()
-        index = int(self.stack.pop())
-        if cond == '1':
+        index = self.stack.pop()
+        if cond == 1:
             new_index = self.pc + index
-            if new_index < 0 or new_index >= len(self.stack):
+            if new_index < 0 or new_index >= len(self.program):
                 logging.warning("OP_JUMPRC: New program counter does not point in the program")
                 return False
             self.pc = new_index
@@ -523,10 +492,10 @@ class ScriptInterpreter:
             return True
 
         def execute(script: str):
-            program = split_script(script)
-            while self.pc < len(program):
-                item = program[self.pc] # Fetch the next item (given by the program counter)
-                logging.warning("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
+            self.program = split_script(script)
+            while self.pc < len(self.program):
+                item = self.program[self.pc] # Fetch the next item (given by the program counter)
+                logging.info("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
                 self.pc = self.pc + 1
                 if not execute_item(item):
                     return False
