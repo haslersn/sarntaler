@@ -155,6 +155,14 @@ class Boolex(Node):
         self.op = op
 
 
+class BoolexCMP(Boolex):
+    """ p_boolexCOMPARE """
+    def __init__(self, op, left, right):
+        super().__init__(op)
+        self.left = left
+        self.right = right
+
+
 class BoolexBinary(Boolex):
     """ p_boolexBINARY """
     def __init__(self, op, left, right):
