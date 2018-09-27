@@ -26,12 +26,13 @@ If you want to use special characters like a new line, use the usual escape sequ
 For Instructions, just write the name of the instruction. The interpreter is case-insensitive. For a list of all instructions see Section XX.
 
 Example Program:
+
 	`123
 	0x41324
-	add
+	op_add
 	"hallo"
 	0x1111111
-	stores`
+	OP_ADD
 
 ## Instructions
 remark: For the highest element on the stack **before the execution** s_1, for the second highest s_2, and so on:
@@ -79,8 +80,8 @@ Boolean values are ints. 1 represents true and 0 represents false.
 # Macros
 Maybe we will introduce macros. Possible ideas:
 
-`OP_LT (Less than) is equal to OP_GE,OP_NOT`
+`OP_LT` (Less than) is equal to `OP_GE,OP_NOT`
 
-`OP_GT (greater than) is equal to OP_LE,OP_NOT`
+`OP_GT` (greater than) is equal to `OP_LE,OP_NOT`
 
-`OP_PUSHR (Push relative to FP) is equal to OP_PUSHFP,OP_ADD,OP_PUSHABS`
+`OP_PUSHR` (Push relative to FP) is equal to `OP_PUSHFP,OP_ADD,OP_PUSHABS`
