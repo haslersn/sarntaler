@@ -5,7 +5,8 @@ keywords = {
     'break' : 'BREAK',
     'continue' : 'CONTINUE',
     'else' : 'ELSE',
-    'return' : 'RETURN'
+    'return' : 'RETURN',
+    'int' : 'INT'
 }
 
 # Token types
@@ -15,7 +16,6 @@ tokens = ['IDENT',
            'SEMI',
            'COMMA',
            'ADDRESS',
-           'INT',
            'COMMENT',
            'ASSIGN',
            'INTCONST',
