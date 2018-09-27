@@ -219,25 +219,12 @@ class ScriptInterpreter:
         return True
 
     def op_add(self):
-        if (len(self.stack) < 2):
-            logging.warning("Not enough arguments")
-            self.stack.append(str(0))
-            return False
-
-        old_first = self.stack.pop()
-        old_second = self.stack.pop()
-
-        try:
-            sum = int(old_first) + int(old_second)
-        except ValueError:
-            logging.warning("Wrong type of arguments. Could not convert " + old_first + " and " + old_second + " to integers")
-            self.stack.append(str(0))
-            return False
-
-        self.stack.append(str(sum))
-        return True
+        return self.math_operations(lambda first, second: first + second)
 
     def op_sub(self):
+        return self.math_operations(lambda first, second: second - first)
+
+    def math_operations(self, op):
         if (len(self.stack) < 2):
             logging.warning("Not enough arguments")
             return False
@@ -246,15 +233,13 @@ class ScriptInterpreter:
         old_second = self.stack.pop()
 
         try:
-            result = int(old_second) - int(old_first)
+            result = op(int(old_first), int(old_second))
         except ValueError:
             logging.warning("Wrong type of arguments. Could not convert " + old_first + " and " + old_second + " to integers")
             return False
 
         self.stack.append(str(result))
         return True
-
-
 
     def execute_script(self):
         """
