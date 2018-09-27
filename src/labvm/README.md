@@ -62,6 +62,8 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_EQU | - | consumes the two highest stack cells and pushes s_2 = s_1 |
 | OP_LE |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 <= s_1 |
 | OP_GE |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 >= s_1 |
+| OP_LT |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 < s_1 |
+| OP_GT |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 > s_1 |
 | OP_NEG |s_1 integer | consumes the highest stack cell and pushes -s_1 |
 | OP_NOT |s_1 integer | consumes the highest stack cell and pushes 1 - s_1 |
 | OP_JUMP | s_1 integer and line exists | absolute jump, consumes highest stack cell, PC = s_1 |
@@ -80,9 +82,5 @@ Boolean values are ints. 1 represents true and 0 represents false.
 
 # Macros
 Maybe we will introduce macros. Possible ideas:
-
-`OP_LT` (Less than) is equal to `OP_GE,OP_NOT`
-
-`OP_GT` (greater than) is equal to `OP_LE,OP_NOT`
 
 `OP_PUSHR` (Push relative to FP) is equal to `OP_PUSHFP,OP_ADD,OP_PUSHABS`
