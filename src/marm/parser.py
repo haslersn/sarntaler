@@ -16,6 +16,10 @@ def p_statementlistOPT(p):
 def p_statementlist(p):
     '''statementlist : statement statementlist
                        | '''
+
+def p_body(p):
+    'body : BEGIN statementlist END '
+
 def p_paramlist(p):
     '''paramlist : paramdecl COMMA paramlist 
                  | paramdecl '''
@@ -30,11 +34,15 @@ def p_typename(p):
     '''typename : ADDRESS 
     | INT'''
 
-def p_statement(p):
+def p_statementRETURN(p):
     'statement : RETURN SEMI'
 
 def p_statementLOOPS(p):
     '''statement : WHILE LPAR boolex RPAR statement '''
+
+def p_elseprod(p):
+    '''elseprod : ELSE statement 
+    |''' 
 
 def p_statementBRANCHING(p):
     '''statement : IF LPAR boolex RPAR statement elseprod '''
@@ -48,6 +56,12 @@ def p_statementNEWSCOPE(p):
 def p_statementLOOPkeywords(p): 
     '''statement : BREAK SEMI
                  | CONTINUE  SEMI '''
+
+def p_expr(p):
+    'expr : INTCONST'
+
+def p_boolex(p):
+    'boolex : expr'
 
 def p_error(p):
     print("Syntax error at ('%s')" % p.error)
