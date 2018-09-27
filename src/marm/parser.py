@@ -21,9 +21,9 @@ def p_body(p):
     'body : BEGIN statementlist END '
 
 def p_paramlist(p):
-    '''paramlist : paramdecl COMMA paramlist 
+    '''paramlist : paramdecl COMMA paramlist
                  | paramdecl '''
-                 
+
 def p_paramdecl(p):
     'paramdecl : type IDENT'
 
@@ -31,7 +31,7 @@ def p_type(p):
     'type : typename'
 
 def p_typename(p):
-    '''typename : ADDRESS 
+    '''typename : ADDRESS
     | INT'''
 
 def p_statementRETURN(p):
@@ -41,8 +41,8 @@ def p_statementLOOPS(p):
     '''statement : WHILE LPAR boolex RPAR statement '''
 
 def p_elseprod(p):
-    '''elseprod : ELSE statement 
-    |''' 
+    '''elseprod : ELSE statement
+    |'''
 
 def p_statementBRANCHING(p):
     '''statement : IF LPAR boolex RPAR statement elseprod '''
@@ -53,7 +53,7 @@ def p_statementEXPRESSIONSTATEMENT(p):
 def p_statementNEWSCOPE(p):
     'statement : body'
 
-def p_statementLOOPkeywords(p): 
+def p_statementLOOPkeywords(p):
     '''statement : BREAK SEMI
                  | CONTINUE  SEMI '''
 
@@ -64,22 +64,22 @@ def p_expr(p):
     'expr : INTCONST'
 
 def p_exprBINARYEXPRESSIONS(p):
-     '''expr : expr ASSIGN expr 
-             | expr MULOP expr 
-             | expr ADDOP expr 
-             | expr DIVOP expr 
+     '''expr : expr ASSIGN expr
+             | expr MULOP expr
+             | expr ADDOP expr
+             | expr DIVOP expr
              | expr SUBOP expr '''
 
 def p_exprUNARYEXPRESSIONS(p):
     '''expr : HASH expr
             | SUBOP expr '''
- 
+
 def p_boolex(p):
     'boolex : expr'
 def p_declarator(p):
-    'decl : IDENT' 
+    'decl : IDENT'
 def p_declaratorlist(p):
-    ''' decllist : decl COMMA decllist 
+    ''' decllist : decl COMMA decllist
                  | decl '''
 
 # Error handling
