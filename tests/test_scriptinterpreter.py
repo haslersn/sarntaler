@@ -188,8 +188,8 @@ def emptystack_test(op: str):
 # TODO SHA256 test
 from math import gcd
 def test_gcd_script():
-    a = 12
-    b = 6
+    a = 324432
+    b = 2345223
     gcdfile = open("./src/labvm/gcd.labvm","r")
     gcdstr = gcdfile.read()
     gcdstr = str(a) + "\n" + str(b) + "\n" + gcdstr
@@ -197,4 +197,4 @@ def test_gcd_script():
     si = ScriptInterpreter(gcdstr, "", None)
     si.execute_script()
     print("Stack after gcd script:",si.stack)
-    assert si.stack[3] == gcd(a,b)
+    assert si.stack[0] == gcd(a,b)

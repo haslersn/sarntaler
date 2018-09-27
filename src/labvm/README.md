@@ -68,8 +68,8 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_NOT |s_1 integer | consumes the highest stack cell and pushes 1 - s_1 |
 | OP_JUMP | s_1 integer and line exists | absolute jump, consumes highest stack cell, PC = s_1 |
 | OP_JUMPR | s_1 integer and boundaries are kept | consumes highest stack cell, PC = s_1 + PC |
-| OP_JUMPC | s_1 integer and s_2 integer and line s_2 exists| absolute conditional Jump. Consumes 2 Arguments. If s_1 == 1, PC = s_2 else nothing happens | 
-| OP_JUMPRC | s_1 integer and s_2 integer and line s_2 keeps boundaries | relative conditional Jump. Consumes 2 Arguments. If s_1 == 1, PC = PC + s_2 else nothing happens | 
+| OP_JUMPC | s_1 integer and s_2 integer and line s_1 exists| absolute conditional Jump. Consumes 2 Arguments. If s_2 == 1, PC = s_1 else nothing happens | 
+| OP_JUMPRC | s_1 integer and s_2 integer and line s_1 keeps boundaries | relative conditional Jump. Consumes 2 Arguments. If s_2 == 1, PC = PC + s_1 else nothing happens | 
 | OP_SWAP | | Swaps s_1 and s_2|
 | OP_DUP |- | pushes s_1 |
 | OP_PUSHABS |- | consumes the highest stack cell. Let n be its value. It pushes the n-th cell of the stack. The lowest stack cell has index 0, the next one 1 and so on. |
@@ -84,3 +84,53 @@ Boolean values are ints. 1 represents true and 0 represents false.
 Maybe we will introduce macros. Possible ideas:
 
 `OP_PUSHR` (Push relative to FP) is equal to `OP_PUSHFP,OP_ADD,OP_PUSHABS`
+
+# Examples
+
+`
+0
+op_pushabs
+1
+op_pushabs
+op_equ
+26
+op_jumprc
+0
+op_pushabs
+1
+op_pushabs
+op_le
+10
+op_jumprc
+0
+op_pushabs
+1
+op_pushabs
+op_sub
+0
+op_popabs
+8
+op_jumpr
+1
+op_pushabs
+0
+op_pushabs
+op_sub
+1
+op_popabs
+-31
+op_jumpr
+`
+
+*Explanation:* This Code computes the gcd of two numbers already in the first two stack cells. It is based on the Euclid algorithm:
+
+`bool gcd(int a, int b) {
+    while(a != b) {
+        if(a > b) {
+            a = a - b;
+        } else {
+            b = b - a;
+        }
+    }
+    return a;
+}`

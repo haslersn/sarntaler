@@ -240,7 +240,7 @@ class ScriptInterpreter:
             logging.warning("OP_POPABS: Argument is not an index in the stack")
             return False
         
-        elem = self.pop()
+        elem = self.stack.pop()
         if elem is None:
             logging.warning("OP_POPABS: Stack has only one element")
             return False
@@ -294,8 +294,8 @@ class ScriptInterpreter:
             return False
 
         index = self.stack.pop()
-        new_index = self.pc + index
-        if new_index < 0 or new_index >= len(self.program):
+        new_index = self.pc + index -1
+        if new_index-1 < 0 or new_index-1 >= len(self.program):
             logging.warning("OP_JUMPR: New program counter does not point in the program")
             return False
         self.pc = new_index
@@ -306,8 +306,8 @@ class ScriptInterpreter:
             logging.warning("OP_JUMPC: Not enough arguments")
             return False
 
-        cond = self.stack.pop()
         index = self.stack.pop()
+        cond = self.stack.pop()
         if cond == 1:
             if index < 0 or index >= len(self.program):
                 logging.warning("OP_JUMPC: New program counter does not point in the program")
@@ -320,11 +320,11 @@ class ScriptInterpreter:
             logging.warning("OP_JUMPRC: Not enough arguments")
             return False
 
-        cond = self.stack.pop()
         index = self.stack.pop()
+        cond = self.stack.pop()
         if cond == 1:
-            new_index = self.pc + index
-            if new_index < 0 or new_index >= len(self.program):
+            new_index = self.pc + index -1
+            if new_index-1 < 0 or new_index-1 >= len(self.program):
                 logging.warning("OP_JUMPRC: New program counter does not point in the program")
                 return False
             self.pc = new_index
@@ -518,6 +518,7 @@ class ScriptInterpreter:
                 self.pc = self.pc + 1
                 if not execute_item(item):
                     return False
+                logging.warning("PC: " + str(self.pc) + ", Stack: " + str(self.stack))
             return True
 
         if not execute(self.input_script) or not execute(self.output_script):

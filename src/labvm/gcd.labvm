@@ -11,7 +11,7 @@ op_pushabs
 op_pushabs
 op_le
 10
-op_jumpr
+op_jumprc
 0
 op_pushabs
 1
@@ -30,4 +30,3 @@ op_sub
 op_popabs
 -31
 op_jumpr
-11111
