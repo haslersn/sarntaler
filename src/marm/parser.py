@@ -19,12 +19,12 @@ def p_procdecl(p):
     'procdecl : type IDENT LPAR paramlistopt RPAR statementlistOPT'
     p[0] = Procdecl(p[1], p[2], p[4], p[6])
 
-def p_statementlistOPT(p):
+def p_statementlistOPT_body(p):
     'statementlistOPT : body'
     p[0] = p[1]
-def p_statementlistOPT(p):
+def p_statementlistOPT_empty(p):
     'statementlistOPT : SEMI'
-    p[0] = None
+    p[0] = []
 
 
 def p_statementlist(p):
