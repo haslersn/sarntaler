@@ -96,7 +96,10 @@ class ScriptInterpreter:
         'OP_MOD',
         'OP_AND',
         'OP_OR',
-        'OP_XOR'
+        'OP_XOR',
+        'OP_EQU',
+        'OP_LE',
+        'OP_GE'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -358,6 +361,24 @@ class ScriptInterpreter:
 
     def op_xor(self):
         return self.math_operations(lambda first, second: second ^ first)
+
+    def op_equ(self):
+        if (len(self.stack) < 2):
+            logging.warning("Not enough arguments")
+            return False
+
+        old_first = self.stack.pop()
+        old_second = self.stack.pop()
+
+        result = 1 if old_first == old_second else 0
+        self.stack.append(result)
+        return True
+
+    def op_le(self):
+        return self.math_operations(lambda first, second: 1 if second <= first else 0)
+
+    def op_ge(self):
+        return self.math_operations(lambda first, second: 1 if second >= first else 0)
 
     def math_operations(self, op):
         if (len(self.stack) < 2):
