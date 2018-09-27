@@ -7,7 +7,7 @@ def p_translationunit(p):
     'translationunit : procdecl'
 
 def p_procdecl(p):
-    'procdecl : type IDENT LPAR paramlist RPAR statementlistOPT'
+    'procdecl : type IDENT LPAR paramlistopt RPAR statementlistOPT'
 
 def p_statementlistOPT(p):
     '''statementlistOPT : BEGIN statementlist END
@@ -19,6 +19,10 @@ def p_statementlist(p):
 
 def p_body(p):
     'body : BEGIN statementlist END '
+
+def p_paramlistopt(p):
+    '''paramlistopt : paramlist 
+                    |  '''
 
 def p_paramlist(p):
     '''paramlist : paramdecl COMMA paramlist
