@@ -63,6 +63,17 @@ def p_statementDECL(p):
 def p_expr(p):
     'expr : INTCONST'
 
+def p_exprBINARYEXPRESSIONS(p):
+     '''expr : expr ASSIGN expr 
+             | expr MULOP expr 
+             | expr ADDOP expr 
+             | expr DIVOP expr 
+             | expr SUBOP expr '''
+
+def p_exprUNARYEXPRESSIONS(p):
+    '''expr : HASH expr
+            | SUBOP expr '''
+ 
 def p_boolex(p):
     'boolex : expr'
 def p_declarator(p):

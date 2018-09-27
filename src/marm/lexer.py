@@ -20,7 +20,7 @@ tokens = ['IDENT',
            'ASSIGN',
            'INTCONST',
            'ADDOP', 'SUBOP', 'MULOP', 'DIVOP',
-           'NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
+           'HASH','NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
            'LPAR', 'RPAR'] + list(keywords.values())
 
 
