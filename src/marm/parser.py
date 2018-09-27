@@ -132,7 +132,6 @@ def p_statementDECL(p):
 
 def p_statementERROR(p):
     'statement : error SEMI'
-    print ('error in statement')
 
 
 def p_expr(p):
@@ -248,6 +247,7 @@ def p_error(t):
             t.type,
             t.value
         ))
+
         # tokseq = [t.type]
         # while True:
         #     from src.marm.lexer import column_number
@@ -268,6 +268,7 @@ yacc = yacc.yacc()
 
 
 def marmparser(filename,input):
+    lexer.filename=filename
     yacc.filename=filename
     return yacc.parse(input,lexer=lexer)
 
