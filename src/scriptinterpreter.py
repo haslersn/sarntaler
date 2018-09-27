@@ -65,6 +65,7 @@ class ScriptInterpreter:
             OP_SUB
             OP_MUL
             OP_DIV
+            OP_NEG
             OP_MOD
             OP_AND
             OP_OR
@@ -96,7 +97,9 @@ class ScriptInterpreter:
         'OP_MOD',
         'OP_AND',
         'OP_OR',
-        'OP_XOR'
+        'OP_XOR',
+        'OP_NOT',
+        'OP_NEG'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -347,6 +350,15 @@ class ScriptInterpreter:
     def op_div(self):
         return self.math_operations(lambda first, second: second // first)
 
+    def op_neg(self):
+        param = self.__pop_checked(int)
+        if param is None:
+            logging.warning("OP_NEG: Stack is empty or top element not an integer")
+            return False
+
+        self.stack.append(-param)
+        return True
+
     def op_mod(self):
         return self.math_operations(lambda first, second: second % first)
 
@@ -359,9 +371,23 @@ class ScriptInterpreter:
     def op_xor(self):
         return self.math_operations(lambda first, second: second ^ first)
 
+    def op_not(self):
+        param = self.__pop_checked(int)
+        if param is None:
+            logging.warning("OP_NOT: Stack is empty or top element not an integer")
+            return False
+
+        if (param != 0 and param != 1):
+            logging.warning("OP_NOT: Top element not a bool (i.e. not 0 or 1)")
+            return False
+
+        self.stack.append(1 - param)
+        return True
+
+
     def math_operations(self, op):
         if (len(self.stack) < 2):
-            logging.warning("Not enough arguments")
+            logging.warning("binary math operation: Not enough arguments")
             return False
 
         old_first = self.__pop_checked(int)

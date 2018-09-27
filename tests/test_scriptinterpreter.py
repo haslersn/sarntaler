@@ -71,59 +71,77 @@ def test_pushabs_notok():
 
 def test_add():
     script_finalstack_test("3 2 42 OP_ADD 1", [3, 44])
-    emptystack_noninteger_test('OP_ADD')
+    emptystack_noninteger_binaryop_test('OP_ADD')
 
 
 def test_sub():
     script_finalstack_test("3 5 1 OP_SUB 1", [3, 4])
-    emptystack_noninteger_test('OP_SUB')
+    emptystack_noninteger_binaryop_test('OP_SUB')
 
 
 def test_mul():
     script_finalstack_test("3 5 2 OP_MUL 1", [3, 10])
-    emptystack_noninteger_test('OP_MUL')
+    emptystack_noninteger_binaryop_test('OP_MUL')
 
 
 def test_div():
     script_finalstack_test("3 10 2 OP_DIV 1", [3, 5])
     script_finalstack_test("3 5 2 OP_DIV 1", [3, 2])
-    emptystack_noninteger_test('OP_DIV')
+    emptystack_noninteger_binaryop_test('OP_DIV')
 
 
 def test_mod():
     script_finalstack_test("3 10 2 OP_MOD 1", [3, 0])
     script_finalstack_test("3 5 2 OP_MOD 1", [3, 1])
-    emptystack_noninteger_test('OP_MOD')
+    emptystack_noninteger_binaryop_test('OP_MOD')
 
 
 def test_and():
     script_finalstack_test("3 5 2 OP_AND 1", [3, 0])
     script_finalstack_test("3 3 2 OP_AND 1", [3, 2])
-    emptystack_noninteger_test('OP_AND')
+    emptystack_noninteger_binaryop_test('OP_AND')
 
 
 def test_or():
     script_finalstack_test("3 5 1 OP_OR 1", [3, 5])
     script_finalstack_test("3 5 3 OP_OR 1", [3, 7])
-    emptystack_noninteger_test('OP_OR')
+    emptystack_noninteger_binaryop_test('OP_OR')
 
 
 def test_xor():
     script_finalstack_test("3 5 1 OP_XOR 1", [3, 4])
     script_finalstack_test("3 5 3 OP_XOR 1", [3, 6])
-    emptystack_noninteger_test('OP_XOR')
+    emptystack_noninteger_binaryop_test('OP_XOR')
 
+def test_not():
+    script_finalstack_test("3 1 OP_NOT 1", [3, 0])
+    script_finalstack_test("3 0 OP_NOT 1", [3, 1])
+    emptystack_noninteger_unaryop_test('OP_NOT')
+    si_notbool_stack = ScriptInterpreter('OP_NOT', "2 OP_NOT", None)
+    assert not si_notbool_stack.execute_script()
 
+def test_neg():
+    script_finalstack_test("3 4 OP_NEG 1", [3, -4])
+    emptystack_noninteger_unaryop_test('OP_NEG')
+
+    
 def script_finalstack_test(script: str, finalstack: list):
     si = ScriptInterpreter(script, "", None)
     si.execute_script()
     assert si.stack == finalstack
 
-
-def emptystack_noninteger_test(op: str):
+def emptystack_noninteger_binaryop_test(op: str):
     si_emptystack = ScriptInterpreter(op, "", None)
     assert not si_emptystack.execute_script()
+    si_one_elem_stack = ScriptInterpreter(op, "1 " + op, None)
+    assert not si_one_elem_stack.execute_script()
     si_noninteger = ScriptInterpreter("a b " + op + " 1", "", None)
+    assert not si_noninteger.execute_script()
+
+def emptystack_noninteger_unaryop_test(op: str):
+    si_emptystack = ScriptInterpreter(op, "", None)
+    assert not si_emptystack.execute_script()
+    si_noninteger = ScriptInterpreter("a " + op + " 1", "", None)
     assert not si_noninteger.execute_script()
 
 # TODO SHA256 test
