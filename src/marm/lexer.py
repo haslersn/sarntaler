@@ -30,9 +30,9 @@ def t_NUMBER(t):
 t_ASSIGN = r'='
 
 # Numeric operations
-t_ADDOP = r'+'
+t_ADDOP = r'\+'
 t_SUBOP = r'-'
-t_MULOP = r'*'
+t_MULOP = r'\*'
 t_DIVOP = r'/'
 
 # Bool operations
@@ -47,8 +47,8 @@ t_LEQ = r'<='
 t_NOT = r'!'
 
 # Parentheses
-t_LPAR = r'('
-t_RPAR = r')'
+t_LPAR = r'\('
+t_RPAR = r'\)'
 
 # Ignore whitespace
 t_ignore = " \t"
