@@ -7,8 +7,12 @@ class TestParserMethods(unittest.TestCase):
         self.lexer = lexer_source.lexer
 
     def generic_parse(self, t_text, t_type, t_value, t_lineno=1, t_lexpos=0):
-        self.lexer.input(t_text)
-        token = self.lexer.token()
+        try:
+            self.lexer.input(t_text)
+            token = self.lexer.token()
+        except lexer_source.LexerError as e:
+            unittest.fail(msg=t_text + " could not be lexed. " + str(e))
+
         self.assertEqual(t_type, token.type)
         self.assertEqual(t_value, token.value)
         self.assertEqual(t_lineno, token.lineno)
@@ -49,7 +53,6 @@ class TestParserMethods(unittest.TestCase):
         self.generic_parse("<=", 'LEQ', '<=')
         self.generic_parse("(", 'LPAR', '(')
         self.generic_parse(")", 'RPAR', ')')
-
 
     def test_tokens_not_empty(self):
         self.assertFalse(lexer_source.tokens.__len__() == 0)
