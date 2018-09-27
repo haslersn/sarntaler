@@ -24,12 +24,21 @@ class BinExpr(Expr):
 
 class UnaryExpr(Expr):
     ''' p_exprUNARYEXPRESSIONS '''
-    def __init__(self, op, right):
+    def __init__(self, op, operand):
         self.op = op
-        self.right = right
+        self.operand = operand
 
 
 class LHSExpr(Expr):
     ''' p_exprLHS '''
     def __init__(self, lhs):
         self.lhs = lhs
+
+
+class StructExpr(Expr):
+    ''' p_exprSTRUCTACCESS '''
+    def __init__(self, expr, ident):
+        self.expr = expr
+        self.ident = ident
+
+
