@@ -7,6 +7,7 @@ keywords = {
     'else' : 'ELSE',
     'return' : 'RETURN',
     'int' : 'INT',
+    'address' : 'ADDRESS',
     #   'void' : 'VOID',
     #   'goto' : 'GOTO',
     #   'default' : 'DEFAULT',
@@ -20,7 +21,7 @@ tokens = ['IDENT',
            'END',
            'SEMI',
            'COMMA',
-           'ADDRESS',
+           'ADDRESSVALUE',
            'ASSIGN',
            'INTCONST',
            'ADDOP', 'SUBOP', 'MULOP', 'DIVOP',
@@ -43,7 +44,7 @@ def t_IDENT(t):
 # TODO: ADDRESS SHOULD INCLUDE VALID DEFINITION OF SUCH
 #       AS OF NOW AN ADDRESS IS ANY HEX NUMBER WITH MAX.
 #       64 DIGITS AND MIN. 1 DIGIT
-def t_ADDRESS(t):
+def t_ADDRESSVALUE(t):
     r'0x\d{1,64}'
     return t
 
