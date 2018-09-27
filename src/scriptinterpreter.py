@@ -59,6 +59,8 @@ class ScriptInterpreter:
         'OP_JUMPC',
         'OP_JUMPRC',
 
+        'OP_CALL',
+
         'OP_ADD',
         'OP_SUB',
         'OP_MUL',
@@ -407,6 +409,21 @@ class ScriptInterpreter:
         self.op_add()
         self.op_pushabs()
 
+    def op_call():
+        if not self.stack:
+            logging.warning("OP_CALL: Stack is empty")
+            return False
+
+        proc_addr = self.__pop_checked(int)  # get procedure address from the top of the stack
+        if proc_addr < 0 or proc_addr >= len(self.program):
+            logging.warning("OP_CALL: Argument is not an index in the program")
+            return False
+
+        self.stack.append(result, self.framepointer) # store the old frame pointer
+        self.framepointer = self.stackframe # set the new frame pointer
+        self.stack.append(result, self.pc)  # store the return address
+        self.pc = proc_addres               # prepare for execution of the procedure
+        return True
 
     def math_operations(self, op):
         if (len(self.stack) < 2):
