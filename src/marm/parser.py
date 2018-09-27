@@ -9,14 +9,15 @@ precedence=(
 start = 'translationunit'
 
 from lexer import tokens
+import ast
 
 def p_translationunit(p):
     'translationunit : procdecl'
-
+    p[0] = Translationunit(p[1])
 
 def p_procdecl(p):
     'procdecl : type IDENT LPAR paramlistopt RPAR statementlistOPT'
-
+    p[0] = Procdecl(p[1], p[2], p[4], p[6])
 
 def p_statementlistOPT(p):
     'statementlistOPT : body'
@@ -62,6 +63,7 @@ def p_paramlist(p):
 
 def p_paramdecl(p):
     'paramdecl : type IDENT'
+    p[0] = Paramdecl(p[1],p[2])
 
 
 def p_type(p):
