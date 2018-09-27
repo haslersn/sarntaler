@@ -1,6 +1,8 @@
 class Node:
     def liststr(self, param):
         rv = "["
+        if len(param) == 0:
+            return "[]"
         for p in param[:len(param)-1]:
             rv += str(p) + ", "
         rv += str(param[len(param)-1]) + "]"
