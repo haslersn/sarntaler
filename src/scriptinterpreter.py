@@ -44,7 +44,10 @@ class ScriptInterpreter:
         Control Flow:
             OP_PUSHABS
             OP_PUSHFP
-            OP_POPFP
+            OP_POPFP    
+
+        Math:
+            OP_ADD
 
     """
     operations = {
@@ -56,7 +59,8 @@ class ScriptInterpreter:
         'OP_DUP',
         'OP_PUSHFP',
         'OP_POPFP',
-        'OP_PUSHABS'
+        'OP_PUSHABS',
+        'OP_ADD'
     }
 
     def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
@@ -210,6 +214,25 @@ class ScriptInterpreter:
             return False
 
         self.framepointer = self.stack.pop()
+        return True
+
+    def op_add(self):
+        if (len(self.stack) < 2):
+            logging.warning("Not enough arguments")
+            self.stack.append(str(0))
+            return False
+
+        old_first = self.stack.pop()
+        old_second = self.stack.pop()
+
+        try:
+            sum = int(old_first) + int(old_second)
+        except ValueError:
+            logging.warning("Wrong type of arguments. Could not convert " + old_first + " and " + old_second + " to integers")
+            self.stack.append(str(0))
+            return False
+
+        self.stack.append(str(sum))
         return True
 
 

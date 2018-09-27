@@ -76,3 +76,16 @@ def test_pushabs_notok():
     si.stack = ['5', '6', '7', '8', '4']
     res = si.op_pushabs()
     assert res == False
+
+def test_add():
+    si = ScriptInterpreter("3 2 42 OP_ADD", "", None)
+    si.execute_script()
+    assert si.stack == ['3', '44']
+
+def test_add_emptystack():
+    si = ScriptInterpreter("OP_ADD", "", None)
+    assert not si.execute_script()
+
+def test_add_nonintegers():
+    si = ScriptInterpreter("a b OP_ADD", "", None)
+    assert not si.execute_script()
