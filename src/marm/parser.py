@@ -243,9 +243,9 @@ def p_error(t):
             tok = yacc.token()             # Get the next token
             if not tok or tok.type == 'SEMI' or tok.type =='END' or tok.type=='RBRAC': 
                 if tok is None:
-                    print("{}:{}.{}: syntax error: unexpected token sequence {}".format(_____secret_filename,t.lexer.lineno,column_number(t),tokseq))
+                    print("{}:{}.{}: syntax error: unexpected token sequence {}".format(yacc.filename,t.lexer.lineno,column_number(t),tokseq))
                 else:
-                    print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(_____secret_filename,t.lexer.lineno,column_number(t),tok.lexer.lineno,column_number(tok),tokseq))
+                    print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(yacc.filename,t.lexer.lineno,column_number(t),tok.lexer.lineno,column_number(tok),tokseq))
                 break
             tokseq.append(tok.type)
         yacc.restart()
@@ -254,12 +254,11 @@ def p_error(t):
 from src.marm.lexer import lexer, tokens
 # Generate parser
 yacc = yacc.yacc()
-_____secret_filename='inmemory'
 
 
-def marmparser(filename):
-    _____secret_filename=filename
-    return yacc.parse(filename,lexer=lexer)
+def marmparser(filename,input):
+    yacc.filename=filename
+    return yacc.parse(input,lexer=lexer)
 
 # Main for Debugging/Testing
 if __name__ == "__main__":
@@ -273,5 +272,5 @@ if __name__ == "__main__":
                         help="Output file. Defaults to stdout")
     args = parser.parse_args()
 
-    result = marmparser(args.input.read())
+    result = marmparser(args.input.name,args.input.read())
     args.output.write(str(result))
