@@ -3,20 +3,20 @@ class Node:
 
 
 class Expr(Node):
-    ''' Non terminal 13 (ABC) '''
+    """ Non terminal 13 (ABC) """
     def __init__(self):
         pass
 
 
 class ConstExpr(Expr):
-    ''' p_expr '''
+    """ p_expr """
     def __init__(self, value):
         super().__init__()
         self.value = value
 
 
 class BinExpr(Expr):
-    ''' p_exprBINARYEXPRESSIONS '''
+    """ p_exprBINARYEXPRESSIONS """
     def __init__(self, op, left, right):
         super().__init__()
         self.op = op
@@ -25,7 +25,7 @@ class BinExpr(Expr):
 
 
 class UnaryExpr(Expr):
-    ''' p_exprUNARYEXPRESSIONS '''
+    """ p_exprUNARYEXPRESSIONS """
     def __init__(self, op, operand):
         super().__init__()
         self.op = op
@@ -33,14 +33,14 @@ class UnaryExpr(Expr):
 
 
 class LHSExpr(Expr):
-    ''' p_exprLHS '''
+    """ p_exprLHS """
     def __init__(self, lhs):
         super().__init__()
         self.lhs = lhs
 
 
 class StructExpr(Expr):
-    ''' p_exprSTRUCTACCESS '''
+    """ p_exprSTRUCTACCESS """
     def __init__(self, expr, ident):
         super().__init__()
         self.expr = expr
@@ -48,6 +48,6 @@ class StructExpr(Expr):
 
 
 class LHS(Node):
-    ''' Non terminal 14 '''
+    """ Non terminal 14 """
     def __init__(self, ident):
         self.ident = ident
