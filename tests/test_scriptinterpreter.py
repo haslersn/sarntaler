@@ -234,7 +234,7 @@ def test_call_test():
     assert si.execute_script()
 
 def test_factorial():
-    facoperand = 30
+    facoperand = 10
     f = open("./src/labvm/factorial.labvm", "r")
     fstr = f.read()
     f.close()
