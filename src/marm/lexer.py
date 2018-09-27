@@ -40,6 +40,16 @@ def t_INTCONST(t):
     t.value = int(t.value)
     return t
 
+# HASH
+def t_HASH(t):
+    r'\#'
+    return t
+
+# DOT
+def t_DOT(t):
+    r'.'
+    return t
+
 # BEGIN and END
 def t_BEGIN(t):
     r'\{'
