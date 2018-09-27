@@ -126,14 +126,14 @@ class Boolex(Node):
 
 
 class BoolexBinary(Boolex):
-    def __init__(self, left, right):
-        super().__init__()
+    def __init__(self, op, left, right):
+        super().__init__(op)
         self.left = left
         self.right = right
 
 
 class BoolexNot(Boolex):
-    def __init__(self, operand):
-        super().__init__()
+    def __init__(self, op, operand):
+        super().__init__(op)
         self.operand = operand
 
