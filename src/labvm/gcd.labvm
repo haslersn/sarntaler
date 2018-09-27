@@ -7,7 +7,7 @@ op_pushabs
 op_pushabs
 op_equ
 26
-op_jumpr
+op_jumprc
 0
 op_pushabs
 1
@@ -33,4 +33,4 @@ op_sub
 op_popabs
 -31
 op_jumpr
-op_halt
+11111111111111

@@ -1,7 +1,6 @@
 from src.scriptinterpreter import ScriptInterpreter
 from src.transaction import Transaction
 
-
 def test_passWithOne():
     t = Transaction([], [], timestamp=None)
     si = ScriptInterpreter("1", "", t.get_hash())
@@ -133,3 +132,11 @@ def test_div_emptystack():
 def test_div_nonintegers():
     si = ScriptInterpreter("a b OP_DIV 1", "", None)
     assert not si.execute_script()
+
+def test_gcd_script():
+    gcdfile = open("./src/labvm/gcd.labvm","r")
+    gcdstr = gcdfile.read()
+    gcdfile.close()
+    si = ScriptInterpreter(gcdstr, "", None)
+    print("Stack after gcd script:" ,si.stack)
+
