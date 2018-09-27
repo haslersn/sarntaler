@@ -1,27 +1,26 @@
-# Hash map for reserved maps
+# Hash map for reserved keywords
 keywords = {
     'if' : 'IF',
     'while' : 'WHILE',
     'break' : 'BREAK',
     'continue' : 'CONTINUE',
-    'else' : 'ELSE'
+    'else' : 'ELSE',
+    'return' : 'RETURN'
 }
 
 # Token types
 tokens = ['IDENT',
-           'NUMBER',
            'BEGIN',
            'END',
            'SEMI',
            'COMMA',
            'ADDRESS',
            'INT',
-           'RETURN',
            'COMMENT',
            'ASSIGN',
            'INTCONST',
            'ADDOP', 'SUBOP', 'MULOP', 'DIVOP',
-           'NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
+           'HASH','NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
            'LPAR', 'RPAR'] + list(keywords.values())
 
 
@@ -36,9 +35,18 @@ def t_IDENT(t):
     return t
 
 
-def t_NUMBER(t):
+def t_INTCONST(t):
     r'\d+'
     t.value = int(t.value)
+    return t
+
+# BEGIN and END
+def t_BEGIN(t):
+    r'\{'
+    return t
+
+def t_END(t):
+    r'\}'
     return t
 
 # Assign
