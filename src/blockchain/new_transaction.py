@@ -17,6 +17,11 @@ class TransactionInput(namedtuple("TransactionInput", ["address", "value"])):
         val["value"] = self.value
         return val
 
+    @classmethod
+    def from_json_compatible(cls, val):
+        """ Create a new TransactionInput from its JSON-serializable representation. """
+        return cls(unhexlify(val["address"]), val["value"])
+
 class TransactionOutput(namedtuple("TransactionOutput", ["address", "value", "params"])):
     """
     :ivar params: Parameters that are pushed to the stack before calling the output
@@ -33,6 +38,13 @@ class TransactionOutput(namedtuple("TransactionOutput", ["address", "value", "pa
         val["value"] = self.value
         val["params"] = self.params
         return val
+
+    @classmethod
+    def from_json_compatible(cls, val):
+        """ Create a new transaction ouptut from its JSON-serializable representation. """
+        return cls( unhexlify(val["address"]),
+                    val["value"],
+                    val["params"])
 
 
 class TransactionData(namedtuple("TransactionData", ["inputs", "outputs", "fee", "nonce"])):
@@ -98,6 +110,19 @@ class TransactionData(namedtuple("TransactionData", ["inputs", "outputs", "fee",
         val["nonce"] = hexlify(self.nonce).decode()
         return val
 
+    @classmethod
+    def from_json_compatible(cls, val):
+        """ Create a new transaction data from its JSON-serializable representation. """
+        inputs = []
+        for inp in val["inputs"]:
+            inputs.append(TransactionInput.from_json_compatible(inp))
+        outputs = []
+        for out in val["outputs"]:
+            outputs.append(TransactionOutput.from_json_compatible(out))
+        fee = val["fee"]
+        nonce = unhexlify(val["nonce"])
+        return cls(inputs, outputs, fee, nonce)
+
     @property
     def hash(self):
         if not self.hasattr('_hash'):
@@ -132,7 +157,7 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signatures"])):
         """ Computes the hash by just hasing the object's JSON representation
             It is recomputed every time """
         h = get_hasher()
-        h.update(json.dump(to_json_compatible()))
+        h.update(str.encode(json.dumps(self.to_json_compatible())))
         return h.digest()
 
     def to_json_compatible(self):
@@ -143,3 +168,12 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signatures"])):
         for sig in self.signatures:
             val["signatures"].append(hexlify(sig).decode())
         return val
+
+    @classmethod
+    def from_json_compatible(cls, val):
+        """ Create a new Transaction from its JSON-serializable representation. """
+        signatures = []
+        for hex_sig in val["signatures"]:
+            signatures.append(unhexlify(hex_sig))
+        return cls(TransactionData.from_json_compatible(val["tx_data"]), signatures)
+        #24return cls(TransactionData.from_json_compatible(val["tx_data"]), signatures)

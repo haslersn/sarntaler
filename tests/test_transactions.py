@@ -11,5 +11,8 @@ def test_tx_input():
 
     tx = Transaction(tx_data)
     jsonstr = json.dumps(tx.to_json_compatible())
-    print(jsonstr)
-    assert not True
+    #print(jsonstr)
+
+    tx2 = Transaction.from_json_compatible(json.loads(jsonstr))
+
+    assert tx.get_hash() == tx2.get_hash()
