@@ -212,7 +212,17 @@ def p_error(t):
     if t is None:
         raise EofError()
     else:
-        raise UnexpectedTokenError(t)
+        # Read ahead looking for a closing '}/;/)'
+        tokseq = [t.type]
+        while True:
+            tok = yacc.token()             # Get the next token
+            if not tok or tok.type == 'SEMI' or tok.type =='END' or tok.type=='RBRAC': 
+                from lexer import column_number
+                print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(args.input.name,t.lexer.lineno,column_number(t),tok.lexer.lineno,column_number(tok),tokseq))
+                break
+            tokseq.append(tok.type)
+        yacc.restart()
+
 
 # Generate parser
 import ply.yacc as yacc
