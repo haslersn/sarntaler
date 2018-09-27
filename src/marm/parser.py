@@ -79,6 +79,7 @@ def p_type(p):
 def p_typename(p):
     '''typename : ADDRESS
     | INT'''
+    p[0] = ast.Typename(p[1])
 
 
 def p_statementRETURN(p):
@@ -198,6 +199,7 @@ def p_boolexPAR(p):
 
 def p_declarator(p):
     'decl : IDENT'
+    p[0] = p[1]
 
 
 def p_declaratorlist(p):
