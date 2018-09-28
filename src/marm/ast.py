@@ -144,8 +144,8 @@ class Paramdecl(Node):
     def analyse_scope(self, scope_list):
         if self.name in scope_list[0]:
             print("Multiple parameters have the name {}.".format(self.name))
-        scope_list[0][self.name] = self
         self.local_var_index = len(scope_list[0])
+        scope_list[0][self.name] = self
 
 
 class Procdecl(Node):
@@ -194,8 +194,8 @@ class StatementDecl(Statement):
         for decl in self.decllist:
             if decl in scope_list[0]:
                 print("Variable {} declared twice".format(decl)) # TODO error handling
-            scope_list[0][decl] = self
             self.local_var_indices[decl] = len(scope_list[0])
+            scope_list[0][decl] = self
 
 
 class StatementReturn(Statement):
