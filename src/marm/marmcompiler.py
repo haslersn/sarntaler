@@ -51,6 +51,7 @@ def marmcompiler(filename, input, errorhandler=None):
     except ParserError as err:
         print(err)
     print(errorhandler)
+    result.analyse_scope()
     return result
 
 

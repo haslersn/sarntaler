@@ -32,6 +32,8 @@ class ConstExpr(Expr):
     def __str__(self):
         return "[ConstExpr: value=" + str(self.value) + "]"
 
+    def analyse_scope(self, scope_list): pass
+
 
 class BinExpr(Expr):
     """ p_exprBINARYEXPRESSIONS """
@@ -44,6 +46,10 @@ class BinExpr(Expr):
     def __str__(self):
         return "[BinExpr: op=" + str(self.op) + ", left=" + str(self.left) + ", right=" + str(self.right) + "]"
 
+    def analyse_scope(self, scope_list):
+        self.left.analyse_scope(scope_list)
+        self.right.analyse_scope(scope_list)
+
 
 class UnaryExpr(Expr):
     """ p_exprUNARYEXPRESSIONS """
@@ -55,6 +61,9 @@ class UnaryExpr(Expr):
     def __str__(self):
         return "[UnaryExpr: op=" + str(self.op) + ", operand=" + str(self.operand) + "]"
 
+    def analyse_scope(self, scope_list):
+        self.operand.analyse_scope(scope_list)
+
 
 class LHSExpr(Expr):
     """ p_exprLHS """
@@ -64,6 +73,9 @@ class LHSExpr(Expr):
 
     def __str__(self):
         return "[LHSExpr: lhs=" + str(self.lhs) + "]"
+
+    def analyse_scope(self, scope_list):
+        self.lhs.analyse_scope(scope_list)
 
 
 class StructExpr(Expr):
@@ -76,6 +88,10 @@ class StructExpr(Expr):
     def __str__(self):
         return "[StructExpr: expr=" + str(self.expr) + ", ident=" + str(self.ident) + "]"
 
+    def analyse_scope(self, scope_list):
+        self.expr.analyse_scope(self.expr, scope_list)
+        # TODO: Attributes?
+
 
 class LHS(Node):
     """ Non terminal 14 """
@@ -85,6 +101,9 @@ class LHS(Node):
 
     def __str__(self):
         return "[LHS: ident=" + str(self.ident) + "]"
+
+    def analyse_scope(self, scope_list):
+        self.definition = scope_lookup(scope_list, self.ident)
 
 
 class Typename(Node):
@@ -106,6 +125,11 @@ class Translationunit(Node):
     def __str__(self):
         return "[Translationunit: procs=" + str(self.procs) + "]"
 
+    def analyse_scope(self, scope_list=[]):
+        local_scope_list = [{}]+scope_list
+        for proc in self.procs:
+            proc.analyse_scope(local_scope_list)
+
 
 class Paramdecl(Node):
     """ Non terminal 3 """
@@ -120,7 +144,7 @@ class Paramdecl(Node):
     def analyse_scope(self, scope_list):
         if self.name in scope_list[0]:
             print("Multiple parameters have the name {}.".format(self.name))
-        scope_list[self.name] = self
+        scope_list[0][self.name] = self
         self.local_var_index = len(scope_list[0])
 
 
@@ -166,11 +190,11 @@ class StatementDecl(Statement):
 
     def analyse_scope(self, scope_list):
         self.local_var_indices = {}
-        for decl in decllist:
+        for decl in self.decllist:
             if decl in scope_list[0]:
                 print("Variable {} declared twice".format(decl)) # TODO error handling
-            scope_list[decl] = self
-            local_var_indices[decl] = len(scope_list[0])
+            scope_list[0][decl] = self
+            self.local_var_indices[decl] = len(scope_list[0])
 
 
 class StatementReturn(Statement):
@@ -230,7 +254,7 @@ class StatementExpression(Statement):
         return "[StatementExpression: expr={}]".format(self.expr)
 
     def analyse_scope(self, scope_list):
-        expr.analyse_scope(scope_list)
+        self.expr.analyse_scope(scope_list)
 
 
 class StatementBody(Statement):
@@ -244,7 +268,7 @@ class StatementBody(Statement):
 
     def analyse_scope(self, scope_list):
         local_scope_list = [{}] + scope_list
-        for statement in body:
+        for statement in self.body:
             statement.analyse_scope(local_scope_list)
 
 
