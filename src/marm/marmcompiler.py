@@ -61,21 +61,27 @@ def marmcompiler(filename, input, errorhandler=None):
     except ParserError as err:
         print(err)
     print(errorhandler)
-    result.analyse_scope()
+    #result.analyse_scope()
     return result
 
 def coloring(input):
     from src.marm.lexer import marmlexer
+    from src.marm.lexer import keywords
     mylexer = marmlexer('',ErrorHandler())
     mylexer.input(input)
-    # Lex input and wrtie to output
     token = mylexer.token()
-    output = ''+str(token.value)
+    output=''
     while not (token is None):
+        if token.type=='IDENT':
+            output+=Fore.GREEN 
+        if token.type=='INTCONST':
+            output+=Fore.RED 
+ #       if keywords.values() (token.type):
+ #           output+=Fore.BLUE
+        output+= str(token.value)+Fore.RESET
         token = mylexer.token()
-        output+= token.value
     print('Coloring done')
-    output
+    return output
 
 if __name__ == "__main__":
     # Parse Arguments
@@ -89,8 +95,10 @@ if __name__ == "__main__":
     parser.add_argument('--output-format', choices=['json', 'str'], default='json',
                         help="Format used for output. Defaults to json")
     args = parser.parse_args()
-    #result=coloring(args.input.read())
-    result = marmcompiler(args.input.name,args.input.read())
+    myinput = args.input.read()
+    result=coloring(myinput)
+    print(result)
+    result = marmcompiler(args.input.name,myinput)
     if result is not None:
         if args.output_format == 'json':
             args.output.write(result.toJSON())
