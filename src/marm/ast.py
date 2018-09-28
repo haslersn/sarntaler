@@ -9,7 +9,6 @@ def scope_lookup(scope_list, name):
 class Node:
     def __init__(self):
         self.classname = self.__class__.__name__
-        self.local_var_indices = None
 
     def liststr(self, param):
         return "[{}]".format(", ".join(map(str,param)))
@@ -185,6 +184,7 @@ class StatementDecl(Statement):
         super().__init__()
         self.typee = typee
         self.decllist = decllist
+        self.local_var_indices = None
 
     def __str__(self):
         return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + self.liststr(self.decllist) + "]"
