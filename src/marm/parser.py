@@ -275,9 +275,10 @@ if __name__ == "__main__":
     except ParserError as err:
         print(err)
     else:
-        if args.output_format == 'json':
-            args.output.write(result.toJSON())
-        elif args.output_format == 'str':
-            args.output.write(str(result))
-        else:
-            print("Unknown output format {}.".format(args.output_format))
+        if result is not None:
+            if args.output_format == 'json':
+                args.output.write(result.toJSON())
+            elif args.output_format == 'str':
+                args.output.write(str(result))
+            else:
+                print("Unknown output format {}.".format(args.output_format))
