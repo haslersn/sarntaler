@@ -147,10 +147,11 @@ class LexerError(RuntimeError):
 ## error handler
 def t_error(t):
     #raise LexerError(t)
-    t.lexer.errorhandler.registerError(t.lexer.filename,
+    t.lexer.errorhandler.registerError(
+            t.lexer.filename,
             t.lexer.lineno,
             column_number(t),
-            ("lexical error: invalid character %s" % (t.value[0]))
+            "lexical error: invalid character {}".format(t.value[0])
             )
 
     t.lexer.skip(1)
@@ -158,8 +159,14 @@ def t_error(t):
 # Generate lexer
 import ply.lex as lex
 
-lexer = lex.lex()
+def marmlexer(filename,errorhandler):
+    locallexer = lex.lex()
+    locallexer.filename = filename
+    locallexer.errorhandler = errorhandler
+    return locallexer
 
+
+lexer = lex.lex()
 # Main for Debugging/Testing
 if __name__ == "__main__":
     # Parse Arguments

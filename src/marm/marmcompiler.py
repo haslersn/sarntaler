@@ -1,3 +1,4 @@
+from colorama import Fore,Back
 
 class ErrorHandler:
     """ ErrorHandler for registering and querying all sorts of errors during compilation """
@@ -31,19 +32,28 @@ class ErrorHandler:
     def cleanCode(self):
         return self.countFatals()+self.countErrors()+self.countWarnings()==0
 
-    def __str__(self):
+    def tostring(self,color=True):
         retstring = ''
+        if color==True:
+            formatstring=Fore.LIGHTYELLOW_EX+"{}:{}.{}: "+Fore.RED
+        else:
+            formatstring="{}:{}.{}: "
         for f in self.fatals:
-            retstring += "{}:{}.{}: {}\n".format( f[0], f[1], f[2], f[3] )
+            retstring += (formatstring+"{}\n").format( f[0], f[1], f[2], f[3] )
         for e in self.errors:
-            retstring += "{}:{}.{}: {}\n".format( e[0], e[1], e[2], e[3] )
+            retstring += (formatstring+"{}\n").format( e[0], e[1], e[2], e[3] )
         for w in self.warnings :
-            retstring += "{}:{}.{}: {}\n".format( w[0], w[1], w[2], w[3] )
+            retstring += (formatstring+"{}\n").format( w[0], w[1], w[2], w[3] )
+        if color==True:
+            retstring+=Fore.RESET
         return retstring
+    def __str__(self):
+        return self.tostring(False)
 
 def marmcompiler(filename, input, errorhandler=None):
     from src.marm.parser import marmparser,ParserError
     #yacc = yacc.yacc()
+    result=None
     if errorhandler is None:
         errorhandler = ErrorHandler()
     try:
@@ -54,6 +64,18 @@ def marmcompiler(filename, input, errorhandler=None):
     result.analyse_scope()
     return result
 
+def coloring(input):
+    from src.marm.lexer import marmlexer
+    mylexer = marmlexer('',ErrorHandler())
+    mylexer.input(input)
+    # Lex input and wrtie to output
+    token = mylexer.token()
+    output = ''+str(token.value)
+    while not (token is None):
+        token = mylexer.token()
+        output+= token.value
+    print('Coloring done')
+    output
 
 if __name__ == "__main__":
     # Parse Arguments
@@ -67,6 +89,7 @@ if __name__ == "__main__":
     parser.add_argument('--output-format', choices=['json', 'str'], default='json',
                         help="Format used for output. Defaults to json")
     args = parser.parse_args()
+    #result=coloring(args.input.read())
     result = marmcompiler(args.input.name,args.input.read())
     if result is not None:
         if args.output_format == 'json':
