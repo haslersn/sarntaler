@@ -165,8 +165,8 @@ class StatementDecl(Statement):
         return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + self.liststr(self.decllist) + "]"
 
     def analyse_scope(self, scope_list):
-        self.local_var_indices = {}
-        for decl in decllist:
+        local_var_indices = {}
+        for decl in self.decllist:
             if decl in scope_list[0]:
                 print("Variable {} declared twice".format(decl)) # TODO error handling
             scope_list[decl] = self
@@ -230,7 +230,7 @@ class StatementExpression(Statement):
         return "[StatementExpression: expr={}]".format(self.expr)
 
     def analyse_scope(self, scope_list):
-        expr.analyse_scope(scope_list)
+        self.expr.analyse_scope(scope_list)
 
 
 class StatementBody(Statement):
@@ -244,7 +244,7 @@ class StatementBody(Statement):
 
     def analyse_scope(self, scope_list):
         local_scope_list = [{}] + scope_list
-        for statement in body:
+        for statement in self.body:
             statement.analyse_scope(local_scope_list)
 
 
