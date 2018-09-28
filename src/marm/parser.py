@@ -291,7 +291,10 @@ if __name__ == "__main__":
                         help="Format used for output. Defaults to json")
     args = parser.parse_args()
     try:
-        result = marmparser(args.input.name,args.input.read())
+        import src.marm.marmcompiler
+        errorhandler = src.marm.marmcompiler.ErrorHandler()
+        result = marmparser(args.input.name,args.input.read(),errorhandler)
+        print(errorhandler)
     except ParserError as err:
         print(err)
     else:
