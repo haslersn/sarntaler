@@ -137,6 +137,8 @@ class Paramdecl(Node):
         super().__init__()
         self.param_type = param_type
         self.name = name
+        self.local_var_index = None
+        self.lenv_depth = None
 
     def __str__(self):
         return "[Paramdecl: param_type=" + str(self.param_type) + ", name=" + str(self.name) + "]"
@@ -145,6 +147,7 @@ class Paramdecl(Node):
         if self.name in scope_list[0]:
             print("Multiple parameters have the name {}.".format(self.name))
         self.local_var_index = len(scope_list[0])
+        self.lenv_depth = len(scope_list)
         scope_list[0][self.name] = self
 
 
@@ -185,12 +188,14 @@ class StatementDecl(Statement):
         self.typee = typee
         self.decllist = decllist
         self.local_var_indices = None
+        self.lenv_depth = None
 
     def __str__(self):
         return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + self.liststr(self.decllist) + "]"
 
     def analyse_scope(self, scope_list):
         self.local_var_indices = {}
+        self.lenv_depth = len(scope_list)
         for decl in self.decllist:
             if decl in scope_list[0]:
                 print("Variable {} declared twice".format(decl)) # TODO error handling
