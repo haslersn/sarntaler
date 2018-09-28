@@ -21,6 +21,11 @@ def p_procdecl(p):
     'procdecl : type IDENT LPAR paramlistopt RPAR statementlistOPT'
     p[0] = ast.Procdecl(p[1], p[2], p[4], p[6])
 
+def p_procdeclERROR(p):
+    '''procdecl : error END
+                | LPAR paramlistopt RPAR statementlistOPT
+                | error statementlistOPT'''
+
 
 def p_statementlistOPT_body(p):
     'statementlistOPT : body'
