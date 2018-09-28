@@ -152,7 +152,12 @@ def p_expr(p):
     p[0] = ast.ConstExpr(p[1])
 
 def p_exprFUNCALL(p):
-    'expr : IDENT LPAR RPAR'
+    '''expr : IDENT LPAR decllist RPAR
+            | IDENT LPAR RPAR'''
+    if len(p)==4:
+        p[0] = ast.BinExpr(p[3],"localcall",p[1])
+    else:  
+        p[0] = ast.UnaryExpr("localcall",p[1])
 
 def p_exprBINARYEXPRESSIONS(p):
      '''expr : expr ASSIGN expr
