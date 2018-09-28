@@ -137,7 +137,7 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signatures"])):
     :vartype tx_data: TransactionData
     :ivar signatures: List of signatures made by the private keys that own the
     input accounts, in the same order as the input account occur in tx_data.inputs
-    :vartype signatures: List[bytes]
+    :vartype signatures: Tuple[bytes]
 
     """
 
