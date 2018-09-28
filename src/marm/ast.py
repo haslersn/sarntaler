@@ -5,13 +5,7 @@ class Node:
         self.classname = self.__class__.__name__
 
     def liststr(self, param):
-        rv = "["
-        if len(param) == 0:
-            return "[]"
-        for p in param[:len(param)-1]:
-            rv += str(p) + ", "
-        rv += str(param[len(param)-1]) + "]"
-        return rv
+        return "[{}]".format(", ".join(map(str,param)))
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)

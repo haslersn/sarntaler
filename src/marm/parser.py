@@ -282,10 +282,17 @@ if __name__ == "__main__":
                         help="Input file. Defaults to stdin")
     parser.add_argument('--output', type=argparse.FileType('w'), default=sys.stdout,
                         help="Output file. Defaults to stdout")
+    parser.add_argument('--output-format', choices=['json', 'str'], default='json',
+                        help="Format used for output. Defaults to json")
     args = parser.parse_args()
     try:
         result = marmparser(args.input.name,args.input.read())
     except ParserError as err:
         print(err)
     else:
-        args.output.write(result.toJSON())#str(result))
+        if args.output_format == 'json':
+            args.output.write(result.toJSON())
+        elif args.output_format == 'str':
+            args.output.write(str(result))
+        else:
+            print("Unknown output format {}.".format(args.output_format))
