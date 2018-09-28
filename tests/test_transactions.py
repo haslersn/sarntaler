@@ -15,4 +15,4 @@ def test_tx_input():
 
     tx2 = Transaction.from_json_compatible(json.loads(jsonstr))
 
-    assert tx.get_hash() == tx2.get_hash()
+    assert tx.hash == tx2.hash

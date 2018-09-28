@@ -153,7 +153,8 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signatures"])):
         new_sig = signing_key.sign(tx_data.get_hash())
         return Transaction(self, tx_data, signatures[0:index:] + (new_sig,) + signatures[index +1:len(signatures):])
 
-    def get_hash(self):
+    @property
+    def hash(self):
         """ Computes the hash by just hasing the object's JSON representation
             It is recomputed every time """
         h = get_hasher()
