@@ -13,9 +13,16 @@ start = 'translationunit'
 
 
 def p_translationunit(p):
-    'translationunit : procdecl'
+    'translationunit : procdecllist'
     p[0] = ast.Translationunit(p[1])
 
+def p_procdecllist(p):
+    '''procdecllist : procdecl procdecllist
+                    | '''
+    if len(p)==2:
+        p[0] = p[2].append(p[1])
+    else: 
+        p[0] = []
 
 def p_procdecl(p):
     'procdecl : type IDENT LPAR paramlistopt RPAR statementlistOPT'
