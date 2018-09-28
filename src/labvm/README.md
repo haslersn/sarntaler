@@ -93,13 +93,14 @@ lines are numbered beginning with 1 and empty lines are not counted
 # Macros
 Macros that are implemented:
 
-`OP_PUSHR` (Push relative to FP) is equal to `OP_PUSHFP,OP_ADD,OP_PUSHABS`
+`OP_PUSHR` (Push relative to FP) is equal to `OP_PUSHFP, OP_ADD, OP_PUSHABS`
 
-`OP_POPR` (Store relative to FP) is equal to `OP_PUSHFP,OP_ADD,OP_POPABS`
+`OP_POPR` (Store relative to FP) is equal to `OP_PUSHFP, OP_ADD, OP_POPABS`
 
 `OP_INCFP` (In-/Decrement FP) is equal to `OP_PUSHFP, OP_ADD, OP_POPFP`
 
 # Examples
+## GCD
 
 
 	0
@@ -135,7 +136,7 @@ Macros that are implemented:
 	-31
 	op_jumpr			// jump back to while condition
 
-Note: The comments are just for explaination. Right now, labVM script does not support comments.
+Note: The comments are just for explanation. Right now, labVM script does not support comments.
 
 *Explanation:* This Code computes the gcd of two numbers already in the first two stack cells. It is based on the Euclid's algorithm:
 
@@ -149,3 +150,31 @@ Note: The comments are just for explaination. Right now, labVM script does not s
 	    }
 	    return a;
 	}
+
+## Factorial
+
+    21              // Line 21 is the start of the main-method
+    OP_JUMP         // Jump to the main-method
+    -1
+    OP_PUSHR        // -1 OP_PUSHR gets the parameter that was put on the stack before calling the function
+    1
+    OP_GT           // check if parameter >= 1
+    11
+    OP_JUMPC        // if parameter >= 1 is true, jump to line 11
+    1
+    OP_RET          // parameter >= 1 is false, put on the stack as returnvalue and return
+    -1
+    OP_PUSHR        // get the parameter again
+    1
+    OP_SUB          // subtract 1 from the parameter
+    3
+    OP_CALL         // call fac on line 3 again with the decremented parameter
+    -1
+    OP_PUSHR        // get the paramter again
+    OP_MUL          // muliply parameter and fac(parameter-1)
+    OP_RET          // return the result of the multiplication
+    10              // put the value that we want the factorial of on the stack
+    3               // Line 3 is the start of the fac() method
+    OP_CALL         // call fac-method
+    3628800         // the value of fac(10)
+    OP_EQU          // check if our calculation was right

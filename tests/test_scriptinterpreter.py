@@ -39,25 +39,24 @@ def test_swapWithOneElement():
 
 
 def test_pushFP():
-    si = ScriptInterpreter("3 2 1 OP_PUSHFP 1", "", None)
-    si.framepointer = 27
+    si = ScriptInterpreter("", "3 2 1 OP_PUSHFP 1", None)
     si.execute_script()
-    assert si.stack == [3, 2, 1, 27]
+    assert si.stack == [3, 2, 1, -1]
 
 
 def test_popFP():
-    si = ScriptInterpreter("3 2 42 OP_POPFP 1", "", None)
+    si = ScriptInterpreter("", "3 2 42 OP_POPFP 1", None)
     si.execute_script()
     assert si.stack == [3, 2]
     assert si.framepointer == 42
     emptystack_test("OP_POPFP")
 
 def test_incfp():
-    si = ScriptInterpreter("3 2 7 OP_INCFP 1", "", None)
+    si = ScriptInterpreter("", "3 2 7 OP_INCFP 1", None)
     si.framepointer = 1
     si.execute_script()
     assert si.stack == [3, 2]
-    assert si.framepointer == 8
+    assert si.framepointer == 6
     emptystack_test("OP_INCFP")
 
 
@@ -166,22 +165,22 @@ def test_gt():
 
 
 def test_pushr():
-    si = ScriptInterpreter("0 1 2 3 4 5 2 OP_PUSHR 1", "", None)
+    si = ScriptInterpreter("0 1 2 3 2 OP_PUSHR 1", "", None)
     si.framepointer = 3
     si.execute_script()  # should push 3 (framepointer) + 2 (operand) = 5th element
-    assert si.stack == [0, 1, 2, 3, 4, 5, 5]
+    assert si.stack == [0, 1, 2, 3, 1]
 
 def test_pushr_2():
-    si = ScriptInterpreter('0 1 2 \"three\" 4 5 3 OP_PUSHR 1', "", None)
+    si = ScriptInterpreter('0 2 \"three\" 4 5 3 OP_PUSHR 1', "", None)
     si.framepointer = 0
     si.execute_script()  # should push 0 (framepointer) + 3 (operand) = 3rd element
-    assert si.stack == [0, 1, 2, "three", 4, 5, "three"]
+    assert si.stack == [0, 2, "three", 4, 5, "three"]
 
 def test_popr():
     si = ScriptInterpreter('0 1 2 3 4 "storethis" 2 OP_POPR 1', "", None)
     si.framepointer = 1
     si.execute_script()  # should store to 1 (framepointer) + 2 (operand) = 3rd element
-    assert si.stack == [0, 1, 2, "storethis", 4]
+    assert si.stack == [0, "storethis", 2, 3, 4]
     emptystack_test('OP_POPR')
 
 def script_finalstack_test(script: str, finalstack: list):
@@ -252,4 +251,5 @@ def test_factorial():
         measure.write(str(i) + ", " + str(time.time() - t) + "\n")
 
     measure.close()
+
 
