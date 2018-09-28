@@ -98,12 +98,15 @@ class LHS(Node):
     def __init__(self, ident):
         super().__init__()
         self.ident = ident
+        self.definition = None
+        self.lenv_depth = None
 
     def __str__(self):
         return "[LHS: ident=" + str(self.ident) + "]"
 
     def analyse_scope(self, scope_list):
         self.definition = scope_lookup(scope_list, self.ident)
+        self.lenv_depth = len(scope_list)
 
 
 class Typename(Node):
