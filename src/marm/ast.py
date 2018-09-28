@@ -117,6 +117,12 @@ class Paramdecl(Node):
     def __str__(self):
         return "[Paramdecl: param_type=" + str(self.param_type) + ", name=" + str(self.name) + "]"
 
+    def analyse_scope(self, scope_list):
+        if self.name in scope_list[0]:
+            print("Multiple parameters have the name {}.".format(self.name))
+        scope_list[self.name] = self
+        self.local_var_index = len(scope_list[0])
+
 
 class Procdecl(Node):
     """ Non terminal 4 """
@@ -131,6 +137,12 @@ class Procdecl(Node):
         return "[Procdecl: return_type=" + str(self.return_type) + ", name=" + str(self.name) + ", params=" +\
                self.liststr(self.params) + ", body=" + self.liststr(self.body) + "]"
 
+    def analyse_scope(self, scope_list):
+        local_scope_list = [{}] + scope_list
+        for param in self.params:
+            param.analyse_scope(local_scope_list)
+        for statement in self.body:
+            statement.analyse_scope(local_scope_list)
 
 class Statement(Node):
     """ Non terminal 12 """
@@ -155,7 +167,7 @@ class StatementDecl(Statement):
     def analyse_scope(self, scope_list):
         self.local_var_indices = {}
         for decl in decllist:
-            if decl in scope_list:
+            if decl in scope_list[0]:
                 print("Variable {} declared twice".format(decl)) # TODO error handling
             scope_list[decl] = self
             local_var_indices[decl] = len(scope_list[0])
@@ -233,7 +245,7 @@ class StatementBody(Statement):
     def analyse_scope(self, scope_list):
         local_scope_list = [{}] + scope_list
         for statement in body:
-            statement.analyse_scope(scope_list)
+            statement.analyse_scope(local_scope_list)
 
 
 class StatementBreak(Statement):
