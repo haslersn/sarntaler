@@ -50,6 +50,18 @@ class BinExpr(Expr):
         self.left.analyse_scope(scope_list)
         self.right.analyse_scope(scope_list)
 
+class LocalcallExpr(Expr):
+    def __init__(self, fnname, params):
+        super().__init__()
+        self.fnname = fnname
+        self.params = params
+
+    def __str__(self):
+        return "[LocalcallExpr: fnname={}, params={}]".format(self.fnname,self.liststr(self.params))
+
+    def analyse_scope(self, scope_list):
+        for param in self.params:
+            param.analyse_scope(scope_list)
 
 class UnaryExpr(Expr):
     """ p_exprUNARYEXPRESSIONS """
