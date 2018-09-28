@@ -18,6 +18,7 @@ class TestParserMethods(unittest.TestCase):
             unittest.fail(msg=t_text + " could not be lexed. " + str(e))
 
     def test_lex_tokens(self):
+        """"Tests all known tokens, has to be updated always"""
         self.generic_lex("if", 'IF', 'if')
         self.generic_lex("while", 'WHILE', 'while')
         self.generic_lex("break", 'BREAK', 'break')
@@ -58,40 +59,49 @@ class TestParserMethods(unittest.TestCase):
         self.assertFalse(lexer.tokens.__len__() == 0)
 
     def test_parse_file_error(self):
+        """Tests some quite complicated errors"""
         errorhandler = marmcompiler.ErrorHandler()
         try:
             testfile = open("./marm/notvalid.marm", mode='r')
             marmcompiler.marmcompiler("notvalid.marm", testfile.read(), errorhandler=errorhandler)
             self.assertFalse(errorhandler.roughlyOk())
+            self.assertEqual(errorhandler.countErrors(), 2)
+            self.assertEqual(errorhandler.countFatals(), 0)
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
     def test_parse_file_error2(self):
+        """Tests some easy errors"""
         errorhandler = marmcompiler.ErrorHandler()
         try:
             testfile = open("./marm/invalid.marm", mode='r')
             marmcompiler.marmcompiler("invalid.marm", testfile.read(), errorhandler=errorhandler)
             self.assertFalse(errorhandler.roughlyOk())
+            self.assertEqual(errorhandler.countErrors(), 5)
+           # self.assertEqual(errorhandler.countFatals(), 3) TODO lexical errors should be fatals
         except IOError as e:
             self.fail(msg="File error: " + str(e))
             
     def test_parse_file_valid_standard(self):
+        """Tests some standard valid file"""
         errorhandler = marmcompiler.ErrorHandler()
         try:
             testfile = open("./marm/test.marm", mode='r')
             marmcompiler.marmcompiler("test.marm", testfile.read(), errorhandler=errorhandler)
-            self.assertTrue(errorhandler.roughlyOk())
+            self.assertTrue(errorhandler.cleanCode())
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
     def test_parse_file_valid_double_functions(self):
+        """Tests some valid easy file with two functions and a call"""
         errorhandler = marmcompiler.ErrorHandler()
         try:
             testfile = open("./marm/valid.marm", mode='r')
             marmcompiler.marmcompiler("valid.marm", testfile.read(), errorhandler=errorhandler)
-            self.assertTrue(errorhandler.roughlyOk())
+            self.assertTrue(errorhandler.cleanCode())
         except IOError as e:
             self.fail(msg="File error: " + str(e))
+
 
 if __name__ == '__main__':
     unittest.main()

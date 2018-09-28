@@ -9,6 +9,7 @@ def scope_lookup(scope_list, name):
 class Node:
     def __init__(self):
         self.classname = self.__class__.__name__
+        self.local_var_indices = None
 
     def liststr(self, param):
         return "[{}]".format(", ".join(map(str,param)))
