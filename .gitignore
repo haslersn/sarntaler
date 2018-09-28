@@ -3,6 +3,7 @@ __pycache__
 /doc/_autosummary/
 /doc/_build/
 .cache
+.pytest_cache
 *.wallet
 *.pem
 *.json.gz
