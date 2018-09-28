@@ -234,14 +234,22 @@ def test_call_test():
     si = ScriptInterpreter(fstr, "", None)
     assert si.execute_script()
 
+import os
+import time
 def test_factorial():
-    facoperand = 30
-    f = open("./src/labvm/factorial.labvm", "r")
-    fstr = f.read()
-    f.close()
-    fstr = fstr.replace('FACOPERAND', str(facoperand))
-    fstr = fstr.replace('FACRESULT', str(factorial(facoperand)))
-    si = ScriptInterpreter(fstr, "", None)
-    assert si.execute_script()
+    measure = open("measure.csv","w")
 
+    #for i in range(1000):
+    i = 10
+        t = time.time()
+        f = open("./src/labvm/factorial.labvm", "r")
+        fstr = f.read()
+        f.close()
+        fstr = fstr.replace('FACOPERAND', str(i))
+        fstr = fstr.replace('FACRESULT', str(factorial(i)))
+        si = ScriptInterpreter(fstr, "", None)
+        si.execute_script()
+        measure.write(str(i) + ", " + str(time.time() - t) + "\n")
+
+    measure.close()
 
