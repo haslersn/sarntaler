@@ -4,6 +4,7 @@ __pycache__
 /doc/_build/
 .cache
 .pytest_cache
+.vscode
 *.wallet
 *.pem
 *.json.gz
