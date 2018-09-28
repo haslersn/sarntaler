@@ -145,7 +145,7 @@ def p_exprBINARYEXPRESSIONS(p):
              | expr ADDOP expr
              | expr DIVOP expr
              | expr SUBOP expr '''
-     p[0] = ast.BoolexBinary(p[2], p[1], p[3])
+     p[0] = ast.BinExpr(p[2], p[1], p[3])
 
 
 def p_exprUNARYEXPRESSIONS(p):
