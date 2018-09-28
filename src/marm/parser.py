@@ -238,38 +238,23 @@ def p_error(t):
     if t is None:
         raise EofError()
     else:
-        # Read ahead looking for a closing '}/;/)'
         from src.marm.lexer import column_number
-        print("{}:{}.{}: syntax error: unexpected token {}:{}".format(
-            yacc.filename,
-            t.lexer.lineno+1,
+        yacc.errorhandler.registerError(yacc.filename,
+            t.lexer.lineno,
             column_number(t),
-            t.type,
-            t.value
-        ))
-
-        # tokseq = [t.type]
-        # while True:
-        #     from src.marm.lexer import column_number
-        #     tok = yacc.token()             # Get the next token
-        #     if not tok or tok.type == 'SEMI' or tok.type =='END' or tok.type=='RBRAC': 
-        #         if tok is None:
-        #             print("{}:{}.{}: syntax error: unexpected token sequence {}".format(yacc.filename,t.lexer.lineno,column_number(t),tokseq))
-        #         else:
-        #             print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(yacc.filename,t.lexer.lineno,column_number(t),tok.lexer.lineno,column_number(tok),tokseq))
-        #         break
-        #     tokseq.append(tok.type)
-        # yacc.restart()
-
+            ("syntax error: unexpected token %s:%s" % (t.type,t.value))
+            )
+            
 
 from src.marm.lexer import lexer, tokens
 # Generate parser
 yacc = yacc.yacc()
 
-
-def marmparser(filename,input):
+def marmparser(filename,input,errorhandler):
     lexer.filename=filename
+    lexer.errorhandler=errorhandler
     yacc.filename=filename
+    yacc.errorhandler=errorhandler
     return yacc.parse(input,lexer=lexer)
 
 # Main for Debugging/Testing

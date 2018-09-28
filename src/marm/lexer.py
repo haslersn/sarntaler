@@ -146,11 +146,12 @@ class LexerError(RuntimeError):
 ## error handler
 def t_error(t):
     #raise LexerError(t)
-    print("{}:{}.{}: lexical error: Invalid character '{}'."
-                         .format(t.lexer.filename,
-                                 t.lexer.lineno+1,
-                                 column_number(t),
-                                 t.value[0]))
+    t.lexer.errorhandler.registerError(t.lexer.filename,
+            t.lexer.lineno,
+            column_number(t),
+            ("lexical error: invalid character %s" % (t.value[0]))
+            )
+
     t.lexer.skip(1)
 
 # Generate lexer
