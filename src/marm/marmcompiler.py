@@ -49,10 +49,8 @@ def marmcompiler(filename, input):
         result = marmparser(filename,input,errorhandler)
     except ParserError as err:
         print(err)
-    else:
-        args.output.write(result.toJSON())
     print(errorhandler)
-
+    return result
 
 
 if __name__ == "__main__":
@@ -66,3 +64,4 @@ if __name__ == "__main__":
                         help="Output file. Defaults to stdout")
     args = parser.parse_args()
     result = marmcompiler(args.input.name,args.input.read())
+    args.output.write(result.toJSON())
