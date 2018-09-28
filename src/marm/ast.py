@@ -9,6 +9,7 @@ def scope_lookup(scope_list, name):
 class Node:
     def __init__(self):
         self.classname = self.__class__.__name__
+        self.local_var_indices = None
 
     def liststr(self, param):
         return "[{}]".format(", ".join(map(str,param)))
@@ -165,12 +166,12 @@ class StatementDecl(Statement):
         return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + self.liststr(self.decllist) + "]"
 
     def analyse_scope(self, scope_list):
-        local_var_indices = {}
+        self.local_var_indices = {}
         for decl in self.decllist:
             if decl in scope_list[0]:
                 print("Variable {} declared twice".format(decl)) # TODO error handling
             scope_list[decl] = self
-            local_var_indices[decl] = len(scope_list[0])
+            self.local_var_indices[decl] = len(scope_list[0])
 
 
 class StatementReturn(Statement):
