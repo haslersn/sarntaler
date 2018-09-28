@@ -13,14 +13,27 @@ start = 'translationunit'
 
 
 def p_translationunit(p):
-    'translationunit : procdecl'
+    'translationunit : procdecllist'
     p[0] = ast.Translationunit(p[1])
 
+def p_procdecllist(p):
+    '''procdecllist : procdecl procdecllist
+                    | procdecl'''
+    if len(p)==3:
+        p[2].append(p[1])
+        p[0]=p[2]
+    else: 
+        p[0] = [p[1]]
 
 def p_procdecl(p):
     'procdecl : type IDENT LPAR paramlistopt RPAR statementlistOPT'
     p[0] = ast.Procdecl(p[1], p[2], p[4], p[6])
 
+def p_procdeclERROR(p):
+    '''procdecl : error END
+                | LPAR paramlistopt RPAR statementlistOPT
+                | error statementlistOPT'''
+    print('hi')
 
 def p_statementlistOPT_body(p):
     'statementlistOPT : body'
@@ -138,6 +151,13 @@ def p_expr(p):
     'expr : INTCONST'
     p[0] = ast.ConstExpr(p[1])
 
+def p_exprFUNCALL(p):
+    '''expr : IDENT LPAR decllist RPAR
+            | IDENT LPAR RPAR'''
+    if len(p)==5:
+        p[0] = ast.BinExpr("localcall",p[1],p[3])
+    else:  
+        p[0] = ast.BinExpr("localcall",p[1],[])
 
 def p_exprBINARYEXPRESSIONS(p):
      '''expr : expr ASSIGN expr

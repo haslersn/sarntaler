@@ -99,12 +99,12 @@ class Typename(Node):
 
 class Translationunit(Node):
     """ Non terminal 0 """
-    def __init__(self, procdecl):
+    def __init__(self, procdecllist):
         super().__init__()
-        self.proc = procdecl
+        self.procs = procdecllist
 
     def __str__(self):
-        return "[Translationunit: procdecl=" + str(self.proc) + "]"
+        return "[Translationunit: procs=" + str(self.procs) + "]"
 
 
 class Paramdecl(Node):

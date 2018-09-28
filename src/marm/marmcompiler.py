@@ -1,6 +1,6 @@
 
 class ErrorHandler:
-    """ Non terminal 15 """
+    """ ErrorHandler for registering and querying all sorts of errors during compilation """
     def __init__(self):
         super().__init__()
         self.warnings = []
@@ -41,10 +41,11 @@ class ErrorHandler:
             retstring += "{}:{}.{}: {}\n".format( w[0], w[1], w[2], w[3] )
         return retstring
 
-def marmcompiler(filename, input):
+def marmcompiler(filename, input, errorhandler=None):
     from src.marm.parser import marmparser,ParserError
     #yacc = yacc.yacc()
-    errorhandler = ErrorHandler()
+    if errorhandler is None:
+        errorhandler = ErrorHandler()
     try:
         result = marmparser(filename,input,errorhandler)
     except ParserError as err:
