@@ -1,5 +1,11 @@
 import json
 
+def scope_lookup(scope_list, name):
+    for scope in scope_list:
+        if name in scope:
+            return scope[name]
+    return None
+
 class Node:
     def __init__(self):
         self.classname = self.__class__.__name__
@@ -180,6 +186,12 @@ class StatementIf(Statement):
     def __str__(self):
         return "[StatementIf: boolex={}, statement={}, elseprod={}]".format(self.boolex,self.statement,self.elseprod)
 
+    def analyse_scope(self, scope_list):
+        self.boolex.analyse_scope(scope_list)
+        self.statement.analyse_scope(scope_list)
+        if not (self.elseprod is None):
+            self.elseprod.analyse_scope(scope_list)
+
 
 class StatementExpression(Statement):
     """ p_statementEXPRESSIONSTATEMENT """
@@ -189,6 +201,9 @@ class StatementExpression(Statement):
 
     def __str__(self):
         return "[StatementExpression: expr={}]".format(self.expr)
+
+    def analyse_scope(self, scope_list):
+        expr.analyse_scope(scope_list)
 
 
 class StatementBody(Statement):
@@ -200,6 +215,11 @@ class StatementBody(Statement):
     def __str__(self):
         return "[StatementBody: body={}]".format(self.liststr(self.body))
 
+    def analyse_scope(self, scope_list):
+        local_scope_list = [{}] + scope_list
+        for statement in body:
+            statement.analyse_scope(scope_list)
+
 
 class StatementBreak(Statement):
     """ p_statementBREAK """
@@ -210,6 +230,8 @@ class StatementBreak(Statement):
     def __str__(self):
         return "[StatementBreak]"
 
+    def analyse_scope(self, scope_list): pass
+
 
 class StatementContinue(Statement):
     """ p_statementCONTINUE """
@@ -219,6 +241,8 @@ class StatementContinue(Statement):
 
     def __str__(self):
         return "[StatementContinue]"
+
+    def analyse_scope(self, scope_list): pass
 
 
 class Boolex(Node):
@@ -241,6 +265,10 @@ class BoolexCMP(Boolex):
     def __str__(self):
         return "[BoolexCMP: op={}, left={}, right={}]".format(self.op,self.left,self.right)
 
+    def analyse_scope(self, scope_list):
+        self.left.analyse_scope(scope_list)
+        self.right.analyse_scope(scope_list)
+
 
 class BoolexBinary(Boolex):
     """ p_boolexBINARY """
@@ -252,6 +280,10 @@ class BoolexBinary(Boolex):
     def __str__(self):
         return "[BoolexBinary: op={}, left={}, right={}]".format(self.op,self.left,self.right)
 
+    def analyse_scope(self, scope_list):
+        self.left.analyse_scope(scope_list)
+        self.right.analyse_scope(scope_list)
+
 
 class BoolexNot(Boolex):
     """ p_boolexUNARY """
@@ -261,4 +293,7 @@ class BoolexNot(Boolex):
 
     def __str__(self):
         return "[BoolexNot: operand={}]".format(str(self.operand))
+
+    def analyse_scope(self, scope_list):
+        self.operand.analyse_scope(scope_list)
 
