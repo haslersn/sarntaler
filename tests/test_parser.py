@@ -57,15 +57,23 @@ class TestParserMethods(unittest.TestCase):
     def test_tokens_not_empty(self):
         self.assertFalse(lexer.tokens.__len__() == 0)
 
-    # TODO test for errors with the error handler
-    @unittest.skip("No error raised")
     def test_parse_file_error(self):
-        with self.assertRaises(parser.ParserError):
-            try:
-                testfile = open("./marm/notvalid.marm", mode='r')
-                marmcompiler.marmcompiler("notvalid.marm", testfile.read())
-            except IOError as e:
-                self.fail(msg="File error: " + str(e))
+        errorhandler = marmcompiler.ErrorHandler()
+        try:
+            testfile = open("./marm/notvalid.marm", mode='r')
+            marmcompiler.marmcompiler("notvalid.marm", testfile.read(), errorhandler=errorhandler)
+            self.assertFalse(errorhandler.roughlyOk())
+        except IOError as e:
+            self.fail(msg="File error: " + str(e))
+
+    def test_parse_file_error2(self):
+        errorhandler = marmcompiler.ErrorHandler()
+        try:
+            testfile = open("./marm/invalid.marm", mode='r')
+            marmcompiler.marmcompiler("invalid.marm", testfile.read(), errorhandler=errorhandler)
+            self.assertFalse(errorhandler.roughlyOk())
+        except IOError as e:
+            self.fail(msg="File error: " + str(e))
             
     def test_parse_file(self):
         try:
