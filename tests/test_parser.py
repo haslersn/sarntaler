@@ -64,11 +64,11 @@ class TestParserMethods(unittest.TestCase):
         """Tests some quite complicated errors"""
         errorhandler = marmcompiler.ErrorHandler()
         try:
-            testfile = open(os.path.join(self.testdir, "notvalid.marm"), mode='r')
-            marmcompiler.marmcompiler("notvalid.marm", testfile.read(), errorhandler=errorhandler)
-            self.assertFalse(errorhandler.roughlyOk())
-            self.assertEqual(errorhandler.countErrors(), 2)
-            self.assertEqual(errorhandler.countFatals(), 0)
+            with open(os.path.join(self.testdir, "notvalid.marm"), mode='r') as testfile:
+                marmcompiler.marmcompiler("notvalid.marm", testfile.read(), errorhandler=errorhandler)
+                self.assertFalse(errorhandler.roughlyOk())
+                self.assertEqual(errorhandler.countErrors(), 2)
+                self.assertEqual(errorhandler.countFatals(), 0)
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
@@ -76,11 +76,11 @@ class TestParserMethods(unittest.TestCase):
         """Tests some easy errors"""
         errorhandler = marmcompiler.ErrorHandler()
         try:
-            testfile = open(os.path.join(self.testdir, "invalid.marm"), mode='r')
-            marmcompiler.marmcompiler("invalid.marm", testfile.read(), errorhandler=errorhandler)
-            self.assertFalse(errorhandler.roughlyOk())
-            self.assertEqual(errorhandler.countErrors(), 5)
-           # self.assertEqual(errorhandler.countFatals(), 3) TODO lexical errors should be fatals
+            with open(os.path.join(self.testdir, "invalid.marm"), mode='r') as testfile:
+                marmcompiler.marmcompiler("invalid.marm", testfile.read(), errorhandler=errorhandler)
+                self.assertFalse(errorhandler.roughlyOk())
+                self.assertEqual(errorhandler.countErrors(), 5)
+                # self.assertEqual(errorhandler.countFatals(), 3) TODO lexical errors should be fatals
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
@@ -88,9 +88,9 @@ class TestParserMethods(unittest.TestCase):
         """Tests some standard valid file"""
         errorhandler = marmcompiler.ErrorHandler()
         try:
-            testfile = open(os.path.join(self.testdir, "test.marm"), mode='r')
-            marmcompiler.marmcompiler("test.marm", testfile.read(), errorhandler=errorhandler)
-            self.assertTrue(errorhandler.cleanCode())
+            with open(os.path.join(self.testdir, "test.marm"), mode='r') as testfile:
+                marmcompiler.marmcompiler("test.marm", testfile.read(), errorhandler=errorhandler)
+                self.assertTrue(errorhandler.cleanCode())
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
@@ -98,9 +98,9 @@ class TestParserMethods(unittest.TestCase):
         """Tests some valid easy file with two functions and a call"""
         errorhandler = marmcompiler.ErrorHandler()
         try:
-            testfile = open(os.path.join(self.testdir, "valid.marm"), mode='r')
-            marmcompiler.marmcompiler("valid.marm", testfile.read(), errorhandler=errorhandler)
-            self.assertTrue(errorhandler.cleanCode())
+            with open(os.path.join(self.testdir, "valid.marm"), mode='r') as testfile:
+                marmcompiler.marmcompiler("valid.marm", testfile.read(), errorhandler=errorhandler)
+                self.assertTrue(errorhandler.cleanCode())
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
