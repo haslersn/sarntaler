@@ -1,0 +1,14 @@
+//Testprogram to parse v0.1
+int test(int x){
+	while int int;
+	int i;
+	i = 0;
+	x = 1;
+	???
+	int int int;
+	while(i < 1){
+		x = x * 2;
+		i = i + 1;
+	}
+	return x;
+}
