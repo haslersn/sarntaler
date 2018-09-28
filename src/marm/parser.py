@@ -155,9 +155,9 @@ def p_exprFUNCALL(p):
     '''expr : IDENT LPAR decllist RPAR
             | IDENT LPAR RPAR'''
     if len(p)==5:
-        p[0] = ast.BinExpr(p[3],"localcall",p[1])
+        p[0] = ast.BinExpr("localcall",p[1],p[3])
     else:  
-        p[0] = ast.BinExpr([],"localcall",p[1])
+        p[0] = ast.BinExpr("localcall",p[1],[])
 
 def p_exprBINARYEXPRESSIONS(p):
      '''expr : expr ASSIGN expr
