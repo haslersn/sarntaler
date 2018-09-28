@@ -152,6 +152,14 @@ class StatementDecl(Statement):
     def __str__(self):
         return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + self.liststr(self.decllist) + "]"
 
+    def analyse_scope(self, scope_list):
+        self.local_var_indices = {}
+        for decl in decllist:
+            if decl in scope_list:
+                print("Variable {} declared twice".format(decl)) # TODO error handling
+            scope_list[decl] = self
+            local_var_indices[decl] = len(scope_list[0])
+
 
 class StatementReturn(Statement):
     """ p_statementRETURN """
@@ -163,6 +171,9 @@ class StatementReturn(Statement):
     def __str__(self):
         return "[StatementReturn: return_value=" + str(self.return_value) + "]"
 
+    def analyse_scope(self, scope_list):
+        self.return_value.analyse_scope(scope_list)
+
 
 class StatementWhile(Statement):
     """ p_statementLOOPS """
@@ -173,6 +184,10 @@ class StatementWhile(Statement):
 
     def __str__(self):
         return "[StatementWhile: boolex=" + str(self.boolex) + ", statement=" + str(self.statement) + "]"
+
+    def analyse_scope(self, scope_list):
+        self.boolex.analyse_scope(scope_list)
+        self.statement.analyse_scope(scope_list)
 
 
 class StatementIf(Statement):
