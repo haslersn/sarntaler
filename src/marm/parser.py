@@ -18,11 +18,12 @@ def p_translationunit(p):
 
 def p_procdecllist(p):
     '''procdecllist : procdecl procdecllist
-                    | '''
-    if len(p)==2:
-        p[0] = p[2].append(p[1])
+                    | procdecl'''
+    if len(p)==3:
+        p[2].append(p[1])
+        p[0]=p[2]
     else: 
-        p[0] = []
+        p[0] = [p[1]]
 
 def p_procdecl(p):
     'procdecl : type IDENT LPAR paramlistopt RPAR statementlistOPT'
@@ -32,7 +33,7 @@ def p_procdeclERROR(p):
     '''procdecl : error END
                 | LPAR paramlistopt RPAR statementlistOPT
                 | error statementlistOPT'''
-
+    print('hi')
 
 def p_statementlistOPT_body(p):
     'statementlistOPT : body'
@@ -150,6 +151,8 @@ def p_expr(p):
     'expr : INTCONST'
     p[0] = ast.ConstExpr(p[1])
 
+def p_exprFUNCALL(p):
+    'expr : IDENT LPAR RPAR'
 
 def p_exprBINARYEXPRESSIONS(p):
      '''expr : expr ASSIGN expr

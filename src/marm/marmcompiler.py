@@ -1,6 +1,6 @@
 
 class ErrorHandler:
-    """ Non terminal 15 """
+    """ ErrorHandler for registering and querying all sorts of errors during compilation """
     def __init__(self):
         super().__init__()
         self.warnings = []
