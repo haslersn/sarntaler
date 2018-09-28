@@ -145,7 +145,7 @@ def p_exprBINARYEXPRESSIONS(p):
              | expr ADDOP expr
              | expr DIVOP expr
              | expr SUBOP expr '''
-     p[0] = ast.BoolexBinary(p[2], p[1], p[3])
+     p[0] = ast.BinExpr(p[2], p[1], p[3])
 
 
 def p_exprUNARYEXPRESSIONS(p):
@@ -238,38 +238,23 @@ def p_error(t):
     if t is None:
         raise EofError()
     else:
-        # Read ahead looking for a closing '}/;/)'
         from src.marm.lexer import column_number
-        print("{}:{}.{}: syntax error: unexpected token {}:{}".format(
-            yacc.filename,
-            t.lexer.lineno+1,
+        yacc.errorhandler.registerError(yacc.filename,
+            t.lexer.lineno,
             column_number(t),
-            t.type,
-            t.value
-        ))
-
-        # tokseq = [t.type]
-        # while True:
-        #     from src.marm.lexer import column_number
-        #     tok = yacc.token()             # Get the next token
-        #     if not tok or tok.type == 'SEMI' or tok.type =='END' or tok.type=='RBRAC': 
-        #         if tok is None:
-        #             print("{}:{}.{}: syntax error: unexpected token sequence {}".format(yacc.filename,t.lexer.lineno,column_number(t),tokseq))
-        #         else:
-        #             print("{}:{}.{}-{}.{}: syntax error: unexpected token sequence {}".format(yacc.filename,t.lexer.lineno,column_number(t),tok.lexer.lineno,column_number(tok),tokseq))
-        #         break
-        #     tokseq.append(tok.type)
-        # yacc.restart()
-
+            ("syntax error: unexpected token %s:%s" % (t.type,t.value))
+            )
+            
 
 from src.marm.lexer import lexer, tokens
 # Generate parser
 yacc = yacc.yacc()
 
-
-def marmparser(filename,input):
+def marmparser(filename,input,errorhandler):
     lexer.filename=filename
+    lexer.errorhandler=errorhandler
     yacc.filename=filename
+    yacc.errorhandler=errorhandler
     return yacc.parse(input,lexer=lexer)
 
 # Main for Debugging/Testing
@@ -282,13 +267,17 @@ if __name__ == "__main__":
                         help="Input file. Defaults to stdin")
     parser.add_argument('--output', type=argparse.FileType('w'), default=sys.stdout,
                         help="Output file. Defaults to stdout")
+    parser.add_argument('--output-format', choices=['json', 'str'], default='json',
+                        help="Format used for output. Defaults to json")
     args = parser.parse_args()
     try:
         result = marmparser(args.input.name,args.input.read())
     except ParserError as err:
         print(err)
     else:
-        if result is not None:
-        #    args.output.write(str(result))
-        #else:
-            args.output.write(result.toJSON())#str(result))
+        if args.output_format == 'json':
+            args.output.write(result.toJSON())
+        elif args.output_format == 'str':
+            args.output.write(str(result))
+        else:
+            print("Unknown output format {}.".format(args.output_format))
