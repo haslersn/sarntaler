@@ -31,8 +31,8 @@ class TestParserMethods(unittest.TestCase):
         self.generic_lex("}", 'END', '}')
         self.generic_lex(";", 'SEMI', ';')
         self.generic_lex(",", 'COMMA', ',')
-        self.generic_lex("0x0000000000000000000000000000000000000000012345678912345678901234"
-                         , 'ADDRESSVALUE', '0x0000000000000000000000000000000000000000012345678912345678901234')
+        self.generic_lex("0x0000000000000000000000000000000000000000012345678912345678901234",
+                         'ADDRESSVALUE', '0x0000000000000000000000000000000000000000012345678912345678901234')
         self.generic_lex("0x4", 'ADDRESSVALUE', '0x4')
         self.generic_lex("=", 'ASSIGN', '=')
         self.generic_lex("23", 'INTCONST', 23)
@@ -75,15 +75,23 @@ class TestParserMethods(unittest.TestCase):
         except IOError as e:
             self.fail(msg="File error: " + str(e))
             
-    def test_parse_file(self):
+    def test_parse_file_valid_standard(self):
+        errorhandler = marmcompiler.ErrorHandler()
         try:
             testfile = open("./marm/test.marm", mode='r')
-            marmcompiler.marmcompiler("test.marm", testfile.read())
-        except parser.ParserError:
-            self.fail(msg="Couldn't parse file.")
+            marmcompiler.marmcompiler("test.marm", testfile.read(), errorhandler=errorhandler)
+            self.assertTrue(errorhandler.roughlyOk())
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
+    def test_parse_file_valid_double_functions(self):
+        errorhandler = marmcompiler.ErrorHandler()
+        try:
+            testfile = open("./marm/valid.marm", mode='r')
+            marmcompiler.marmcompiler("valid.marm", testfile.read(), errorhandler=errorhandler)
+            self.assertTrue(errorhandler.roughlyOk())
+        except IOError as e:
+            self.fail(msg="File error: " + str(e))
 
 if __name__ == '__main__':
     unittest.main()

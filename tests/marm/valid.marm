@@ -7,7 +7,7 @@ int test(int x){
 		x = x * 2;
 		i = i + 1;
 	}
-	return x;
+	return test2();
 }
 
 int test2(){
