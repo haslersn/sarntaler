@@ -74,7 +74,7 @@ class StructExpr(Expr):
 class LHS(Node):
     """ Non terminal 14 """
     def __init__(self, ident):
-     #   self.classname = self.__class__.__name__
+        super().__init__()
         self.ident = ident
 
     def __str__(self):
@@ -84,6 +84,7 @@ class LHS(Node):
 class Typename(Node):
     """ Non terminal 18 """
     def __init__(self, typee):
+        super().__init__()
         self.typee = typee
 
     def __str__(self):
@@ -93,6 +94,7 @@ class Typename(Node):
 class Translationunit(Node):
     """ Non terminal 0 """
     def __init__(self, procdecl):
+        super().__init__()
         self.proc = procdecl
 
     def __str__(self):
@@ -102,6 +104,7 @@ class Translationunit(Node):
 class Paramdecl(Node):
     """ Non terminal 3 """
     def __init__(self, param_type, name):
+        super().__init__()
         self.param_type = param_type
         self.name = name
 
@@ -112,6 +115,7 @@ class Paramdecl(Node):
 class Procdecl(Node):
     """ Non terminal 4 """
     def __init__(self, return_type, name, params, body):
+        super().__init__()
         self.return_type = return_type
         self.name = name
         self.params = params
