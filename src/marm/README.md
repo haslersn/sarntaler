@@ -17,7 +17,7 @@ marm code features
 - declaration statements
 - procedure declarations
 
-```
+```c
 int main(int param1,int param2){
     int i;
     i = 0;
@@ -30,7 +30,7 @@ int main(int param1,int param2){
 
 ## Usage
 
-```
+```python
 from src.marm.marmcompiler import marmcompiler, coloring
 print(coloring('..... marmcode ......'))
 print(marmcompiler('filename','........ marmcode.........')
