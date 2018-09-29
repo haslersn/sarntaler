@@ -7,21 +7,49 @@ class ErrorHandler:
         self.warnings = []
         self.errors = []
         self.fatals = []
+        self.idx = {}
+
+    class error_iter:
+        def __init__(self,ehandler):
+            self.values=sorted(ehandler.idx.keys())
+            self.ehandler=ehandler
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            if len(self.values)==0:
+                raise StopIteration()
+            else:
+                value = self.values[0]
+                self.values=self.values[1:]
+                return (self.ehandler.idx[value])
+
+    def __iter__(self):
+        eiter = self.error_iter(self)
+        return eiter
+
 
     def registerWarning(self,filename, line, col, message):
-        self.warnings.append((filename,line,col,message))
+        warning = (filename,line,col,message)
+        self.warnings.append(warning)
+        self.idx[(warning[1],warning[2])]=warning
 
     def countWarnings(self):
         return len(self.warnings)
 
     def registerError(self,filename, line, col, message):
-        self.errors.append((filename,line,col,message))
+        error = (filename,line,col,message)
+        self.errors.append(error)
+        self.idx[(error[1],error[2])]=error
     
     def countErrors(self):
         return len(self.errors)
-    
+
     def registerFatal(self,filename, line, col, message):
-        self.fatals.append((filename,line,col,message))
+        fatal=(filename,line,col,message)
+        self.fatals.append(fatal)
+        self.idx[(fatal[1],fatal[2])]=fatal
 
     def countFatals(self):
         return len(self.fatals)
@@ -32,10 +60,52 @@ class ErrorHandler:
     def cleanCode(self):
         return self.countFatals()+self.countErrors()+self.countWarnings()==0
 
+    def to_explanation(self,input):
+        e_iter = iter(self)
+        try:
+            currenterror = e_iter.__next__()
+        except:
+            currenterror = ('',0,0,'')
+        from src.marm.lexer import marmlexer
+        from src.marm.lexer import keywords
+        mylexer = marmlexer('',ErrorHandler(),True)
+        mylexer.input(input)
+        token = mylexer.token()
+        output='  1 '
+        linecounter=2
+        while not (token is None):
+            if token.type=='IDENT':
+                output+=Fore.YELLOW 
+            if token.type=='INTCONST':
+                output+=Fore.RED 
+            if token.type=='COMMENT':
+                output+=Fore.GREEN
+            if token.type in keywords.values():
+                output+=Fore.CYAN
+            output+= str(token.value)+Fore.RESET
+            if token.type=='NEWLINE':
+                while linecounter-1==currenterror[1]:
+                    col=0
+                    output+='   '
+                    while col<currenterror[2]:
+                        col+=1
+                        output+=' '
+                    output+='^\n   '+Fore.RED+currenterror[3]+Fore.RESET+'\n'
+                    try:
+                        currenterror=e_iter.__next__()
+                    except:
+                        break
+                      
+                output+="{:3} ".format(linecounter)
+                linecounter+=1
+            token = mylexer.token()
+        return output
+
+
     def tostring(self,color=True):
         retstring = ''
         if color==True:
-            formatstring=Fore.LIGHTYELLOW_EX+"{}:{}.{}: "+Fore.RED
+            formatstring=Back.BLACK+Fore.LIGHTYELLOW_EX+"{}:{}.{}: "+Back.RESET+Fore.RED
         else:
             formatstring="{}:{}.{}: "
         for f in self.fatals:
@@ -60,7 +130,9 @@ def marmcompiler(filename, input, errorhandler=None):
         result = marmparser(filename,input,errorhandler)
     except ParserError as err:
         print(err)
+    print(coloring(input))
     print(errorhandler.tostring())
+    print(errorhandler.to_explanation(input))
     #result.analyse_scope()
     return result
 
@@ -101,8 +173,6 @@ if __name__ == "__main__":
                         help="Format used for output. Defaults to json")
     args = parser.parse_args()
     myinput = args.input.read()
-    result=coloring(myinput)
-    print(result)
     result = marmcompiler(args.input.name,myinput)
     if result is not None:
         if args.output_format == 'json':
