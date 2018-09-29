@@ -75,8 +75,8 @@ def p_paramlist(p):
     if len(p) == 2:
         p[0] = [p[1]]
     else:
-        p[2].insert(0,p[1])
-        p[0] = p[2]
+        p[3].insert(0,p[1])
+        p[0] = p[3]
 
 
 def p_paramdecl(p):
