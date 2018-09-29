@@ -160,6 +160,20 @@ import ply.lex as lex
 
 lexer = lex.lex()
 
+def marmlexer(filename,input,errorhandler):
+    lexer.filename=filename
+    lexer.errorhandler=errorhandler
+    lexer.input(input)
+
+    tokens = []
+    token = lexer.token()
+    while not (token is None):
+        tokens.append(token)
+        token=lexer.token()
+
+    return tokens
+
+
 # Main for Debugging/Testing
 if __name__ == "__main__":
     # Parse Arguments
