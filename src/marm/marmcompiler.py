@@ -67,20 +67,25 @@ def marmcompiler(filename, input, errorhandler=None):
 def coloring(input):
     from src.marm.lexer import marmlexer
     from src.marm.lexer import keywords
-    mylexer = marmlexer('',ErrorHandler())
+    mylexer = marmlexer('',ErrorHandler(),True)
     mylexer.input(input)
     token = mylexer.token()
-    output=''
+    output='  1 '
+    linecounter=2
     while not (token is None):
         if token.type=='IDENT':
-            output+=Fore.GREEN 
+            output+=Fore.YELLOW 
         if token.type=='INTCONST':
             output+=Fore.RED 
- #       if keywords.values() (token.type):
- #           output+=Fore.BLUE
+        if token.type=='COMMENT':
+            output+=Fore.GREEN
+        if token.type in keywords.values():
+            output+=Fore.CYAN
         output+= str(token.value)+Fore.RESET
+        if token.type=='NEWLINE':
+            output+="{:3} ".format(linecounter)
+            linecounter+=1
         token = mylexer.token()
-    print('Coloring done')
     return output
 
 if __name__ == "__main__":
