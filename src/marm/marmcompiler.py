@@ -41,18 +41,37 @@ class ErrorHandler:
             retstring += "{}:{}.{}: {}\n".format( w[0], w[1], w[2], w[3] )
         return retstring
 
-def marmcompiler(filename, input, errorhandler=None):
+def marmcompiler(filename, input, errorhandler=None, stages=None):
     from src.marm.parser import marmparser,ParserError
     #yacc = yacc.yacc()
+    if stages is None:
+        stages = ['parse', 'analyse_scope']
     if errorhandler is None:
         errorhandler = ErrorHandler()
-    try:
-        result = marmparser(filename,input,errorhandler)
-    except ParserError as err:
-        print(err)
-    print(errorhandler)
-    if errorhandler.roughlyOk():
-        result.analyse_scope()
+
+    completed_stages=[]
+    result = None
+    for stage in stages:
+        if stage == 'lex':
+            from src.marm.lexer import marmlexer
+            result = marmlexer(filename, input, errorhandler)
+        elif stage == 'parse':
+            from src.marm.parser import marmparser, ParserError
+            try:
+                result = marmparser(filename, input, errorhandler)
+            except ParserError as err:
+                print(err)
+        elif stage == 'analyse_scope':
+            assert('parse' in completed_stages)
+            result.analyse_scope()
+
+        if errorhandler.roughlyOk():
+            completed_stages.append(stage)
+        else:
+            print(errorhandler)
+            print("Errors occured during {}.".format(stage))
+            return None
+
     return result
 
 
@@ -69,39 +88,15 @@ if __name__ == "__main__":
                         help="Format used for output. Defaults to json")
     parser.add_argument('--stages', choices=['lex', 'parse', 'analyse_scope'],
                         nargs='*',
-                        default=['parse', 'analyse_scope'],
+                        default=None,
                         help="Compiler stages to be run, in order. Defaults to all.")
     args = parser.parse_args()
 
-    errorhandler = ErrorHandler()
-
-    completed_stages=[]
-    result = None
-    for stage in args.stages:
-        if stage == 'lex':
-            from src.marm.lexer import marmlexer
-            result = marmlexer(args.input.name, args.input.read(), errorhandler)
-        elif stage == 'parse':
-            from src.marm.parser import marmparser, ParserError
-            try:
-                result = marmparser(args.input.name, args.input.read(), errorhandler)
-            except ParserError as err:
-                print(err)
-        elif stage == 'analyse_scope':
-            assert('parse' in completed_stages)
-            result.analyse_scope()
-
-        if errorhandler.roughlyOk():
-            completed_stages.append(stage)
-        else:
-            print(errorhandler)
-            print("Errors occured during {}.".format(stage))
-            exit(1)
-    print(errorhandler)
+    result = marmcompiler(args.input.name, args.input.read(), None, args.stages)
 
     if result is None:
         print("No result produced.")
-        exit(2)
+        exit(1)
     else:
         if args.output_format == 'json':
             import json
