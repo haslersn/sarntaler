@@ -63,7 +63,7 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
                 print(err)
         elif stage == 'analyse_scope':
             assert('parse' in completed_stages)
-            result.analyse_scope()
+            result.analyse_scope([], errorhandler)
 
         if errorhandler.roughlyOk():
             completed_stages.append(stage)
