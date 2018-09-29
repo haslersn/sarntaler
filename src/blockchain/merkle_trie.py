@@ -1,18 +1,7 @@
 from collections import namedtuple
 from binascii import hexlify, unhexlify
-from hashlib import sha256
 from typing import List
-
-class Crypto:
-    @staticmethod
-    def compute_hash(to_hash: bytes) -> bytes:
-        m = sha256()
-        m.update(to_hash)
-        return m.digest()
-
-    @staticmethod
-    def is_hash(hash: bytes) -> int:
-        return len(hash) == 32 and hash != bytes(32) # mustn't be zero
+from src.blockchain.crypto import compute_hash, is_hash
 
 class MerkleTrie(namedtuple("MerkleTrie", ["hash"])):
     _DICTS = tuple([ dict() for _ in range(64) ])
@@ -59,7 +48,7 @@ class MerkleTrie(namedtuple("MerkleTrie", ["hash"])):
         for child in children:
             to_hash += child
         assert(len(to_hash) == 32 * 16)
-        hash = Crypto.compute_hash(to_hash)
+        hash = compute_hash(to_hash)
 
         if hash in cls._DICTS[depth]:
             assert cls._DICTS[depth][hash] == children
@@ -69,7 +58,7 @@ class MerkleTrie(namedtuple("MerkleTrie", ["hash"])):
 
     @staticmethod
     def _check_is_hash(str: bytes):
-        if not Crypto.is_hash(str):
+        if not is_hash(str):
             raise ValueError('non-zero hash with length 32 Byte expected')
 
     @staticmethod

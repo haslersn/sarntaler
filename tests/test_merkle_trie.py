@@ -1,11 +1,12 @@
-from src.blockchain.merkle_trie import *
 import pytest
 import json
+from src.blockchain.merkle_trie import *
+from src.blockchain.crypto import compute_hash
 
 def gen_key(i):
-    return Crypto.compute_hash(bytes([i]))
+    return compute_hash(bytes([i]))
 def gen_value(i):
-    return Crypto.compute_hash(bytes([0, i]))
+    return compute_hash(bytes([0, i]))
 
 def test_put_and_remove():
     key = gen_key(1)
