@@ -60,7 +60,7 @@ def marmcompiler(filename, input, errorhandler=None):
         result = marmparser(filename,input,errorhandler)
     except ParserError as err:
         print(err)
-    print(errorhandler)
+    print(errorhandler.tostring())
     #result.analyse_scope()
     return result
 

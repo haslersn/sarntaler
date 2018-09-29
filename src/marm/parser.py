@@ -260,10 +260,11 @@ def p_error(t):
         raise EofError()
     else:
         from src.marm.lexer import column_number
+        action_str = ' '.join([s for s in yacc.action[yacc.state]])
         yacc.errorhandler.registerError(yacc.filename,
             t.lexer.lineno,
             column_number(t),
-            ("syntax error: unexpected token %s:%s" % (t.type,t.value))
+            ("syntax error: unexpected token %s:%s, instead expected one of [%s]" % (t.type,t.value,action_str))
             )
             
 
