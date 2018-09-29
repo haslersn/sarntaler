@@ -1,6 +1,7 @@
 from collections import namedtuple
+from binascii import hexlify, unhexlify
 from hashlib import sha256
-from typing import *
+from typing import List
 
 class Crypto:
     @staticmethod
@@ -13,146 +14,136 @@ class Crypto:
     def is_hash(hash: bytes) -> int:
         return len(hash) == 32 and hash != bytes(32) # mustn't be zero
 
-class MerkleTrie(namedtuple("MerkleTrie", ["children", "hash"])):
-    def __new__(cls, children = None, hash = bytes(32)):
-        return super().__new__(cls, children, hash)
+class MerkleTrie(namedtuple("MerkleTrie", ["hash"])):
+    _DICTS = tuple([ dict() for _ in range(64) ])
+
+    def __new__(cls, hash = bytes(32)):
+        return super().__new__(cls, hash)
 
     @property
     def empty(self):
         return self.hash == bytes(32)
 
-    @property
-    def known(self):
-        return self.empty or self.children is not None
+    @staticmethod
+    def _empty(hash: bytes):
+        return hash == bytes(32)
 
     @classmethod
-    def _create_unknown(cls, hash: bytes):
-        cls._check_is_hash(hash)
-        return cls.__new__(cls, None, hash)
+    def _known(cls, hash: bytes, depth: int):
+        return hash in cls._DICTS[depth]
 
     @classmethod
-    def _create_with_children(cls, children):
-        if type(children) != tuple or len(children) != 16 or not all(type(c) == MerkleTrie for c in children):
+    def _check_known(cls, hash: bytes, depth: int):
+        if not cls._known(hash, depth):
+            raise ValueError('node was required to store its children')
+
+    @classmethod
+    def _children(cls, hash: bytes, depth: int):
+        cls._check_known(hash, depth)
+        return cls._DICTS[depth][hash]
+
+    @staticmethod
+    def _check_is_inner_depth(depth):
+        if depth < 0 or depth >= 64:
+            raise ValueError('Inner node index must be in [0, 63]')
+
+    @classmethod
+    def _create_inner_node(cls, children, depth) -> bytes:
+        cls._check_is_inner_depth(depth)
+        if type(children) != tuple or len(children) != 16:
             raise ValueError('Illegal type of children')
+        if depth != 63 and not all(c == bytes(32) or c in cls._DICTS[depth + 1] for c in children):
+            raise ValueError('Children aren\'t known')
+
         to_hash = bytes()
         for child in children:
-            to_hash += child.hash
+            to_hash += child
         assert(len(to_hash) == 32 * 16)
         hash = Crypto.compute_hash(to_hash)
-        return cls.__new__(cls, children, hash)
+
+        if hash in cls._DICTS[depth]:
+            assert cls._DICTS[depth][hash] == children
+        else:
+            cls._DICTS[depth][hash] = children
+        return hash
 
     @staticmethod
     def _check_is_hash(str: bytes):
         if not Crypto.is_hash(str):
             raise ValueError('non-zero hash with length 32 Byte expected')
 
-    def _check_known(self):
-        if not self.known:
-            raise ValueError('node was required to store its children')
-
     @staticmethod
-    def _child_index(encoded_path: bytes, deepness: int):
-        child_index = encoded_path[deepness // 2]
-        if deepness % 2 == 0:
+    def _child_index(encoded_path: bytes, depth: int):
+        child_index = encoded_path[depth // 2]
+        if depth % 2 == 0:
             child_index //= 16
         else:
             child_index %= 16
         return child_index
 
-    def _put_internal(self, encoded_path: bytes, value: bytes, deepness: int):
-        if deepness == 64:
-            assert self.children is None
-            return type(self)._create_unknown(value)
-        self._check_known()
-        child_index = type(self)._child_index(encoded_path, deepness)
-        old_children = (MerkleTrie(),) * 16 if self.empty else self.children
-        old_child = old_children[child_index]
-        new_child = old_child._put_internal(encoded_path, value, deepness + 1)
-        new_children = old_children[:child_index] + (new_child,) + old_children[child_index+1:]
-        return type(self)._create_with_children(new_children)
+    @classmethod
+    def _update_node(cls, hash: bytes, encoded_path: bytes, depth: int, fn):
+        child_index = cls._child_index(encoded_path, depth)
+        if not cls._empty(hash):
+            old_children = cls._children(hash, depth)
+            old_child = old_children[child_index]
+            new_child = fn(old_child)
+            new_children = old_children[:child_index] + (new_child,) + old_children[child_index+1:]
+            if new_children == (bytes(32),) * 16:
+                return bytes(32)
+            else:
+                return cls._create_inner_node(new_children, depth)
+        else:
+            new_child = fn(hash)
+            if cls._empty(new_child):
+                return hash
+            else:
+                new_children = (hash,) * child_index + (new_child,) + (hash,) * (15 - child_index)
+                return cls._create_inner_node(new_children, depth)
 
-    def _remove_internal(self, encoded_path: bytes, deepness: int):
-        if self.empty:
-            return (self, False)
-        if deepness == 64:
-            assert self.children is None
-            return (MerkleTrie(), True)
-        self._check_known()
-        child_index = type(self)._child_index(encoded_path, deepness)
-        old_children = self.children
-        old_child = old_children[child_index]
-        new_child, did_remove = old_child._remove_internal(encoded_path, deepness + 1)
-        if not did_remove:
-            return (self, False)
-        new_children = old_children[:child_index] + (new_child,) + old_children[child_index+1:]
-        if new_children == (None,) * 16:
-            return (MerkleTrie(), True)
-        return (type(self)._create_with_children(new_children), True)
+    @classmethod
+    def _put_internal(cls, hash: bytes, encoded_path: bytes, value: bytes, depth: int):
+        if depth == 64:
+            return value
+        fn = lambda h: cls._put_internal(h, encoded_path, value, depth + 1)
+        return cls._update_node(hash, encoded_path, depth, fn)
 
-    def _get_internal(self, encoded_path: bytes, deepness: int):
-        if self.empty:
+    @classmethod
+    def _remove_internal(cls, hash: bytes, encoded_path: bytes, depth: int):
+        if cls._empty(hash):
+            return hash
+        if depth == 64:
+            return bytes(32)
+        fn = lambda h: cls._remove_internal(h, encoded_path, depth + 1)
+        return cls._update_node(hash, encoded_path, depth, fn)
+
+    @classmethod
+    def _get_internal(cls, hash: bytes, encoded_path: bytes, depth: int):
+        if cls._empty(hash):
             return None
-        if deepness == 64:
-            assert self.children is None
-            return self.hash
-        self._check_known()
-        child_index = type(self)._child_index(encoded_path, deepness)
-        child = self.children[child_index]
-        return child._get_internal(encoded_path, deepness + 1)
+        if depth == 64:
+            return hash
+        children = cls._children(hash, depth)
+        child_index = cls._child_index(encoded_path, depth)
+        child = children[child_index]
+        return cls._get_internal(child, encoded_path, depth + 1)
 
-    def _cherry_pick_internal(self, encoded_path, deepness: int):
-        if self.empty:
-            return MerkleTrie()
-        if deepness == 64:
-            assert self.children is None
-            return self
-        self._check_known()
-        child_index = type(self)._child_index(encoded_path, deepness)
-        old_children = self.children
-        old_child = old_children[child_index]
-        new_child = old_child._cherry_pick_internal(encoded_path, deepness + 1)
-        fn = lambda c: c if c.empty else type(self)._create_unknown(c.hash)
-        new_children = tuple(map(fn, old_children[:child_index])) + (new_child,) + tuple(map(fn, old_children[child_index+1:]))
-        return type(self)._create_with_children(new_children)
-
-    @staticmethod
-    def _merge_internal(first, second, deepness: int):
-        assert first.hash == second.hash
-        if deepness == 64:
-            assert first.children is None
-            assert second.children is None
-            return first
-        if second.children is None:
-            return first
-        if first.children is None:
-            return second
-        fn = lambda f, s: type(first)._merge_internal(f, s, deepness + 1)
-        new_children = tuple([ fn(f, s) for (f, s) in zip(first.children, second.children) ])
-        return type(first)._create_with_children(new_children)
-
-    def put(self, encoded_path: bytes, value: bytes) :
-        type(self)._check_is_hash(encoded_path)
-        type(self)._check_is_hash(value)
-        return self._put_internal(encoded_path, value, 0)
+    def put(self, encoded_path: bytes, value: bytes):
+        cls = type(self)
+        cls._check_is_hash(encoded_path)
+        cls._check_is_hash(value)
+        return cls(cls._put_internal(self.hash, encoded_path, value, 0))
 
     def remove(self, encoded_path: bytes):
-        type(self)._check_is_hash(encoded_path)
-        return self._remove_internal(encoded_path, 0)
+        cls = type(self)
+        cls._check_is_hash(encoded_path)
+        new_hash = cls._remove_internal(self.hash, encoded_path, 0)
+        return (cls(new_hash), new_hash != self.hash)
 
     def get(self, encoded_path: bytes) -> bytes:
-        type(self)._check_is_hash(encoded_path)
-        return self._get_internal(encoded_path, 0)
+        cls = type(self)
+        cls._check_is_hash(encoded_path)
+        return cls._get_internal(self.hash, encoded_path, 0)
 
     def contains(self, encoded_path: bytes) -> bool:
         return self.get(encoded_path) is not None
-
-    @staticmethod
-    def merge(first, second):
-        return type(first)._merge_internal(first, second, 0)
-
-    def cherry_pick(self, encoded_paths: List[bytes]):
-        result = type(self)._create_unknown(self.hash)
-        for path in encoded_paths:
-            additional = self._cherry_pick_internal(path, 0)
-            result = type(self).merge(result, additional)
-        return result
