@@ -46,3 +46,19 @@ def test_put_multiple():
             else:
                 assert not trie.contains(key)
                 assert trie.get(key) is None
+
+def check_serialization(trie):
+    serialized = json.dumps(trie.to_json_compatible([]))
+    deserialized = MerkleTrie.from_json_compatible(json.loads(serialized))
+    serialized_again = json.dumps(deserialized.to_json_compatible([]))
+    assert trie == deserialized
+    assert serialized == serialized_again
+
+def test_serialization_empty():
+    check_serialization(MerkleTrie())
+
+def test_serialization_full():
+    trie = MerkleTrie()
+    for i in range(10):
+        trie = trie.put(gen_key(i), gen_value(i))
+    check_serialization(trie)

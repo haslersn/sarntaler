@@ -147,3 +147,42 @@ class MerkleTrie(namedtuple("MerkleTrie", ["hash"])):
 
     def contains(self, encoded_path: bytes) -> bool:
         return self.get(encoded_path) is not None
+
+    @classmethod
+    def _to_json_compatible(cls, hash: bytes, encoded_paths: List[bytes], depth: int, let_know: bool):
+        if cls._empty(hash):
+            return None
+        val = {}
+        if depth == 64:
+            val["value"] = hexlify(hash).decode()
+        else:
+            val["hash"] = hexlify(hash).decode()
+            if let_know:
+                children = cls._children(hash, depth)
+                recurse = lambda c, lk: cls._to_json_compatible(c, encoded_paths, depth + 1, lk)
+                if encoded_paths:
+                    let_know_children_indices = map(lambda p: cls._child_index(encoded_path, depth), encoded_paths)
+                    let_know_children = [ i in let_know_children_indices for i in range(16) ]
+                    val["children"] = [ recurse(c, lk) for c, lk in zip(children, let_know_children) ]
+                else:
+                    val["children"] = [ recurse(c, True) for c in children ]
+        return val
+
+    @classmethod
+    def _from_json_compatible(cls, val, depth: int):
+        if val == None:
+            return bytes(32)
+        if depth == 64:
+            return unhexlify(val["value"])
+        fn = lambda v: cls._from_json_compatible(v, depth + 1)
+        children = tuple(map(fn, val["children"]))
+        return cls._create_inner_node(children, depth)
+
+    def to_json_compatible(self, encoded_paths: List[bytes]):
+        """ Returns a JSON-serializable representation of this object. """
+        return type(self)._to_json_compatible(self.hash, encoded_paths, 0, True)
+
+    @classmethod
+    def from_json_compatible(cls, val):
+        """ Create a new MerkleTrie from its JSON-serializable representation. """
+        return cls(cls._from_json_compatible(val, 0))
