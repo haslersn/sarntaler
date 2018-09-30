@@ -9,6 +9,21 @@ def scope_lookup(scope_list, name):
 class Node:
     def __init__(self):
         self.classname = self.__class__.__name__
+        self.pos_filename = None
+        self.pos_begin_line = None
+        self.pos_end_line = None
+        self.pos_begin_col = None
+        self.pos_end_col = None
+
+    def set_pos_from(self, p):
+        (self.pos_begin_line, ignore) = p.linespan(1)
+        (ignore, self.pos_end_line) = p.linespan(len(p)-1)
+        from src.marm.lexer import column_number_from_lexpos
+        (begin_lexpos, ignore) = p.lexspan(0)
+        (ignore, end_lexpos) = p.lexspan(len(p)-1)
+        self.pos_begin_col = column_number_from_lexpos(p.lexer.lexdata, begin_lexpos)
+        self.pos_end_col = column_number_from_lexpos(p.lexer.lexdata, end_lexpos)
+        self.pos_filename = p.lexer.filename
 
     def liststr(self, param):
         return "[{}]".format(", ".join(map(str,param)))

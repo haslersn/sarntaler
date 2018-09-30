@@ -15,6 +15,7 @@ start = 'translationunit'
 def p_translationunit(p):
     'translationunit : procdecllist'
     p[0] = ast.Translationunit(p[1])
+    p[0].set_pos_from(p)
 
 def p_procdecllist(p):
     '''procdecllist : procdecl procdecllist
@@ -28,6 +29,7 @@ def p_procdecllist(p):
 def p_procdecl(p):
     'procdecl : type IDENT LPAR paramlistopt RPAR statementlistOPT'
     p[0] = ast.Procdecl(p[1], p[2], p[4], p[6])
+    p[0].set_pos_from(p)
 
 def p_procdeclERROR(p):
     '''procdecl : error END
@@ -82,6 +84,7 @@ def p_paramlist(p):
 def p_paramdecl(p):
     'paramdecl : type IDENT'
     p[0] = ast.Paramdecl(p[1], p[2])
+    p[0].set_pos_from(p)
 
 
 def p_type(p):
@@ -93,16 +96,19 @@ def p_typename(p):
     '''typename : ADDRESS
     | INT'''
     p[0] = ast.Typename(p[1])
+    p[0].set_pos_from(p)
 
 
 def p_statementRETURN(p):
     'statement : RETURN expr SEMI'
     p[0] = ast.StatementReturn(p[2])
+    p[0].set_pos_from(p)
 
 
 def p_statementLOOPS(p):
     '''statement : WHILE LPAR boolex RPAR statement '''
     p[0] = ast.StatementWhile(p[3], p[5])
+    p[0].set_pos_from(p)
 
 
 def p_elseprod(p):
@@ -117,31 +123,37 @@ def p_elseprod(p):
 def p_statementBRANCHING(p):
     '''statement : IF LPAR boolex RPAR statement elseprod '''
     p[0] = ast.StatementIf(p[3], p[5], p[6])
+    p[0].set_pos_from(p)
 
 
 def p_statementEXPRESSIONSTATEMENT(p):
     'statement : expr SEMI'
     p[0] = ast.StatementExpression(p[1])
+    p[0].set_pos_from(p)
 
 
 def p_statementNEWSCOPE(p):
     'statement : body'
     p[0] = ast.StatementBody(p[1])
+    p[0].set_pos_from(p)
 
 
 def p_statementBREAK(p):
     'statement : BREAK SEMI'
     p[0] = ast.StatementBreak()
+    p[0].set_pos_from(p)
 
 
 def P_statementCONTINUE(p):
     'statement: CONTINUE SEMI'
     p[0] = ast.StatementContinue()
+    p[0].set_pos_from(p)
 
 
 def p_statementDECL(p):
     'statement : type decllist SEMI'
     p[0] = ast.StatementDecl(p[1], p[2])
+    p[0].set_pos_from(p)
 
 def p_statementERROR(p):
     'statement : error SEMI'
@@ -150,6 +162,7 @@ def p_statementERROR(p):
 def p_expr(p):
     'expr : INTCONST'
     p[0] = ast.ConstExpr(p[1])
+    p[0].set_pos_from(p)
 
 def p_exprFUNCALL(p):
     '''expr : IDENT LPAR decllist RPAR
@@ -158,20 +171,23 @@ def p_exprFUNCALL(p):
         p[0] = ast.LocalcallExpr(p[1],p[3])
     else:
         p[0] = ast.LocalcallExpr(p[1],[])
+    p[0].set_pos_from(p)
 
 def p_exprBINARYEXPRESSIONS(p):
-     '''expr : expr ASSIGN expr
-             | expr MULOP expr
-             | expr ADDOP expr
-             | expr DIVOP expr
-             | expr SUBOP expr '''
-     p[0] = ast.BinExpr(p[2], p[1], p[3])
+    '''expr : expr ASSIGN expr
+            | expr MULOP expr
+            | expr ADDOP expr
+            | expr DIVOP expr
+            | expr SUBOP expr '''
+    p[0] = ast.BinExpr(p[2], p[1], p[3])
+    p[0].set_pos_from(p)
 
 
 def p_exprUNARYEXPRESSIONS(p):
     '''expr : HASH expr
             | SUBOP expr '''
     p[0] = ast.UnaryExpr(p[1], p[2])
+    p[0].set_pos_from(p)
 
 
 def p_exprLHS(p):
@@ -187,11 +203,13 @@ def p_exprNESTED(p):
 def p_exprSTRUCTACCESS(p):
     'expr : expr DOT IDENT'
     p[0] = ast.StructExpr(p[1], p[3])
+    p[0].set_pos_from(p)
 
 
 def p_lhsexpression(p):
     'lhsexpression : IDENT'
     p[0] = ast.LHS(p[1])
+    p[0].set_pos_from(p)
 
 
 def p_boolexCOMPARE(p):
@@ -202,17 +220,20 @@ def p_boolexCOMPARE(p):
               | expr LT expr
               | expr GT expr'''
     p[0] = ast.BoolexCMP(p[2], p[1], p[3])
+    p[0].set_pos_from(p)
 
 
 def p_boolexBINARY(p):
     '''boolex : boolex OR boolex
               | boolex AND boolex'''
     p[0] = ast.BoolexBinary(p[2], p[1], p[3])
+    p[0].set_pos_from(p)
 
 
 def p_boolexUNARY(p):
     'boolex : NOT boolex'
     p[0] = ast.BoolexNot(p[1], p[2])
+    p[0].set_pos_from(p)
 
 
 def p_boolexPAR(p):
@@ -275,7 +296,7 @@ def marmparser(filename,input,errorhandler):
     lexer.errorhandler=errorhandler
     yacc.filename=filename
     yacc.errorhandler=errorhandler
-    return yacc.parse(input,lexer=lexer)
+    return yacc.parse(input,lexer=lexer,tracking=True)
 
 # Main for Debugging/Testing
 if __name__ == "__main__":

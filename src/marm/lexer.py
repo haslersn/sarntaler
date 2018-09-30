@@ -124,9 +124,11 @@ def t_newline(t):
 
 
 # Helper function to calculate the current column number
+def column_number_from_lexpos(input, lexpos):
+    line_start = input.rfind('\n', 0, lexpos) + 1
+    return (lexpos - line_start) + 1
 def column_number(token):
-    line_start = token.lexer.lexdata.rfind('\n', 0, token.lexpos) + 1
-    return (token.lexpos - line_start) + 1
+    return column_number_from_lexpos(token.lexer.lexdata, token.lexpos)
 
 
 # Error handling
