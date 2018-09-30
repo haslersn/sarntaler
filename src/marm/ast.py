@@ -175,7 +175,8 @@ class Paramdecl(Node):
 
     def analyse_scope(self, scope_list, errorhandler):
         if self.name in scope_list[0]:
-            errorhandler.registerError('?','?','?', "Multiple parameters have the name {}.".format(self.name)) #TODO
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Multiple parameters have the name {}.".format(self.name)) #TODO
         self.local_var_index = len(scope_list[0])
         self.lenv_depth = len(scope_list)
         scope_list[0][self.name] = self
@@ -228,7 +229,8 @@ class StatementDecl(Statement):
         self.lenv_depth = len(scope_list)
         for decl in self.decllist:
             if decl in scope_list[0]:
-                errorhandler.registerError('?','?','?', "Variable {} declared twice".format(decl)) #TODO
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Variable {} declared twice".format(decl)) #TODO
             self.local_var_indices[decl] = len(scope_list[0])
             scope_list[0][decl] = self
 
