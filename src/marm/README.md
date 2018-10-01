@@ -10,13 +10,13 @@ lexer, parser, typechecking and code generation phases.
 marm is a much more simplified subset of C, but contains special instructions for 
 the blockchain. Currently the features include:
 
-- while loops
-- comments
-- if branches
-- function calls
-- expression statements
-- declaration statements and
-- procedure declarations.
+- [while loops](#loops)
+- [comments](#comments)
+- [if branches](#ifs)
+- [function calls](#functions)
+- [expression statements](#expressions)
+- [declaration statements](#declarations) and
+- [procedure declarations](#procedures).
 
 ### General definition and keywords
 
@@ -27,7 +27,43 @@ MARM currently supports only integers and sarns as well as addresses.
 Identifiers **must** start with a letter (either lower of larger case) followed by any number 
 of number literals or letters or underscores.
 
-### Comments
+#### <a name="keywords"></a> Reserved Keywords
+The following words are **reserved keywords** and may not be used in any way. You might use them as
+parts of identifiers but not as sole words separated by whitespaces or tabs.
+
+<table>
+  <tr>
+    <td><b><tt>if</tt></b></td>
+    <td><b><tt>while</tt></b></td>
+    <td><b><tt>break</tt></b></td>
+    <td><b><tt>continue</tt></b></td>
+    <td><b><tt>else</tt></b></td>
+  </tr>
+  <tr>
+    <td><b><tt>return</tt></b></td>
+    <td><b><tt>int</tt></b></td>
+    <td><b><tt>address</tt></b></td>
+    <td><b><tt>sarn</tt></b></td>
+    <td><b><tt>msg</tt></b></td>
+  </tr>
+  <tr>
+    <td colspan="5"><b><tt>contract</tt></b></td>
+  </tr>
+</table>
+
+|          	|         	| 	|            	|        	|
+|:--------:	|:-------:	|:----------:	|:----------:	|:------:	|
+|   `if`   	| `while` 	|   `break`  	| `continue` 	| `else` 	|
+| `return` 	|  `int`  	|  `address` 	|   `sarn`   	|  `msg` 	|
+| <td colspan=5>`contract`
+|          	|         	| 	|            	|        	|
+
+| One    | Two | Three | Four    | Five  | Six 
+| -
+| Span <td colspan=3>triple  <td colspan=2>double
+
+
+### <a name="comments"></a> Comments
 
 We support both in-line and multi-line comments. The syntax is directly inherited by C:
 ```c 
@@ -44,7 +80,7 @@ The regular expression for comments is defined by
 ```
 , but is ignored by the lexer. So every content there is inside a comment is completely
 disregarded. 
-### Procedure declarations
+### <a name="procedures"></a> Procedure declarations
 
 Basically you would define a procedure as you would in C. So
 ```c
@@ -77,7 +113,7 @@ procdecllist : procdecl procdecllist
 procdecl     : type IDENT LPAR paramlistopt RPAR statementlistOPT
 ```
 
-### Loop statements
+### <a name="loops"></a> Loop statements
 Currently only `while` loops are supported. However, `do while` and `for` loops can easily
 be transformed to simple `while` loops:
 ```c 
@@ -110,11 +146,11 @@ The grammar for loop statements is definied by
 ```bnf
 statement : WHILE LPAR boolex RPAR statement
 ```
-### If branches
+### <a name="ifs"></a> If branches
 
-### Function calls
-### Expression statements
-### Declaration statements
+### <a name="functions"></a> Function calls
+### <a name="expressions"></a> Expression statements
+### <a name="declarations"></a> Declaration statements
 
 ## Example
 
