@@ -14,7 +14,7 @@ class Account(namedtuple("Account", ["pub_key", "balance", "code", "owner_access
     _dict = dict()
 
     @classmethod
-    def _get_from_hash(cls, hash: bytes):
+    def get_from_hash(cls, hash: bytes):
         if hash in cls._dict:
             return cls._dict[hash]
         else:
