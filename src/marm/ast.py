@@ -189,7 +189,7 @@ class LocalcallExpr(Expr):
                     errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                                "Parameter {} of function  must be of type {}, got {}.".format(
                                                    i, dparam_type, param.marm_type))
-                    self.marm_type = self.fnname.marm_type.return_type
+            self.marm_type = self.fnname.marm_type.return_type
         else:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Trying to call expression which is not a function.")
