@@ -256,7 +256,7 @@ class Translationunit(Node):
         self.procs = procdecllist
 
     def __str__(self):
-        return "[Translationunit: procs=" + str(self.procs) + "]"
+        return "[Translationunit: procs=" + self.liststr(self.procs) + "]"
 
     def analyse_scope(self, scope_list=[], errorhandler=None):
         local_scope_list = [{}]+scope_list
