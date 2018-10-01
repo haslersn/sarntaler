@@ -125,7 +125,7 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
     from src.marm.parser import marmparser,ParserError
     #yacc = yacc.yacc()
     if stages is None:
-        stages = ['parse', 'analyse_scope']
+        stages = ['parse', 'analyse_scope', 'typecheck']
     if errorhandler is None:
         errorhandler = ErrorHandler()
 
