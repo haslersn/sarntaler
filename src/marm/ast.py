@@ -131,7 +131,7 @@ class BinExpr(Expr):
             if type(self.left) == LHS:
                 # create rhs code
                 code_right = self.right.code_gen_with_labels(label_loop_id, label_if_id)
-                left_stackaddress = self.left.code_gen_with_labels(label_loop_id, label_if_id)
+                left_stackaddress = self.left.code_gen_LHS()
 
                 code += code_right
                 code += left_stackaddress
@@ -260,24 +260,24 @@ class UnaryExpr(Expr):
         return code
 
 
-class LHSExpr(Expr):
-    """ p_exprLHS """
-    def __init__(self, lhs):
-        super().__init__()
-        self.lhs = lhs
+# class LHSExpr(Expr):
+#     """ p_exprLHS """
+#     def __init__(self, lhs):
+#         super().__init__()
+#         self.lhs = lhs
 
-    def __str__(self):
-        return "[LHSExpr: lhs=" + str(self.lhs) + "]"
+#     def __str__(self):
+#         return "[LHSExpr: lhs=" + str(self.lhs) + "]"
 
-    def analyse_scope(self, scope_list, errorhandler):
-        self.lhs.analyse_scope(scope_list, errorhandler)
+#     def analyse_scope(self, scope_list, errorhandler):
+#         self.lhs.analyse_scope(scope_list, errorhandler)
 
-    def typecheck(self, errorhandler):
-        self.lhs.typecheck(errorhandler)
+#     def typecheck(self, errorhandler):
+#         self.lhs.typecheck(errorhandler)
 
-    def code_gen_with_labels(self, label_loop_id, label_if_id):
-        """Pushes the address of the identifier stored in the lhs"""
-        return self.lhs.code_gen_with_labels(label_loop_id, label_if_id)
+#     def code_gen_with_labels(self, label_loop_id, label_if_id):
+#         """Pushes the address of the identifier stored in the lhs"""
+#         return self.lhs.code_gen_with_labels(label_loop_id, label_if_id)
 
 
 class StructExpr(Expr):
@@ -305,6 +305,12 @@ class StructExpr(Expr):
     def _code_gen(self):
         """TODO has not yet been decided what this should actually do"""
         code = []
+        code.append("// code for struct access not implemented yet")
+        return code
+    def code_gen_LHS(self):
+        """Pushes the address of the identifier from the symbol table on the stack"""
+        code = []
+        code.append("// codeLHS for struct access not implemented yet")
         return code
 
 
@@ -332,7 +338,15 @@ class LHS(Node):
     def _code_gen(self):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
-        ident_addr = "ident_addr"  # TODO get address from symbol table
+        ident_addr = "ident_addr "+self.ident  # TODO get address from symbol table
+        code.append(ident_addr)
+        code.append('OP_PUSHR')
+        return code
+
+    def code_gen_LHS(self):
+        """Pushes the address of the identifier from the symbol table on the stack"""
+        code = []
+        ident_addr = "ident_addr "+self.ident  # TODO get address from symbol table
         code.append(ident_addr)
         return code
 
