@@ -241,6 +241,13 @@ class Typename(Node):
     def __str__(self):
         return "[Typename: typee=" + str(self.typee) + "]"
 
+    def __eq__(self, other):
+        if type(other) is Typename:
+            return self.typee == other.typee
+        elif type(other) is str: # TODO: replace with better mechanism
+            return self.typee == other
+        else: return False
+
 
 class Translationunit(Node):
     """ Non terminal 0 """
@@ -273,7 +280,7 @@ class Paramdecl(Node):
         self.name = name
         self.local_var_index = None
         self.lenv_depth = None
-        self.marm_type = self.param_type.typee
+        self.marm_type = self.param_type
 
     def __str__(self):
         return "[Paramdecl: param_type=" + str(self.param_type) + ", name=" + str(self.name) + "]"
@@ -290,7 +297,7 @@ class Paramdecl(Node):
 
     def get_marm_type_for(self, ident):
         assert(ident == self.name)
-        return self.param_type.typee
+        return self.param_type
 
 class Proctype():
     def __init__(self, return_type, param_types):
@@ -326,7 +333,7 @@ class Procdecl(Node):
         for param in self.params:
             param.typecheck(errorhandler)
             param_types.append(param.marm_type)
-        self.marm_type = Proctype(self.return_type.typee, param_types)
+        self.marm_type = Proctype(self.return_type, param_types)
 
     def typecheck(self, errorhandler):
         for statement in self.body:
@@ -366,7 +373,7 @@ class StatementDecl(Statement):
             scope_list[0][decl] = self
 
     def get_marm_type_for(self, ident):
-        return self.typee.typee
+        return self.typee
 
     def typecheck(self, errorhandler): pass
 
