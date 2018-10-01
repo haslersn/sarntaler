@@ -2,7 +2,7 @@ import typing
 import src.blockchain.new_transaction.py as t
 from src.blockchain.merkle_trie import MerkleTrie
 from src.blockchain.account import Account
-# TODO import VM as LabVM (or change name in code)
+from src.scriptinterpreter import ScriptInterpreter
 
 def transit(state : MerkleTrie, transaction : t.Transaction, miner_add : bytes):
     transInputs =  transaction.tx_data.inputs
@@ -36,7 +36,8 @@ def transit(state : MerkleTrie, transaction : t.Transaction, miner_add : bytes):
         state = state.put(transOutput.address, acc.hash)
 
         if acc.code != None:
-            state = LabVM.execute(state, transOutput.params, acc.code)
+            vm = ScriptInterpreter(state, transOutput.params, acc.code, transaction.hash)
+            state = vm.execute_script()
 
 
     #Miner gets his fee

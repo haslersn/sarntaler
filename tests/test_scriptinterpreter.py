@@ -1,17 +1,20 @@
 from src.scriptinterpreter import ScriptInterpreter
+from src.blockchain.merkle_trie import MerkleTrie, MerkleTrieStorage
+
+empty_mt = MerkleTrie(MerkleTrieStorage()) # not relevant in this test yet, but needs to exist
 
 def test_passWithOne():
-    si = ScriptInterpreter("1", "", None)
+    si = ScriptInterpreter(empty_mt, "1", "", None)
     assert si.execute_script()
 
 
 def test_failWithMoreThanOneStackElement():
-    si = ScriptInterpreter("1 2 3", "", None)
+    si = ScriptInterpreter(empty_mt, "1 2 3", "", None)
     assert not si.execute_script()
 
 
 def test_dup():
-    si = ScriptInterpreter(None, None, None)
+    si = ScriptInterpreter(empty_mt, None, None, None)
     si.stack = ['3', '2']
     res = si.op_dup()
     assert si.stack == ['3', '2', '2']
@@ -19,7 +22,7 @@ def test_dup():
 
 
 def test_dup_emptystack():
-    si = ScriptInterpreter(None, None, None)
+    si = ScriptInterpreter(empty_mt, None, None, None)
     si.stack = []
     res = si.op_dup()
     assert res == False
@@ -34,25 +37,25 @@ def test_swap():
 
 
 def test_swapWithOneElement():
-    si = ScriptInterpreter("1 OP_SWAP 1", None, None)
+    si = ScriptInterpreter(empty_mt, "1 OP_SWAP 1", None, None)
     assert not si.execute_script()
 
 
 def test_pushFP():
-    si = ScriptInterpreter("", "3 2 1 OP_PUSHFP 1", None)
+    si = ScriptInterpreter(empty_mt, "", "3 2 1 OP_PUSHFP 1", None)
     si.execute_script()
     assert si.stack == [3, 2, 1, -1]
 
 
 def test_popFP():
-    si = ScriptInterpreter("", "3 2 42 OP_POPFP 1", None)
+    si = ScriptInterpreter(empty_mt, "", "3 2 42 OP_POPFP 1", None)
     si.execute_script()
     assert si.stack == [3, 2]
     assert si.framepointer == 42
     emptystack_test("OP_POPFP")
 
 def test_incfp():
-    si = ScriptInterpreter("", "3 2 7 OP_INCFP 1", None)
+    si = ScriptInterpreter(empty_mt, "", "3 2 7 OP_INCFP 1", None)
     si.framepointer = 1
     si.execute_script()
     assert si.stack == [3, 2]
@@ -69,7 +72,7 @@ def test_pushabs_ok():
 
 
 def test_pushabs_notok():
-    si = ScriptInterpreter(None, None, None)
+    si = ScriptInterpreter(empty_mt, None, None, None)
     si.stack = [5, 6, 7, 8, 4]
     res = si.op_pushabs()
     assert res == False
@@ -123,7 +126,7 @@ def test_not():
     script_finalstack_test("3 1 OP_NOT 1", [3, 0])
     script_finalstack_test("3 0 OP_NOT 1", [3, 1])
     emptystack_noninteger_unaryop_test('OP_NOT')
-    si_notbool_stack = ScriptInterpreter('OP_NOT', "2 OP_NOT", None)
+    si_notbool_stack = ScriptInterpreter(empty_mt, 'OP_NOT', "2 OP_NOT", None)
     assert not si_notbool_stack.execute_script()
 
 def test_neg():
@@ -165,49 +168,49 @@ def test_gt():
 
 
 def test_pushr():
-    si = ScriptInterpreter("0 1 2 3 2 OP_PUSHR 1", "", None)
+    si = ScriptInterpreter(empty_mt, "0 1 2 3 2 OP_PUSHR 1", "", None)
     si.framepointer = 3
     si.execute_script()  # should push 3 (framepointer) + 2 (operand) = 5th element
     assert si.stack == [0, 1, 2, 3, 1]
 
 def test_pushr_2():
-    si = ScriptInterpreter('0 2 \"three\" 4 5 3 OP_PUSHR 1', "", None)
+    si = ScriptInterpreter(empty_mt, '0 2 \"three\" 4 5 3 OP_PUSHR 1', "", None)
     si.framepointer = 0
     si.execute_script()  # should push 0 (framepointer) + 3 (operand) = 3rd element
     assert si.stack == [0, 2, "three", 4, 5, "three"]
 
 def test_popr():
-    si = ScriptInterpreter('0 1 2 3 4 "storethis" 2 OP_POPR 1', "", None)
+    si = ScriptInterpreter(empty_mt, '0 1 2 3 4 "storethis" 2 OP_POPR 1', "", None)
     si.framepointer = 1
     si.execute_script()  # should store to 1 (framepointer) + 2 (operand) = 3rd element
     assert si.stack == [0, "storethis", 2, 3, 4]
     emptystack_test('OP_POPR')
 
 def script_finalstack_test(script: str, finalstack: list):
-    si = ScriptInterpreter(script, "", None)
+    si = ScriptInterpreter(empty_mt, script, "", None)
     si.execute_script()
     assert si.stack == finalstack
 
 def test_div_nonintegers():
-    si = ScriptInterpreter("a b OP_DIV 1", "", None)
+    si = ScriptInterpreter(empty_mt, "a b OP_DIV 1", "", None)
     assert not si.execute_script()
 
 #def emptystack_noninteger_test(op: str):
 
 def emptystack_noninteger_binaryop_test(op: str):
     emptystack_test(op)
-    si_one_elem_stack = ScriptInterpreter(op, "1 " + op, None)
+    si_one_elem_stack = ScriptInterpreter(empty_mt, op, "1 " + op, None)
     assert not si_one_elem_stack.execute_script()
-    si_noninteger = ScriptInterpreter("a b " + op + " 1", "", None)
+    si_noninteger = ScriptInterpreter(empty_mt, "a b " + op + " 1", "", None)
     assert not si_noninteger.execute_script()
 
 def emptystack_noninteger_unaryop_test(op: str):
     emptystack_test(op)
-    si_noninteger = ScriptInterpreter("a " + op + " 1", "", None)
+    si_noninteger = ScriptInterpreter(empty_mt, "a " + op + " 1", "", None)
     assert not si_noninteger.execute_script()
 
 def emptystack_test(op: str):
-    si_emptystack = ScriptInterpreter(op, "", None)
+    si_emptystack = ScriptInterpreter(empty_mt, op, "", None)
     assert not si_emptystack.execute_script()
 
 
@@ -220,7 +223,7 @@ def test_gcd_script():
     gcdstr = gcdfile.read()
     gcdstr = str(a) + "\n" + str(b) + "\n" + gcdstr
     gcdfile.close()
-    si = ScriptInterpreter(gcdstr, "", None)
+    si = ScriptInterpreter(empty_mt, gcdstr, "", None)
     si.execute_script()
     print("Stack after gcd script:",si.stack)
     assert si.stack[0] == gcd(a,b)
@@ -230,7 +233,7 @@ def test_call_test():
     f = open("./src/labvm/calltest.labvm","r")
     fstr = f.read()
     f.close()
-    si = ScriptInterpreter(fstr, "", None)
+    si = ScriptInterpreter(empty_mt, fstr, "", None)
     assert si.execute_script()
 
 def test_factorial():
@@ -240,7 +243,5 @@ def test_factorial():
     f.close()
     fstr = fstr.replace('FACOPERAND', str(facoperand))
     fstr = fstr.replace('FACRESULT', str(factorial(facoperand)))
-    si = ScriptInterpreter(fstr, "", None)
+    si = ScriptInterpreter(empty_mt, fstr, "", None)
     assert si.execute_script()
-
-

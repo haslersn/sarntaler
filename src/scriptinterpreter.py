@@ -84,9 +84,10 @@ class ScriptInterpreter:
         'OP_GT'
     }
 
-    def __init__(self, input_script: str, output_script: str, tx_hash: bytes):
-        self.output_script = output_script
-        self.input_script = input_script
+    def __init__(self, state, params_script: str, acc_script: str, tx_hash: bytes):
+        self.acc_script = acc_script
+        self.state = state
+        self.params_script = params_script
         self.tx_hash = tx_hash
 
         self.stack = []
@@ -281,7 +282,7 @@ class ScriptInterpreter:
             return False
 
         index = self.stack.pop()
-        del self.stack[(index+1):] 
+        del self.stack[(index+1):]
         return True
 
     def op_popvoid(self):
@@ -453,7 +454,7 @@ class ScriptInterpreter:
         self.framepointer = self.stack.pop()        # restore the framepointer
         self.stack.append(result)
         return True
-        
+
     def math_operations(self, op):
         if (len(self.stack) < 2):
             logging.warning("binary math operation: Not enough arguments")
@@ -580,15 +581,15 @@ class ScriptInterpreter:
                 logging.warning("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
             return True
 
-        if not execute(self.input_script) or not execute(self.output_script):
+        if not execute(self.params_script) or not execute(self.acc_script):
             logging.error("Invalid Tx due to invalid code item")
-            return False
+            return None
 
         exit_code = self.__pop_checked(int)
         if exit_code == 1:
-            return True
+            return self.state
         elif exit_code is None:
             logging.error("Invalid Tx due to missing exit code")
         else:
             logging.error("Invalid Tx due to exit code {}".format(exit_code))
-        return False
+        return None
