@@ -56,13 +56,13 @@ class Expr(Node):
 class MsgType:
     def __eq__(self, other):
         return type(other) is MsgType
-    def has_attribute(self, ident):
-        return False # TODO
+    def attribute_type(self, ident):
+        return None #TODO
 class ContractType:
     def __eq__(self, other):
         return type(other) is ContractType
-    def has_attribute(self, ident):
-        return False # TODO
+    def attribute_type(self, ident):
+        return None # TODO
 
 class SpecialExpression(Expr):
     """ p_exprSPECIALCONSTANTS"""
@@ -302,7 +302,7 @@ class StructExpr(Expr):
 
     def typecheck(self, errorhandler):
         self.expr.typecheck(errorhandler)
-        if not self.expr.marm_type.has_attribute(self.ident):
+        if self.expr.marm_type.attribute_type(self.ident) is None:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Value of type {} has not attribute named {}".format(
                                            self.expr.marm_type, self.ident))
@@ -362,8 +362,8 @@ class Typename(Node):
         """Should not be used at all, fails on call"""
         raise NotImplementedError
 
-    def has_attribute(self, ident):
-        return False # TODO
+    def attribute_type(self, ident):
+        return None # TODO
 
 
 class Translationunit(Node):
@@ -438,8 +438,8 @@ class Proctype():
         self.return_type = return_type
         self.param_types = param_types
 
-    def has_attribute(self, ident):
-        return False
+    def attribute_type(self, ident):
+        return None
 
 
 class Procdecl(Node):
