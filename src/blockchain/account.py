@@ -55,7 +55,7 @@ class Account(namedtuple("Account", ["pub_key", "balance", "code", "owner_access
 
     @property
     def address(self):
-        return compute_hash(pub_key)
+        return compute_hash(self.pub_key)
 
     def add_to_balance(self, delta: int):
         newbalance = self.balance + delta
