@@ -10,7 +10,8 @@ keywords = {
     'address': 'ADDRESS',
     'sarn':'SARN',
     'msg':'MSG',
-    'contract':'CONTRACT'
+    'contract':'CONTRACT',
+    'create':'CREATE'
     #   'void' : 'VOID',
     #   'goto' : 'GOTO',
     #   'default' : 'DEFAULT',

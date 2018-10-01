@@ -5,7 +5,7 @@ import ply.yacc as yacc
 precedence = (
      ('right', 'ASSIGN'),
      ('right', 'HASH', 'NOT'),
-     ('right', 'ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP', 'MULOP', 'SUBOP'),
+     ('right', 'ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP','MODOP', 'MULOP', 'SUBOP'),
      ('right', 'IF_WITHOUT_ELSE'),
 )
 
@@ -172,23 +172,30 @@ def p_exprSPECIALCONSTANTS(p):
     p[0].set_pos_from(p)
 
 def p_exprFUNCALL(p):
-    '''expr : lhsexpression LPAR exprlist RPAR
-            | lhsexpression LPAR RPAR'''
-    if len(p)==5:
-        p[0] = ast.LocalcallExpr(p[1],p[3])
+    '''expr : lhsexpression LPAR exprlist_opt RPAR
+            | CREATE LPAR exprlist_opt RPAR'''
+    if p[1]=='create':
+        p[0] = ast.CreateExpr(p[3])
     else:
-        p[0] = ast.LocalcallExpr(p[1],[])
+        p[0] = ast.LocalcallExpr(p[1],p[3])
     p[0].set_pos_from(p)
+
+def p_exprlistOPT(p):
+    '''exprlist_opt : exprlist
+                    | '''
+    if len(p)==2:
+        p[0] = p[1]
+    else:
+        p[0] = []
 
 def p_exprlist(p):
     '''exprlist : expr COMMA exprlist
-                | expr'''
-
+                | expr '''
     if len(p)==4:
         p[3].append(p[1])
         p[0] = p[3]
     else:
-        p[0] = []
+        p[0] = [p[1]]
 
 def p_exprBINARYEXPRESSIONS(p):
     '''expr : expr ASSIGN expr

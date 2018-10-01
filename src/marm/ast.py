@@ -119,7 +119,21 @@ class LocalcallExpr(Expr):
         for param in self.params:
             param.analyse_scope(scope_list, errorhandler)
 
+<<<<<<< HEAD
     def typecheck(self, errorhandler): pass # TODO
+=======
+class CreateExpr(Expr):
+    def __init__(self, params):
+        super().__init__()
+        self.params = params
+
+    def __str__(self):
+        return "[CreateExpr: params={}]".format(self.liststr(self.params))
+
+    def analyse_scope(self, scope_list, errorhandler):
+        for param in self.params:
+            param.analyse_scope(scope_list, errorhandler)
+>>>>>>> create contracts added
 
 class UnaryExpr(Expr):
     """ p_exprUNARYEXPRESSIONS """
