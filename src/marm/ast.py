@@ -438,7 +438,7 @@ class Paramdecl(Node):
         self.param_type = param_type
         self.name = name
         self.marm_type = self.param_type
-        self.local_var_index = None
+        self.param_index = None
 
     def __str__(self):
         return "[Paramdecl: param_type=" + str(self.param_type) + ", name=" + str(self.name) + "]"
@@ -448,7 +448,6 @@ class Paramdecl(Node):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Multiple parameters have the name {}.".format(self.name)) #TODO
         scope.define(self.name, self)
-        self.local_var_index = scope.get_next_var_index() # TODO: how to handler parameters?
 
     def typecheck(self, errorhandler): pass
 
@@ -457,7 +456,7 @@ class Paramdecl(Node):
         return self.param_type
 
     def get_local_index_for(self, ident):
-        return self.local_var_index
+        return -2-self.param_index # TODO: calling convention
 
     def code_gen(self):
         """Insert the identifier in the symboltable(?) and or do nothing I guess"""
@@ -491,8 +490,11 @@ class Procdecl(Node):
     def analyse_scope(self, scope, errorhandler):
         local_scope = Scope(scope)
         local_scope.define("#current_function", self)
+        i=0
         for param in self.params:
             param.analyse_scope(local_scope, errorhandler)
+            param.param_index = i
+            i+=1
         for statement in self.body:
             statement.analyse_scope(local_scope, errorhandler)
         self.local_depth = local_scope.next_var_index_delta
@@ -514,11 +516,11 @@ class Procdecl(Node):
 
     def code_gen(self):
         """Insert the identifiers in the symboltable(?) and generate the code for the body"""
-        code = [0]*self.local_depth #TODO: how to initialize locals? # TODO: How to handle parameters?
         # TODO decide what to do with the procedure and params addresses
+        code = []
         for decl in self.body:
             code += decl.code_gen()
-        code+=["OP_POPVOID"]*self.local_depth # TODO: how to handle parameters?
+        code+=['OP_POPVOID']*self.local_depth
         return code
 
 
@@ -539,6 +541,7 @@ class StatementDecl(Statement):
         self.typee = typee
         self.decllist = decllist
         self.local_var_indices = None
+        self.init_values = [0]*len(self.decllist) # TODO
 
     def __str__(self):
         return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + self.liststr(self.decllist) + "]"
@@ -562,12 +565,11 @@ class StatementDecl(Statement):
     def code_gen(self):
         """Ignore the type and call code_gen on all declarations, whatever they may do"""
         code = []
-        for decl in self.decllist:
-            if isinstance(decl, str):
-                code.append("decl " + decl)
-                pass  # Normally there should not happen anything I guess
+        for i in range(0, len(self.decllist)):
+            if isinstance(self.decllist[i], str):
+                code+=[str(self.init_values[i]) + ' //decl '+self.decllist[i]]
             else:
-                code += decl.code_gen()
+                code += self.decllist[i].code_gen()
         return code
 
 
@@ -757,10 +759,10 @@ class StatementBody(Statement):
 
     def code_gen(self):
         """Generate the code for all statements in the body"""
-        code = [0]*self.local_depth #TODO: how to initialize locals?
+        code = []
         for stmnt in self.body:
             code += stmnt.code_gen()
-        code+=["OP_POPVOID"]*self.local_depth
+        code+=["OP_POPVOID"]*self.local_depth # pop local variables after block
         return code
 
 
