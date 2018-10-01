@@ -5,5 +5,5 @@ def compute_hash(to_hash: bytes) -> bytes:
     m.update(to_hash)
     return m.digest()
 
-def is_hash(hash: bytes) -> int:
+def is_hash(hash: bytes) -> bool:
     return len(hash) == 32 and hash != bytes(32) # mustn't be zero
