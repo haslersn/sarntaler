@@ -40,7 +40,7 @@ class ScriptInterpreter:
     operations = {
         'OP_SHA256',
         'OP_CHECKSIG',
-        'OP_RETURN',
+        'OP_KILL',
         'OP_CHECKLOCKTIME',
 
         'OP_SWAP',
@@ -150,14 +150,14 @@ class ScriptInterpreter:
         return True
 
 
-    def op_return(self):
+    def op_kill(self):
 
         """Marks transaction as invalid.
         A standard way of attaching extra data to transactions is to add a zero-value output with a
-        scriptPubKey consisting of OP_RETURN followed by exactly one pushdata op. Such outputs are
+        scriptPubKey consisting of OP_KILL followed by exactly one pushdata op. Such outputs are
         provably unspendable, reducing their cost to the network.
         Currently it is usually considered non-standard (though valid) for a transaction to have more
-        than one OP_RETURN output or an OP_RETURN output with more than one pushdata op. """
+        than one OP_KILL output or an OP_KILL output with more than one pushdata op. """
 
         #DONE
         logging.warning('Transaction can not be spent!')
