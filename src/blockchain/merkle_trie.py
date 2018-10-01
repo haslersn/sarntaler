@@ -1,4 +1,3 @@
-from collections import namedtuple
 from binascii import hexlify, unhexlify
 from typing import List
 from src.blockchain.crypto import compute_hash, is_hash
