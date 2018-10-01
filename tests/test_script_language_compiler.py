@@ -83,8 +83,8 @@ class TestParserMethods(unittest.TestCase):
             with open(os.path.join(self.testdir, "notvalid.marm"), mode='r') as testfile:
                 marmcompiler.marmcompiler("notvalid.marm", testfile.read(), errorhandler=errorhandler)
                 self.assertFalse(errorhandler.roughlyOk())
-                self.assertEqual(errorhandler.countErrors(), 2)
-                self.assertEqual(errorhandler.countFatals(), 0)
+                self.assertEqual(2, errorhandler.countErrors())
+                self.assertEqual(0, errorhandler.countFatals())
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
@@ -95,7 +95,7 @@ class TestParserMethods(unittest.TestCase):
             with open(os.path.join(self.testdir, "invalid.marm"), mode='r') as testfile:
                 marmcompiler.marmcompiler("invalid.marm", testfile.read(), errorhandler=errorhandler)
                 self.assertFalse(errorhandler.roughlyOk())
-                self.assertEqual(5, errorhandler.countErrors(),)
+                self.assertEqual(6, errorhandler.countErrors(),)
                 # self.assertEqual(3, errorhandler.countFatals()) TODO lexical errors should be fatals
         except IOError as e:
             self.fail(msg="File error: " + str(e))
@@ -127,6 +127,17 @@ class TestParserMethods(unittest.TestCase):
         try:
             with open(os.path.join(self.testdir, "absurd_tests.marm"), mode='r') as testfile:
                 marmcompiler.marmcompiler("absurd_tests.marm", testfile.read(), errorhandler=errorhandler)
+                self.assertTrue(errorhandler.cleanCode())
+        except IOError as e:
+            self.fail(msg="File error: " + str(e))
+
+    @unittest.expectedFailure
+    def test_parse_file_unimplemented_features(self):
+        """Tests whether some new features are actually implemented"""
+        errorhandler = marmcompiler.ErrorHandler()
+        try:
+            with open(os.path.join(self.testdir, "blockchainfeatures.marm"), mode='r') as testfile:
+                marmcompiler.marmcompiler("blockchainfeatures.marm", testfile.read(), errorhandler=errorhandler)
                 self.assertTrue(errorhandler.cleanCode())
         except IOError as e:
             self.fail(msg="File error: " + str(e))
