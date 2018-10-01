@@ -257,12 +257,13 @@ class Typename(Node):
 
 class Translationunit(Node):
     """ Non terminal 0 """
-    def __init__(self, procdecllist):
+    def __init__(self, contractdata, procdecllist):
         super().__init__()
         self.procs = procdecllist
+        self.contractdata =  contractdata
 
     def __str__(self):
-        return "[Translationunit: procs=" + self.liststr(self.procs) + "]"
+        return "[Translationunit: contractdata = "+str(self.contractdata)+" procs=" + self.liststr(self.procs) + "]"
 
     def analyse_scope(self, scope_list=[], errorhandler=None):
         local_scope_list = [{}]+scope_list

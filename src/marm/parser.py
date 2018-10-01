@@ -14,9 +14,26 @@ start = 'translationunit'
 
 
 def p_translationunit(p):
-    'translationunit : procdecllist'
-    p[0] = ast.Translationunit(p[1])
+    'translationunit : contractdata procdecllist'
+    p[0] = ast.Translationunit(p[1],p[2])
     p[0].set_pos_from(p)
+
+def p_contractclause(p):
+    ''' contractdata : CONTRACT BEGIN contractlist END 
+                     | '''
+    if len(p)==5:
+        p[0]=p[3]
+    else:
+        p[0]=[]
+def p_contractlist(p):
+    ''' contractlist : paramdecl SEMI contractlist
+                     | '''
+    if len(p)==4:
+        p[3].append(p[1])
+        p[0]=p[3]
+    else: 
+        p[0] = []
+
 
 def p_procdecllist(p):
     '''procdecllist : procdecl procdecllist
@@ -166,8 +183,8 @@ def p_expr(p):
     p[0].set_pos_from(p)
 
 def p_exprSPECIALCONSTANTS(p):
-    '''expr : CONTRACT 
-            | MSG'''
+    '''expr : MSG
+            |  CONTRACT '''
     p[0] = ast.SpecialExpression(p[1])
     p[0].set_pos_from(p)
 

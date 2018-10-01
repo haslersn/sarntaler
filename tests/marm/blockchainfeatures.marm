@@ -1,3 +1,8 @@
+contract {
+	sarn sar;
+	int globalx;
+}
+
 //Testprogram for basic contract features
 int test(int x){
 	address a;
@@ -9,6 +14,9 @@ int test(int x){
 	// create takes sarns from the balance and creates an account
 	//     whose address it returns
 	a = create(s); 
+
+	s = contract.sar;
+	contract.globalx = x;
 
 	while(i < 1){
 		x = x % 2;

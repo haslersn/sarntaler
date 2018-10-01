@@ -151,13 +151,13 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
         if errorhandler.roughlyOk():
             completed_stages.append(stage)
         else:
-            print(coloring(input))
+#            print(coloring(input))
             print(errorhandler.tostring())
             print(errorhandler.to_explanation(input))
             print("Errors occured during {}.".format(stage))
             return None
 
-    print(coloring(input))
+ #   print(coloring(input))
     print(errorhandler.tostring())
     print(errorhandler.to_explanation(input))
 
