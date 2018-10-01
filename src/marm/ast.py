@@ -356,7 +356,7 @@ class LHS(Node):
     def code_gen(self):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
-        ident_addr = "ident_addr "+self.ident  # TODO get address from symbol table
+        ident_addr = 2+self.definition.get_local_index_for(self.ident)
         code.append(ident_addr)
         code.append('OP_PUSHR')
         return code
@@ -364,7 +364,7 @@ class LHS(Node):
     def code_gen_LHS(self):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
-        ident_addr = "ident_addr "+self.ident  # TODO get address from symbol table
+        ident_addr = 2+self.definition.get_local_index_for(self.ident)
         code.append(ident_addr)
         return code
 
@@ -448,13 +448,16 @@ class Paramdecl(Node):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Multiple parameters have the name {}.".format(self.name)) #TODO
         scope.define(self.name, self)
-        self.local_var_index = scope.get_next_var_index()
+        self.local_var_index = scope.get_next_var_index() # TODO: how to handler parameters?
 
     def typecheck(self, errorhandler): pass
 
     def get_marm_type_for(self, ident):
         assert(ident == self.name)
         return self.param_type
+
+    def get_local_index_for(self, ident):
+        return self.local_var_index
 
     def code_gen(self):
         """Insert the identifier in the symboltable(?) and or do nothing I guess"""
@@ -479,6 +482,7 @@ class Procdecl(Node):
         self.name = name
         self.params = params
         self.body = body
+        self.local_depth = None
 
     def __str__(self):
         return "[Procdecl: return_type=" + str(self.return_type) + ", name=" + str(self.name) + ", params=" +\
@@ -491,6 +495,7 @@ class Procdecl(Node):
             param.analyse_scope(local_scope, errorhandler)
         for statement in self.body:
             statement.analyse_scope(local_scope, errorhandler)
+        self.local_depth = local_scope.next_var_index_delta
 
     def get_marm_type_for(self, ident):
         assert(self.name == ident)
@@ -509,10 +514,11 @@ class Procdecl(Node):
 
     def code_gen(self):
         """Insert the identifiers in the symboltable(?) and generate the code for the body"""
-        code = []
+        code = [0]*self.local_depth #TODO: how to initialize locals? # TODO: How to handle parameters?
         # TODO decide what to do with the procedure and params addresses
         for decl in self.body:
             code += decl.code_gen()
+        code+=["OP_POPVOID"]*self.local_depth # TODO: how to handle parameters?
         return code
 
 
@@ -548,6 +554,8 @@ class StatementDecl(Statement):
 
     def get_marm_type_for(self, ident):
         return self.typee
+    def get_local_index_for(self, ident):
+        return self.local_var_indices[ident]
 
     def typecheck(self, errorhandler): pass
 
@@ -732,6 +740,7 @@ class StatementBody(Statement):
     def __init__(self, body):
         super().__init__()
         self.body = body
+        self.local_depth = None
 
     def __str__(self):
         return "[StatementBody: body={}]".format(self.liststr(self.body))
@@ -740,6 +749,7 @@ class StatementBody(Statement):
         local_scope = Scope(scope)
         for statement in self.body:
             statement.analyse_scope(local_scope, errorhandler)
+        self.local_depth = local_scope.next_var_index_delta
 
     def typecheck(self, errorhandler):
         for statement in self.body:
@@ -747,9 +757,10 @@ class StatementBody(Statement):
 
     def code_gen(self):
         """Generate the code for all statements in the body"""
-        code = []
+        code = [0]*self.local_depth #TODO: how to initialize locals?
         for stmnt in self.body:
             code += stmnt.code_gen()
+        code+=["OP_POPVOID"]*self.local_depth
         return code
 
 
