@@ -105,7 +105,7 @@ class BinExpr(Expr):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                            "Right operand of {} exspects value of type int, got {}".format(
                                                self.op, self.right.marm_type))
-            self.marm_type = 'int'
+            self.marm_type = Typename('int')
 
 
 
@@ -233,9 +233,6 @@ class LHS(Node):
 
     def analyse_scope(self, scope_list, errorhandler):
         self.definition = scope_lookup(scope_list, self.ident)
-        if self.definition is None:
-            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Use of undeclared identifier {}.".format(self.ident))
         self.lenv_depth = len(scope_list)
 
     def typecheck(self, errorhandler):
