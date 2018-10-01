@@ -178,8 +178,10 @@ def t_error(t):
             column_number(t),
             "lexical error: invalid character {}".format(t.value[0])
             )
-
+    ret = t.value[0]
     t.lexer.skip(1)
+    t.value=ret
+    return t
 
 # Generate lexer
 import ply.lex as lex
