@@ -30,6 +30,13 @@ of number literals or letters or underscores.
 #### <a name="keywords"></a> Reserved Keywords
 The following words are **reserved keywords** and may not be used in any way. You might use them as
 parts of identifiers but not as sole words separated by whitespaces or tabs.
+
+|<td colspan="5"> Schlüsselwörter |
+|:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|
+| `if` | `while` | `break` | `continue` | `else` | 
+| `return` | `int` | `address` | `sarn` | `msg` |
+|<td colspan="5"> `continue` |
+
 <center>
 <table>
   <tr>
