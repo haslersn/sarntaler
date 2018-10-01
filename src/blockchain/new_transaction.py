@@ -3,24 +3,27 @@ import json
 from collections import namedtuple
 from typing import Tuple # needed for the type hint "Tuple[bytes]"
 from binascii import hexlify, unhexlify
-from src.blockchain.crypto import compute_hash
+from src.blockchain.crypto import *
 
 class TransactionInput(namedtuple("TransactionInput", ["address", "value"])):
 
     def __new__(cls, address: bytes, value: int):
+        check_is_hash(address)
+        if value < 0:
+            raise ValueError('transaction value mustn\'t be negative')
         return super().__new__(cls, address, value)
 
     def to_json_compatible(self):
         """ Returns a JSON-serializable representation of this object. """
-        val = {}
-        val["address"] = hexlify(self.address).decode()
-        val["value"] = self.value
-        return val
+        var = {}
+        var["address"] = hexlify(self.address).decode()
+        var["value"] = self.value
+        return var
 
     @classmethod
-    def from_json_compatible(cls, val):
+    def from_json_compatible(cls, var):
         """ Create a new TransactionInput from its JSON-serializable representation. """
-        return cls(unhexlify(val["address"]), val["value"])
+        return cls(unhexlify(var["address"]), var["value"])
 
 class TransactionOutput(namedtuple("TransactionOutput", ["address", "value", "params"])):
     """
@@ -30,6 +33,9 @@ class TransactionOutput(namedtuple("TransactionOutput", ["address", "value", "pa
     """
 
     def __new__(self, address: bytes, value: int, params: str = None):
+        check_is_hash(address)
+        if value < 0:
+            raise ValueError('transaction value mustn\'t be negative')
         return super().__new__(self, address, value, params)
 
     def to_json_compatible(self):

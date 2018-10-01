@@ -2,17 +2,22 @@ import json
 
 from src.blockchain.new_transaction import Transaction, TransactionData, TransactionInput, TransactionOutput
 
-def test_tx_input():
-    tx_input = TransactionInput(bytes(32), 10)
-    assert json.dumps(tx_input.to_json_compatible()) == '{"address": "0000000000000000000000000000000000000000000000000000000000000000", "value": 10}'
-    tx_output = TransactionOutput(b"2342342", 8)
+def test_tx():
+    tx_input = TransactionInput(bytes([17] * 32), 10)
+    assert json.dumps(tx_input.to_json_compatible()) == '{"address": "1111111111111111111111111111111111111111111111111111111111111111", "value": 10}'
+
+    tx_output = TransactionOutput(bytes([1] * 32), 8)
+    assert json.dumps(tx_output.to_json_compatible()) == '{"address": "0101010101010101010101010101010101010101010101010101010101010101", "value": 8, "params": null}'
+
     tx_data = TransactionData([tx_input], [tx_output], 2, bytes(32))
-    #tx = Transaction(tx_data, (bytes(32),) * len(tx_data.inputs))
+    assert json.dumps(tx_data.to_json_compatible()) == '{"inputs": [{"address": "1111111111111111111111111111111111111111111111111111111111111111", "value": 10}], "outputs": [{"address": "0101010101010101010101010101010101010101010101010101010101010101", "value": 8, "params": null}], "fee": 2, "nonce": "0000000000000000000000000000000000000000000000000000000000000000"}'
 
     tx = Transaction(tx_data)
-    jsonstr = json.dumps(tx.to_json_compatible())
-    #print(jsonstr)
+    serialized = json.dumps(tx.to_json_compatible())
+    assert serialized == '{"tx_data": {"inputs": [{"address": "1111111111111111111111111111111111111111111111111111111111111111", "value": 10}], "outputs": [{"address": "0101010101010101010101010101010101010101010101010101010101010101", "value": 8, "params": null}], "fee": 2, "nonce": "0000000000000000000000000000000000000000000000000000000000000000"}, "signatures": ["0000000000000000000000000000000000000000000000000000000000000000"]}'
 
-    tx2 = Transaction.from_json_compatible(json.loads(jsonstr))
+    deserialized = Transaction.from_json_compatible(json.loads(serialized))
+    serialized_again = json.dumps(tx.to_json_compatible())
 
-    assert tx.hash == tx2.hash
+    assert tx.hash == deserialized.hash # TODO: just use tx eq function
+    assert serialized == serialized_again
