@@ -1,4 +1,4 @@
-# labVM Documentation 
+# labVM Documentation
 
 ## Basics
 The labVM is a stack-based Virtual Machine. The Stack can hold references to either Integer or Strings of arbitrary size.
@@ -58,10 +58,10 @@ remark: For the highest element on the stack **before the execution** s_1, for t
 
 The stack grows to the top in this figure.
 
-Boolean values are ints. 1 represents true and 0 represents false. 
+Boolean values are ints. 1 represents true and 0 represents false.
 
 
-|Instruction | Constraints | Description | 
+|Instruction | Constraints | Description |
 | ---------- | ----------- | ----------- |
 |_**Math**_|
 | OP_ADD |s_1 and s_2 integers | consumes the two highest stack cells and pushes s_2 + s_1 |
@@ -83,8 +83,8 @@ Boolean values are ints. 1 represents true and 0 represents false.
 |_**Flow Control**_|
 | OP_JUMP | s_1 integer and line exists | absolute jump, consumes highest stack cell, PC = s_1 |
 | OP_JUMPR | s_1 integer and boundaries are kept | consumes highest stack cell, PC = s_1 + PC |
-| OP_JUMPC | s_1 integer and s_2 integer and line s_1 exists| absolute conditional Jump. Consumes 2 Arguments. If s_2 == 1, PC = s_1 else nothing happens | 
-| OP_JUMPRC | s_1 integer and s_2 integer and line s_1 keeps boundaries | relative conditional Jump. Consumes 2 Arguments. If s_2 == 1, PC = PC + s_1 else nothing happens | 
+| OP_JUMPC | s_1 integer and s_2 integer and line s_1 exists| absolute conditional Jump. Consumes 2 Arguments. If s_2 == 1, PC = s_1 else nothing happens |
+| OP_JUMPRC | s_1 integer and s_2 integer and line s_1 keeps boundaries | relative conditional Jump. Consumes 2 Arguments. If s_2 == 1, PC = PC + s_1 else nothing happens |
 | OP_CALL | s_1 valid code line | consumes s_1, pushes FP, sets FP = SP (points to old FP, pushes PC (return address), jumps |
 | OP_RET | needs a valid stack frame | s_1 will be interpreted as the return value. restores FP and PC, everything on the stack between the return address and the return value gets lost |
 | OP_KILL | - | kills execution with an error |
@@ -100,8 +100,18 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_PUSHPC | - | pushes the Program Counter |
 | OP_POPPC | s_1 valid code line | pop into the Program Counter |
 | OP_POPVOID | stack not empty | removes s_1 |
+|_**String**_|
+| OP_PACK | s_1 integer, at least s_1 +1 stack elements | Packs the number of stack elements given in s_1 into a single string separated by spaces, starting from s_2 and consuming them all. The topmost stack element will be the last element in the string. Pushes the resulting String onto the stack. The resulting string can be used e.g. to pass parameters to OP_TRANSFER. Reverse operation: OP_UNPACK
+| OP_UNPACK | s_1 string | Splits the string at s_1 by spaces and pushes the parts onto the stack in the order they appear in the string (i.e. the first element of the string will be furthest down on the stack). Also leaves the number of elements that were pushed in s_1 (excluding s_1 itself). Reverse operation: OP_PACK
+|_**Blockchain**_|
+| OP_GETBAL | - | Leaves the current smart contract account balance to the stack |
+| OP_GETSTOR | s_1 string | Consumes s_1 and leaves the value of the storage cell referenced by s_1 on the stack. |
+| OP_SETSTOR | s_2 string | Consumes s_1 and s_2 and stores the value of s_1 in the storage cell referenced by s_1. |
+| OP_TRANSFER | s_1 integer, s_2 address, s_3 string | Consumes s_1 to s_3 and calls the contract at address s_2 with the parameters stored in s_3, sending the amount of money specified in s_1. Leaves a success code at s_1 and return value at s_2. The amount of money may be zero but not negative and the parameters may be empty. |
+| OP_CREATECONTR | s_1 pubkey, s_2 string, s_3 boolean, s_4 + s_5 strings | Consumes s_1 to s_5 and creates a new account with public key in s_1, contract code in s_2, owner_access flag in s_3. s_4 and s_5 are interpreted as space-separated lists of storage variable names and their initial values, respectively. Leaves a bool on the stack if the contract creation succeeded.  | 
 
-lines are numbered beginning with 1 and empty lines are not counted
+
+Lines are numbered beginning with 1 and empty lines are not counted
 
 # Macros
 Macros that are implemented:
