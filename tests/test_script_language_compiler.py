@@ -76,19 +76,11 @@ class TestParserMethods(unittest.TestCase):
         """Tests some easy errors"""
         errorhandler = marmcompiler.ErrorHandler()
         try:
-<<<<<<< 54c807a56b48cedc354b68ac0ba006667d09d2f0:tests/test_parser.py
             with open(os.path.join(self.testdir, "invalid.marm"), mode='r') as testfile:
                 marmcompiler.marmcompiler("invalid.marm", testfile.read(), errorhandler=errorhandler)
                 self.assertFalse(errorhandler.roughlyOk())
-                self.assertEqual(errorhandler.countErrors(), 5)
-                # self.assertEqual(errorhandler.countFatals(), 3) TODO lexical errors should be fatals
-=======
-            testfile = open("./marm/invalid.marm", mode='r')
-            marmcompiler.marmcompiler("invalid.marm", testfile.read(), errorhandler=errorhandler)
-            self.assertFalse(errorhandler.roughlyOk())
-            self.assertEqual(5, errorhandler.countErrors())
-           # self.assertEqual(3, errorhandler.countFatals()) TODO lexical errors should be fatals
->>>>>>> updated tests:tests/test_script_language_compiler.py
+                self.assertEqual(5, errorhandler.countErrors(),)
+                # self.assertEqual(3, errorhandler.countFatals()) TODO lexical errors should be fatals
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
