@@ -219,7 +219,7 @@ def p_exprlist(p):
         p[0] = [p[1]]
 
 def p_exprBINARYEXPRESSIONS(p):
-    '''expr : expr ASSIGN expr
+    '''expr : lhsexpression ASSIGN expr
             | expr MULOP expr
             | expr ADDOP expr
             | expr DIVOP expr

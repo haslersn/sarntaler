@@ -173,7 +173,7 @@ c = -d
 ```
 The grammar is defined by
 ```bnf
-expr   : expr ASSIGN expr
+expr   : lhsexpression ASSIGN expr
        | expr MULOP expr
        | expr ADDOP expr
        | expr DIVOP expr
