@@ -9,11 +9,11 @@ class TestParserMethods(unittest.TestCase):
 
         self.testdir = os.path.join(os.path.dirname(__file__), "marm")
 
-    def generic_test(self, filename, cleanCode=True, roughlyOk=True, error_count=0, fatals_count=0):
+    def generic_test(self, filename, cleanCode=True, roughlyOk=True, error_count=0, fatals_count=0, stages=None):
         errorhandler = marmcompiler.ErrorHandler()
         try:
             with open(os.path.join(self.testdir, filename), mode='r') as testfile:
-                marmcompiler.marmcompiler(filename, testfile.read(), errorhandler=errorhandler)
+                marmcompiler.marmcompiler(filename, testfile.read(), errorhandler=errorhandler, stages=stages)
                 self.assertEqual(errorhandler.roughlyOk(), roughlyOk)
                 self.assertEqual(errorhandler.cleanCode(), cleanCode)
                 self.assertEqual(errorhandler.countErrors(), error_count)
@@ -102,14 +102,7 @@ class TestParserMethods(unittest.TestCase):
 
     def test_parse_file_valid_double_functions(self):
         """Tests some valid easy file with two functions and a call"""
-        errorhandler = marmcompiler.ErrorHandler()
-        try:
-            with open(os.path.join(self.testdir, "valid.marm"), mode='r') as testfile:
-                marmcompiler.marmcompiler("valid.marm", testfile.read(), errorhandler=errorhandler,
-                                          stages=['lex', 'parse', 'analyse_scope', 'typecheck', 'codegen'])
-                self.assertTrue(errorhandler.cleanCode())
-        except IOError as e:
-            self.fail(msg="File error: " + str(e))
+        self.generic_test("valid.marm", stages=['lex', 'parse', 'codegen'])
 
     @unittest.expectedFailure
     def test_parse_file_test_for_behaviour(self):
@@ -120,13 +113,7 @@ class TestParserMethods(unittest.TestCase):
     @unittest.expectedFailure
     def test_parse_file_unimplemented_features(self):
         """Tests whether some new features are actually implemented and should be have any other flaws"""
-        errorhandler = marmcompiler.ErrorHandler()
-        try:
-            with open(os.path.join(self.testdir, "blockchainfeatures.marm"), mode='r') as testfile:
-                marmcompiler.marmcompiler("blockchainfeatures.marm", testfile.read(), errorhandler=errorhandler)
-                self.assertTrue(errorhandler.cleanCode())
-        except IOError as e:
-            self.fail(msg="File error: " + str(e))
+        self.generic_test("blockchainfeatures.marm")
 
     def test_typecheck_valid(self):
         self.generic_test("valid_types.marm")
