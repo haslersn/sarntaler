@@ -1,25 +1,25 @@
-21
-OP_JUMP
+21              // Line 21 is the start of the main-method
+OP_JUMP         // Jump to the main-method
 -1
-OP_PUSHR
+OP_PUSHR        // -1 OP_PUSHR gets the parameter that was put on the stack before calling the function
 1
-OP_GT
+OP_GT           // check if parameter >= 1
 11
-OP_JUMPC
+OP_JUMPC        // if parameter >= 1 is true, jump to line 11
 1
-OP_RET
+OP_RET          // parameter >= 1 is false, put on the stack as returnvalue and return
 -1
-OP_PUSHR
+OP_PUSHR        // get the parameter again
 1
-OP_SUB
+OP_SUB          // subtract 1 from the parameter
 3
-OP_CALL
+OP_CALL         // call fac on line 3 again with the decremented parameter
 -1
-OP_PUSHR
-OP_MUL
-OP_RET
-FACOPERAND
-3
-OP_CALL
-FACRESULT
-OP_EQU
+OP_PUSHR        // get the paramter again
+OP_MUL          // muliply parameter and fac(parameter-1)
+OP_RET          // return the result of the multiplication
+FACOPERAND      // put the value that we want the factorial of on the stack
+3               // Line 3 is the start of the fac() method
+OP_CALL         // call fac-method
+FACRESULT       // the value of fac(FACOPERAND) will be put here to test the result
+OP_EQU          // check if our calculation was right
