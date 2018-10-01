@@ -9,6 +9,18 @@ class TestParserMethods(unittest.TestCase):
         self.lexer = lexer.lexer
         self.testdir = os.path.join(os.path.dirname(__file__), "marm")
 
+    def generic_test(self, filename, cleanCode=True, roughlyOk=True, error_count=0, fatals_count=0):
+        errorhandler = marmcompiler.ErrorHandler()
+        try:
+            with open(os.path.join(self.testdir, filename), mode='r') as testfile:
+                marmcompiler.marmcompiler(filename, testfile.read(), errorhandler=errorhandler)
+                self.assertEqual(errorhandler.roughlyOk(), roughlyOk)
+                self.assertEqual(errorhandler.cleanCode(), cleanCode)
+                self.assertEqual(errorhandler.countErrors(), error_count)
+                self.assertEqual(errorhandler.countFatals(), fatals_count)
+        except IOError as e:
+            self.fail(msg="File error: " + str(e))
+
     def generic_lex(self, t_text, t_type, t_value, t_lineno=1, t_lexpos=0):
         try:
             self.lexer.input(t_text)
@@ -63,58 +75,25 @@ class TestParserMethods(unittest.TestCase):
 
     def test_parse_file_error(self):
         """Tests some quite complicated errors"""
-        errorhandler = marmcompiler.ErrorHandler()
-        try:
-            with open(os.path.join(self.testdir, "notvalid.marm"), mode='r') as testfile:
-                marmcompiler.marmcompiler("notvalid.marm", testfile.read(), errorhandler=errorhandler)
-                self.assertFalse(errorhandler.roughlyOk())
-                self.assertEqual(errorhandler.countErrors(), 2)
-                self.assertEqual(errorhandler.countFatals(), 0)
-        except IOError as e:
-            self.fail(msg="File error: " + str(e))
+        self.generic_test("notvalid.marm", False, False, 2)
 
     def test_parse_file_error2(self):
         """Tests some easy errors"""
-        errorhandler = marmcompiler.ErrorHandler()
-        try:
-            with open(os.path.join(self.testdir, "invalid.marm"), mode='r') as testfile:
-                marmcompiler.marmcompiler("invalid.marm", testfile.read(), errorhandler=errorhandler)
-                self.assertFalse(errorhandler.roughlyOk())
-                self.assertEqual(5, errorhandler.countErrors(),)
-                # self.assertEqual(3, errorhandler.countFatals()) TODO lexical errors should be fatals
-        except IOError as e:
-            self.fail(msg="File error: " + str(e))
+        self.generic_test("invalid.marm", False, False, 5, 3)
 
     def test_parse_file_valid_standard(self):
         """Tests some standard valid file"""
-        errorhandler = marmcompiler.ErrorHandler()
-        try:
-            with open(os.path.join(self.testdir, "test.marm"), mode='r') as testfile:
-                marmcompiler.marmcompiler("test.marm", testfile.read(), errorhandler=errorhandler)
-                self.assertTrue(errorhandler.cleanCode())
-        except IOError as e:
-            self.fail(msg="File error: " + str(e))
+        self.generic_test("test.marm")
 
     def test_parse_file_valid_double_functions(self):
         """Tests some valid easy file with two functions and a call"""
-        errorhandler = marmcompiler.ErrorHandler()
-        try:
-            with open(os.path.join(self.testdir, "valid.marm"), mode='r') as testfile:
-                marmcompiler.marmcompiler("valid.marm", testfile.read(), errorhandler=errorhandler)
-                self.assertTrue(errorhandler.cleanCode())
-        except IOError as e:
-            self.fail(msg="File error: " + str(e))
+        self.generic_test("valid.marm")
 
     @unittest.expectedFailure
     def test_parse_file_test_for_behaviour(self):
         """Tests whether some parsable structure results in defined behaviour, should probably fail"""
-        errorhandler = marmcompiler.ErrorHandler()
-        try:
-            with open(os.path.join(self.testdir, "absurd_tests.marm"), mode='r') as testfile:
-                marmcompiler.marmcompiler("absurd_tests.marm", testfile.read(), errorhandler=errorhandler)
-                self.assertTrue(errorhandler.cleanCode())
-        except IOError as e:
-            self.fail(msg="File error: " + str(e))
+        self.generic_test("absurd_tests.marm")
+
 
 
 if __name__ == '__main__':
