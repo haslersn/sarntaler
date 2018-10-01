@@ -230,13 +230,16 @@ class UnaryExpr(Expr):
     def typecheck(self, errorhandler):
         self.operand.typecheck(errorhandler)
         if self.op == '#':
-            pass # TODO
+            if self.operand.marm_type != 'string':
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Operator '#' expects one argument of type string")
+            self.marm_type = Typename('int')
         elif self.op == '-':
             if self.operand.marm_type != 'int':
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                            "Operator '-' expects one argument of type int.")
             else:
-                self.marm_type = 'int'
+                self.marm_type = Typename('int')
         else:
             errorhandler.registerFatal(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Typechecking failed on unknown operator {}".format(self.op))
