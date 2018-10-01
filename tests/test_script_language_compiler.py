@@ -3,6 +3,7 @@ import os.path
 from src.marm import *
 
 
+# Usage python _jb_pytest_runner.py (for PyCharm) --target test_script_language_compiler.py::TestParserMethods
 class TestParserMethods(unittest.TestCase):
     def setUp(self):
         self.lexer = lexer.lexer
