@@ -227,7 +227,7 @@ def test_gcd_script():
 
 def test_call_test():
     #please use -s to debug, should add 1 onto stack
-    f = open("./src/labvm/calltest.labvm","r")
+    f = open("./src/labvm/testprograms/calltest.labvm","r")
     fstr = f.read()
     f.close()
     si = ScriptInterpreter(fstr, "", None)
@@ -236,20 +236,14 @@ def test_call_test():
 import os
 import time
 def test_factorial():
-    measure = open("measure.csv","w")
 
-    #for i in range(1000):
-    i = 10
-        t = time.time()
-        f = open("./src/labvm/factorial.labvm", "r")
-        fstr = f.read()
-        f.close()
-        fstr = fstr.replace('FACOPERAND', str(i))
-        fstr = fstr.replace('FACRESULT', str(factorial(i)))
-        si = ScriptInterpreter(fstr, "", None)
-        si.execute_script()
-        measure.write(str(i) + ", " + str(time.time() - t) + "\n")
-
-    measure.close()
+    t = time.time()
+    ## f = open("./src/labvm/testprograms/factorial.labvm", "r")
+    fstr = f.read()
+    f.close()
+    #fstr = fstr.replace('FACOPERAND', str(i))
+    #fstr = fstr.replace('FACRESULT', str(factorial(i)))
+    si = ScriptInterpreter(fstr, "", None)
+    si.execute_script()
 
 

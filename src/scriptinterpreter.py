@@ -480,12 +480,14 @@ class ScriptInterpreter:
         """
         def split_script(script: str):
             result = []
-            script += ' '  # tailing whitespace removes a special case
+            script += '\n'  # tailing newline to not get errors at the end of file parsing
             while True:
                 script = script.lstrip()
                 if not script:
                     break
-                if script[0] in [ '"', '\'' ]:
+                if script.startswith('//'):
+                    first = next(i for i, chr in enumerate(script) if chr in ['\n'])
+                elif script[0] in [ '"', '\'' ]:
                     first_quote = script[0]
                     first = script[1:].find(first_quote)
                     if first == -1:
