@@ -309,6 +309,9 @@ class StructExpr(Expr):
         """TODO do stuff"""
         code = []
         code.append("// codeLHS for struct access not implemented yet")
+        code += self.expr.code_gen()
+        if self.ident == "balance":
+            code.append("OP_GETBAL")
         return code
 
 
