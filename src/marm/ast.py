@@ -464,7 +464,7 @@ class StatementBody(Statement):
 
     def typecheck(self, errorhandler):
         for statement in self.body:
-            statement.typecheck(statement)
+            statement.typecheck(errorhandler)
 
 
 class StatementBreak(Statement):
