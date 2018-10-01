@@ -177,24 +177,27 @@ class LocalcallExpr(Expr):
 
     def typecheck(self, errorhandler):
         self.fnname.typecheck(errorhandler)
-        if type(self.fnname.marm_type) is not Proctype:
+        if type(self.fnname.marm_type) is Proctype:
+            if len(self.params) != len(self.fnname.marm_type.param_types):
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Function {} expects {} parameters but gets {}.".format(
+                                               self.fnname, len(self.fnname.marm_type.param_types), len(self.params)))
+                return
+            for i in range(0, len(self.params)):
+                param = self.params[i]
+                dparam_type = self.fnname.marm_type.param_types[i]
+                param.typecheck(errorhandler)
+                if param.marm_type != dparam_type:
+                    errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                               "Parameter {} of function  must be of type {}, got {}.".format(
+                                                   i, dparam_type, param.marm_type))
+                    self.marm_type = self.fnname.marm_type.return_type
+        else:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Trying to call expression which is not a function.")
             return
-        if len(self.params) != len(self.fnname.marm_type.param_types):
-            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Function {} expects {} parameters but gets {}.".format(
-                                           self.fnname, len(self.fnname.marm_type.param_types), len(self.params)))
-            return
-        for i in range(0, len(self.params)):
-            param = self.params[i]
-            dparam_type = self.fnname.marm_type.param_types[i]
-            param.typecheck(errorhandler)
-            if param.marm_type != dparam_type:
-                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Parameter {} of function  must be of type {}, got {}.".format(
-                                               i, dparam_type, param.marm_type))
-        self.marm_type = self.fnname.marm_type.return_type
+
+
 
     # TODO code_gen
 
@@ -430,14 +433,13 @@ class Paramdecl(Node):
         return code
 
 
-class Proctype():
+class Proctype:
     def __init__(self, return_type, param_types):
         self.return_type = return_type
         self.param_types = param_types
 
     def attribute_type(self, ident):
         return None
-
 
 class Procdecl(Node):
     """ Non terminal 4 """
