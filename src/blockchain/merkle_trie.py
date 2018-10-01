@@ -98,6 +98,23 @@ class MerkleTrieStorage:
         child = children[child_index]
         return self._get_internal(child, encoded_path, depth + 1)
 
+    def _get_all(self, hash: bytes, partial_path: bytearray, depth: int):
+        if _empty(hash):
+            return []
+        if depth == 64:
+            return [ (bytes(partial_path), hash) ]
+        result = []
+        for i, c in enumerate(self._children(hash, depth)):
+            child_path = partial_path[:]
+            if depth % 2 == 0:
+                child_path.append(16 * i)
+            else:
+                child_path[-1] += i
+            if child_path[-1] >= 256:
+                assert False
+            result += self._get_all(c, child_path, depth + 1)
+        return result
+
     def _to_json_compatible(self, hash: bytes, encoded_paths: List[bytes], depth: int, let_know: bool):
         if _empty(hash):
             return None
@@ -163,11 +180,13 @@ class MerkleTrie:
 
     def get(self, encoded_path: bytes) -> bytes:
         _check_is_hash(encoded_path)
-        cls = type(self)
         return self._storage._get_internal(self.hash, encoded_path, 0)
 
     def contains(self, encoded_path: bytes) -> bool:
         return self.get(encoded_path) is not None
+
+    def get_all(self) -> List[bytes]:
+        return self._storage._get_all(self.hash, [], 0)
 
     def to_json_compatible(self, encoded_paths: List[bytes]):
         """ Returns a JSON-serializable representation of this object. """

@@ -69,3 +69,6 @@ def test_serialization_empty():
 
 def test_serialization_full():
     check_serialization(example_trie)
+
+def test_get_all():
+    assert example_trie.get_all() == sorted(zip(example_trie_keys, example_trie_values), key = lambda p: p[0])
