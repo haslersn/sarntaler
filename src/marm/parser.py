@@ -95,7 +95,8 @@ def p_type(p):
 
 def p_typename(p):
     '''typename : ADDRESS
-    | INT'''
+    | INT
+    | SARN'''
     p[0] = ast.Typename(p[1])
     p[0].set_pos_from(p)
 
@@ -163,6 +164,12 @@ def p_statementERROR(p):
 def p_expr(p):
     'expr : INTCONST'
     p[0] = ast.ConstExpr(p[1])
+    p[0].set_pos_from(p)
+
+def p_exprSPECIALCONSTANTS(p):
+    '''expr : CONTRACT 
+            | MSG'''
+    p[0] = ast.SpecialExpression(p[1])
     p[0].set_pos_from(p)
 
 def p_exprFUNCALL(p):

@@ -8,6 +8,9 @@ keywords = {
     'return': 'RETURN',
     'int': 'INT',
     'address': 'ADDRESS',
+    'sarn':'SARN',
+    'msg':'MSG',
+    'contract':'CONTRACT'
     #   'void' : 'VOID',
     #   'goto' : 'GOTO',
     #   'default' : 'DEFAULT',
