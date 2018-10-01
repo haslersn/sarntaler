@@ -51,6 +51,7 @@ let
     treelib
     urwid
     werkzeug
+    colorama
   ];
 
 in buildEnv {
