@@ -1,14 +1,18 @@
 import json
 
+
 class Node:
     def __init__(self):
         self.classname = self.__class__.__name__
 
     def liststr(self, param):
-        return "[{}]".format(", ".join(map(str,param)))
+        return "[{}]".format(", ".join(map(str, param)))
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+    def code_gen(self):
+        return []
 
 
 class Expr(Node):
@@ -43,30 +47,25 @@ class BinExpr(Expr):
 
     def code_gen(self):
         """ act differently for ASSIGN expressions and mathematical operations """
+        code = []
         if str(self.op) == "ASSIGN":
             if type(self.left) == LHSExpr:
-                code = []
                 # create rhs code
                 code_right = self.right.code_gen()
-                # TODO push stack address of lhs
-                left_stackaddress = "abcdefg"
+                left_stackaddress = self.left.code_gen()
                 # OP_POPABS
                 operator = "OP_POPABS"
 
-                code.append(operator)
                 code.append(left_stackaddress)
+                code.append(operator)
                 for line in code_right:
                     code.append(line)
-
-                return code
             else:
                 # got an expression on the left side like a+b, which we don't want to allow
                 print("BinaryExpression.code_gen: got a binary expression like a+b = 5 which we don't want to allow")
-                return []
         else:
             code_left = self.left.code_gen()
             code_right = self.right.code_gen()
-            code = []
             """ push code_left on stack, then code_right and afterwards the operator """
             for line in code_left:
                 code.append(line)
@@ -83,9 +82,7 @@ class BinExpr(Expr):
             else:
                 # we should not end up in this case
                 print("BinExpr.code_gen: got an operator that is not valid")
-            return code
-
-
+        return code
 
 
 class UnaryExpr(Expr):
@@ -98,6 +95,21 @@ class UnaryExpr(Expr):
     def __str__(self):
         return "[UnaryExpr: op=" + str(self.op) + ", operand=" + str(self.operand) + "]"
 
+    def code_gen(self):
+        """act differently on hash and negation, although hash is not yet implemented"""
+        code = []
+        if str(self.op) == "HASH":
+            pass  # TODO change when the hashing is decided
+        elif str(self.op) == "SUBOP":
+            code_operand = self.operand.code_gen()
+            for line in code_operand:
+                code.append(line)
+            code.append("OP_NEG")
+        else:
+            # we should not end up in this case
+            print("UnaryExpr.code_gen: got an operator that is not valid")
+        return code
+
 
 class LHSExpr(Expr):
     """ p_exprLHS """
@@ -107,6 +119,10 @@ class LHSExpr(Expr):
 
     def __str__(self):
         return "[LHSExpr: lhs=" + str(self.lhs) + "]"
+
+    def code_gen(self):
+        """pushes the address of the identifier stored in the lhs"""
+        return self.lhs.code_gen()
 
 
 class StructExpr(Expr):
@@ -118,6 +134,12 @@ class StructExpr(Expr):
 
     def __str__(self):
         return "[StructExpr: expr=" + str(self.expr) + ", ident=" + str(self.ident) + "]"
+
+    def code_gen(self):
+        """pushes the address of the identifier stored in the lhs"""
+        code = []
+
+        return code
 
 
 class LHS(Node):

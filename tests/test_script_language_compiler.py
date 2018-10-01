@@ -3,6 +3,7 @@ import os.path
 from src.marm import *
 
 
+# Usage python _jb_pytest_runner.py (for PyCharm) --target test_script_language_compiler.py::TestParserMethods
 class TestParserMethods(unittest.TestCase):
     def setUp(self):
         self.lexer = lexer.lexer
@@ -79,8 +80,8 @@ class TestParserMethods(unittest.TestCase):
             with open(os.path.join(self.testdir, "invalid.marm"), mode='r') as testfile:
                 marmcompiler.marmcompiler("invalid.marm", testfile.read(), errorhandler=errorhandler)
                 self.assertFalse(errorhandler.roughlyOk())
-                self.assertEqual(errorhandler.countErrors(), 5)
-                # self.assertEqual(errorhandler.countFatals(), 3) TODO lexical errors should be fatals
+                self.assertEqual(5, errorhandler.countErrors(),)
+                # self.assertEqual(3, errorhandler.countFatals()) TODO lexical errors should be fatals
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
@@ -100,6 +101,16 @@ class TestParserMethods(unittest.TestCase):
         try:
             with open(os.path.join(self.testdir, "valid.marm"), mode='r') as testfile:
                 marmcompiler.marmcompiler("valid.marm", testfile.read(), errorhandler=errorhandler)
+                self.assertTrue(errorhandler.cleanCode())
+        except IOError as e:
+            self.fail(msg="File error: " + str(e))
+
+    def test_parse_file_test_for_behaviour(self):
+        """Tests whether some parsable structure results in defined behaviour"""
+        errorhandler = marmcompiler.ErrorHandler()
+        try:
+            with open(os.path.join(self.testdir, "absurd_tests.marm"), mode='r') as testfile:
+                marmcompiler.marmcompiler("absurd_tests.marm", testfile.read(), errorhandler=errorhandler)
                 self.assertTrue(errorhandler.cleanCode())
         except IOError as e:
             self.fail(msg="File error: " + str(e))

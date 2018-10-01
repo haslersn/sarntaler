@@ -1,0 +1,23 @@
+//Testprogram to parse v0.1
+int test(int x){
+	address a;
+	sarn s;
+	int i;
+	i = 0;
+	x = 1;
+	while(i < 1){
+		x = x % 2;
+		i = i + 1;
+	}
+	//messages come with an associated account
+	msg.account; 
+	// a of type address
+	a.balance; 
+	// the address of contract c
+	c.account; 
+
+	// s is sarn, a is address, a receives s sarns from contracts balance<
+	a.transfer(s);
+
+	return x;
+}
