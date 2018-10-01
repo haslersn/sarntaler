@@ -48,23 +48,25 @@ class TransactionTarget(namedtuple("TransactionTarget", ["pubkey_script", "amoun
     def pay_to_pubkey(self, recipient_pk: Key) -> str:
         """ Returns a standard pay-to-pubkey script """
         keystr = recipient_pk.to_json_compatible()
-        return keystr + " OP_CHECKSIG"
+        return "k0x{} OP_CHECKSIG".format(keystr)  # k0x means: key that is hex-coded
 
     @classmethod
     def pay_to_pubkey_lock(self, recipient_pk: Key, lock_time: datetime) -> str:
         """ Returns a pay-to-pubkey script with a lock-time """
         keystr = recipient_pk.to_json_compatible()
-        return str(lock_time.replace(tzinfo=timezone.utc).timestamp()) + " OP_CHECKLOCKTIME " + keystr + " OP_CHECKSIG"
+        return "{} OP_CHECKLOCKTIME {}".format(
+            str(lock_time.replace(tzinfo=timezone.utc).timestamp()),
+            self.pay_to_pubkey(recipient_pk))
 
     @property
     def get_pubkey(self) -> Optional[Key]:
         """ Returns the public key of the target for a standard PAY_TO_PUBKEY transaction"""
         if self.is_pay_to_pubkey_lock:
             return Key.from_json_compatible(self.pubkey_script[
-                                            self.pubkey_script.find("OP_CHECKLOCKTIME") + 17:self.pubkey_script.find(
+                                            self.pubkey_script.find("OP_CHECKLOCKTIME") + 20:self.pubkey_script.find(
                                                 "OP_CHECKSIG") - 1])
         elif self.is_pay_to_pubkey:
-            return Key.from_json_compatible(self.pubkey_script[:self.pubkey_script.find(" ")])
+            return Key.from_json_compatible(self.pubkey_script[3:self.pubkey_script.find(" ")])
 
         return None
 
