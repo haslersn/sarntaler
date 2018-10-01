@@ -128,7 +128,7 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
     from src.marm.parser import marmparser,ParserError
     #yacc = yacc.yacc()
     if stages is None:
-        stages = ['parse', 'analyse_scope', 'typecheck']
+        stages = ['codegen']
     if errorhandler is None:
         errorhandler = ErrorHandler()
 
@@ -216,10 +216,10 @@ if __name__ == "__main__":
     parser.add_argument('--output-format',
                         choices=['json', 'str', 'list_str', 'mass'],
                         default=None,
-                        help="Format used for output. Defaults to json")
+                        help="Format used for output. Defaults to json or mass.")
     parser.add_argument('--stages', choices=marmcompiler_stages,
                         nargs='*', default=None,
-                        help="Compiler stages to be run, in order. Defaults to all.")
+                        help="Compiler stages to be run, in order. Defaults to codegen. Dependencies are run automatically")
     args = parser.parse_args()
 
     myinput = args.input.read()
