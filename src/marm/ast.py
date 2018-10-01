@@ -1,4 +1,5 @@
 import json
+import weakref
 
 def scope_lookup(scope_list, name):
     for scope in scope_list:
@@ -30,7 +31,12 @@ class Node:
         return "[{}]".format(", ".join(map(str,param)))
 
     def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        def json_default(obj):
+            if isinstance(obj, (weakref.ProxyType, weakref.CallableProxyType)):
+                return "<weakref>"
+            else:
+                return obj.__dict__
+        return json.dumps(self, default=json_default, sort_keys=True, indent=4)
 
 
 class Expr(Node):
@@ -241,15 +247,23 @@ class Typename(Node):
     def __str__(self):
         return "[Typename: typee=" + str(self.typee) + "]"
 
+    def __eq__(self, other):
+        if type(other) is Typename:
+            return self.typee == other.typee
+        elif type(other) is str: # TODO: replace with better mechanism
+            return self.typee == other
+        else: return False
+
 
 class Translationunit(Node):
     """ Non terminal 0 """
-    def __init__(self, procdecllist):
+    def __init__(self, contractdata, procdecllist):
         super().__init__()
         self.procs = procdecllist
+        self.contractdata =  contractdata
 
     def __str__(self):
-        return "[Translationunit: procs=" + str(self.procs) + "]"
+        return "[Translationunit: contractdata = "+str(self.contractdata)+" procs=" + self.liststr(self.procs) + "]"
 
     def analyse_scope(self, scope_list=[], errorhandler=None):
         local_scope_list = [{}]+scope_list
@@ -273,7 +287,7 @@ class Paramdecl(Node):
         self.name = name
         self.local_var_index = None
         self.lenv_depth = None
-        self.marm_type = self.param_type.typee
+        self.marm_type = self.param_type
 
     def __str__(self):
         return "[Paramdecl: param_type=" + str(self.param_type) + ", name=" + str(self.name) + "]"
@@ -290,7 +304,7 @@ class Paramdecl(Node):
 
     def get_marm_type_for(self, ident):
         assert(ident == self.name)
-        return self.param_type.typee
+        return self.param_type
 
 class Proctype():
     def __init__(self, return_type, param_types):
@@ -326,7 +340,7 @@ class Procdecl(Node):
         for param in self.params:
             param.typecheck(errorhandler)
             param_types.append(param.marm_type)
-        self.marm_type = Proctype(self.return_type.typee, param_types)
+        self.marm_type = Proctype(self.return_type, param_types)
 
     def typecheck(self, errorhandler):
         for statement in self.body:
@@ -366,7 +380,7 @@ class StatementDecl(Statement):
             scope_list[0][decl] = self
 
     def get_marm_type_for(self, ident):
-        return self.typee.typee
+        return self.typee
 
     def typecheck(self, errorhandler): pass
 
@@ -382,7 +396,7 @@ class StatementReturn(Statement):
         return "[StatementReturn: return_value=" + str(self.return_value) + "]"
 
     def analyse_scope(self, scope_list, errorhandler):
-        self.function = scope_lookup(scope_list, "#current_function")
+        self.function = weakref.proxy(scope_lookup(scope_list, "#current_function"))
         self.return_value.analyse_scope(scope_list, errorhandler)
 
     def typecheck(self, errorhandler):

@@ -292,7 +292,7 @@ class StatementWhile(Statement):
         code.append("OP_NOT")
 
         # Test the bool and jump accordingly (length of body + jump further + push of jump back + jump back)
-        code.append(str(code_body.__len__ + 4))  # TODO test where this jumps to
+        code.append(str(code_body.__len__ + 4))
         code.append("OP_JUMPRC")
 
         # The loop body
@@ -300,7 +300,7 @@ class StatementWhile(Statement):
 
         # Jump back to the start (length of body, bool and this jumps length +
         # jump further + length of jump further + not)
-        code.append(str(-1 * (code_boolex.__len__ + code_body.__len__ + 4)))  # TODO test where this jumps to
+        code.append(str(-1 * (code_boolex.__len__ + code_body.__len__ + 4)))
         code.append("OP_JUMPR")
         return code
 
