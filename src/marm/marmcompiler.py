@@ -72,7 +72,7 @@ class ErrorHandler:
         mylexer.input(input)
         token = mylexer.token()
         output='  1 '
-        linecounter=2
+        linecounter=1
         while not (token is None):
             if token.type=='IDENT':
                 output+=Fore.YELLOW 
@@ -84,7 +84,7 @@ class ErrorHandler:
                 output+=Fore.CYAN
             output+= str(token.value)+Fore.RESET
             if token.type=='NEWLINE':
-                while linecounter-1==currenterror[1]:
+                while linecounter==currenterror[1]:
                     col=0
                     output+='   '
                     while col<currenterror[2]:
@@ -96,8 +96,8 @@ class ErrorHandler:
                     except:
                         break
                       
+                linecounter+=len(token.value)
                 output+="{:3} ".format(linecounter)
-                linecounter+=1
             token = mylexer.token()
         return output
 
@@ -170,7 +170,7 @@ def coloring(input):
     mylexer.input(input)
     token = mylexer.token()
     output='  1 '
-    linecounter=2
+    linecounter=1
     while not (token is None):
         if token.type=='IDENT':
             output+=Fore.YELLOW 
@@ -182,8 +182,8 @@ def coloring(input):
             output+=Fore.CYAN
         output+= str(token.value)+Fore.RESET
         if token.type=='NEWLINE':
+            linecounter+=len(token.value)
             output+="{:3} ".format(linecounter)
-            linecounter+=1
         token = mylexer.token()
     return output
 
