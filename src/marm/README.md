@@ -75,9 +75,9 @@ decllist  : decl COMMA decllist
 decl      : IDENT
 ```
 
-<aside class="warning">
+<aside class="warning"> <span style="color:red">
 Until now you <b>must not</b> include variable declarations outside of procedures. It <b>will</b> be implemented
-in the future but right now it will result in an error!
+in the future but right now it will result in an error! </span>
 </aside>
 
 
