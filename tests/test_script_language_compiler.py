@@ -121,6 +121,9 @@ class TestParserMethods(unittest.TestCase):
     def test_typecheck_invalid_1(self):
         self.generic_test("invalid_types_1.marm", False, False, 2, 0)
 
+    def test_scopes_invalid(self):
+        self.generic_test("scopes_invalid.marm", False, False, 4, 0)
+
 
 if __name__ == '__main__':
     unittest.main()

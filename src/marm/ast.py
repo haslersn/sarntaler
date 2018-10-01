@@ -233,6 +233,9 @@ class LHS(Node):
 
     def analyse_scope(self, scope_list, errorhandler):
         self.definition = scope_lookup(scope_list, self.ident)
+        if self.definition is None:
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Use of undeclared identifier {}.".format(self.ident))
         self.lenv_depth = len(scope_list)
 
     def typecheck(self, errorhandler):
