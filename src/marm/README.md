@@ -55,6 +55,35 @@ The regular expression for comments is defined by
 ```
 , but is ignored by the lexer. So every content there is inside a comment is completely
 disregarded. 
+
+### <a name="declarations"></a> Declaration statements
+
+You can declare variables with a type followed by a list of identifiers. It **must** end with 
+a semicolon (`;`):
+```c
+<type> identifier;
+<type> ident1, ident2, ...;
+```
+
+The grammar for variable declarations is defined by
+```bnf
+statement : type decllist SEMI
+
+decllist  : decl COMMA decllist
+          | decl
+
+decl      : IDENT
+```
+
+<div class="panel panel-danger">
+**DANGER**
+{: .panel-heading}
+<div class="panel-body">
+Until now you **must not** include variable declarations outside of procedures. It **will** be implemented
+in the future but right now it will result in an error!
+</div>
+</div>
+
 ### <a name="procedures"></a> Procedure declarations
 
 Basically you would define a procedure as you would in C. So
@@ -78,6 +107,7 @@ by
 <type> identifier
 ``` 
 where `<type>` also is a type from the [list](#head1234) above and the `identifier` fulfills the rules specified [above](#identifier).
+You can have multiple definitions separated by commas.
 
 
 The grammar for procedure declarations is defined by
@@ -124,8 +154,6 @@ statement : WHILE LPAR boolex RPAR statement
 ### <a name="ifs"></a> If branches
 
 ### <a name="functions"></a> Function calls
-### <a name="expressions"></a> Expression statements
-### <a name="declarations"></a> Declaration statements
 
 ## Example
 
