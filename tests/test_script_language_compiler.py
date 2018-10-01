@@ -102,7 +102,14 @@ class TestParserMethods(unittest.TestCase):
 
     def test_parse_file_valid_double_functions(self):
         """Tests some valid easy file with two functions and a call"""
-        self.generic_test("valid.marm")
+        errorhandler = marmcompiler.ErrorHandler()
+        try:
+            with open(os.path.join(self.testdir, "valid.marm"), mode='r') as testfile:
+                marmcompiler.marmcompiler("valid.marm", testfile.read(), errorhandler=errorhandler,
+                                          stages=['lex', 'parse', 'analyse_scope', 'typecheck', 'codegen'])
+                self.assertTrue(errorhandler.cleanCode())
+        except IOError as e:
+            self.fail(msg="File error: " + str(e))
 
     @unittest.expectedFailure
     def test_parse_file_test_for_behaviour(self):
@@ -112,8 +119,14 @@ class TestParserMethods(unittest.TestCase):
 
     @unittest.expectedFailure
     def test_parse_file_unimplemented_features(self):
-        """Tests whether some new features are actually implemented"""
-        self.generic_test("blockchainfeatures.marm")
+        """Tests whether some new features are actually implemented and should be have any other flaws"""
+        errorhandler = marmcompiler.ErrorHandler()
+        try:
+            with open(os.path.join(self.testdir, "blockchainfeatures.marm"), mode='r') as testfile:
+                marmcompiler.marmcompiler("blockchainfeatures.marm", testfile.read(), errorhandler=errorhandler)
+                self.assertTrue(errorhandler.cleanCode())
+        except IOError as e:
+            self.fail(msg="File error: " + str(e))
 
     def test_typecheck_valid(self):
         self.generic_test("valid_types.marm")
