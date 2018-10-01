@@ -311,7 +311,7 @@ class Procdecl(Node):
                self.liststr(self.params) + ", body=" + self.liststr(self.body) + "]"
 
     def analyse_scope(self, scope_list, errorhandler):
-        local_scope_list = [{}] + scope_list
+        local_scope_list = [{"#current_function": self}] + scope_list
         for param in self.params:
             param.analyse_scope(local_scope_list, errorhandler)
         for statement in self.body:
@@ -326,7 +326,7 @@ class Procdecl(Node):
         for param in self.params:
             param.typecheck(errorhandler)
             param_types.append(param.marm_type)
-        self.marm_type = Proctype(self.return_type, param_types)
+        self.marm_type = Proctype(self.return_type.typee, param_types)
 
     def typecheck(self, errorhandler):
         for statement in self.body:
@@ -382,10 +382,15 @@ class StatementReturn(Statement):
         return "[StatementReturn: return_value=" + str(self.return_value) + "]"
 
     def analyse_scope(self, scope_list, errorhandler):
+        self.function = scope_lookup(scope_list, "#current_function")
         self.return_value.analyse_scope(scope_list, errorhandler)
 
     def typecheck(self, errorhandler):
         self.return_value.typecheck(errorhandler)
+        if self.return_value.marm_type != self.function.marm_type.return_type:
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Can't return value of type {} from function with return type {}".format(
+                                           self.return_value.marm_type, self.function.marm_type.return_type))
         # TODO
 
 
