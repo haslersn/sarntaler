@@ -191,7 +191,17 @@ class LocalcallExpr(Expr):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Trying to call expression which is not a function.")
             return
+    def code_gen(self):
+        """TODO create code for inter-contract call"""
+        code_methodid = self.fnname.code_gen_LHS()
 
+        code = []
+        for param in self.params:#[::-1]:
+            code+=param.code_gen()
+        code+=code_methodid
+        code.append("OP_CALL")
+        code.append("// WARNING: We assume a call to be a contract-local call")
+        return code
     # TODO code_gen
 
 
