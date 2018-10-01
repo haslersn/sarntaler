@@ -288,7 +288,10 @@ class StructExpr(Expr):
 
     def typecheck(self, errorhandler):
         self.expr.typecheck(errorhandler)
-        pass # TODO
+        if not self.expr.marm_type.has_attribute(self.ident):
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Value of type {} has not attribute named {}".format(
+                                           self.expr.marm_type, self.ident))
 
     def _code_gen(self):
         """TODO has not yet been decided what this should actually do"""
@@ -344,6 +347,9 @@ class Typename(Node):
     def _code_gen(self):
         """Should not be used at all, fails on call"""
         raise NotImplementedError
+
+    def has_attribute(self, ident):
+        return False # TODO
 
 
 class Translationunit(Node):
@@ -417,6 +423,9 @@ class Proctype():
     def __init__(self, return_type, param_types):
         self.return_type = return_type
         self.param_types = param_types
+
+    def has_attribute(self, ident):
+        return False
 
 
 class Procdecl(Node):
