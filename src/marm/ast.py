@@ -1,4 +1,5 @@
 import json
+import weakref
 
 def scope_lookup(scope_list, name):
     for scope in scope_list:
@@ -30,7 +31,12 @@ class Node:
         return "[{}]".format(", ".join(map(str,param)))
 
     def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        def json_default(obj):
+            if isinstance(obj, (weakref.ProxyType, weakref.CallableProxyType)):
+                return "<weakref>"
+            else:
+                return obj.__dict__
+        return json.dumps(self, default=json_default, sort_keys=True, indent=4)
 
 
 class Expr(Node):
@@ -99,7 +105,7 @@ class BinExpr(Expr):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                            "Right operand of {} exspects value of type int, got {}".format(
                                                self.op, self.right.marm_type))
-            self.marm_type = 'int'
+            self.marm_type = Typename('int')
 
 
 
@@ -241,6 +247,13 @@ class Typename(Node):
     def __str__(self):
         return "[Typename: typee=" + str(self.typee) + "]"
 
+    def __eq__(self, other):
+        if type(other) is Typename:
+            return self.typee == other.typee
+        elif type(other) is str: # TODO: replace with better mechanism
+            return self.typee == other
+        else: return False
+
 
 class Translationunit(Node):
     """ Non terminal 0 """
@@ -250,7 +263,7 @@ class Translationunit(Node):
         self.contractdata =  contractdata
 
     def __str__(self):
-        return "[Translationunit: contractdata = "+str(self.contractdata)+" procs=" + str(self.procs) + "]"
+        return "[Translationunit: contractdata = "+str(self.contractdata)+" procs=" + self.liststr(self.procs) + "]"
 
     def analyse_scope(self, scope_list=[], errorhandler=None):
         local_scope_list = [{}]+scope_list
@@ -274,7 +287,7 @@ class Paramdecl(Node):
         self.name = name
         self.local_var_index = None
         self.lenv_depth = None
-        self.marm_type = self.param_type.typee
+        self.marm_type = self.param_type
 
     def __str__(self):
         return "[Paramdecl: param_type=" + str(self.param_type) + ", name=" + str(self.name) + "]"
@@ -291,7 +304,7 @@ class Paramdecl(Node):
 
     def get_marm_type_for(self, ident):
         assert(ident == self.name)
-        return self.param_type.typee
+        return self.param_type
 
 class Proctype():
     def __init__(self, return_type, param_types):
@@ -312,7 +325,7 @@ class Procdecl(Node):
                self.liststr(self.params) + ", body=" + self.liststr(self.body) + "]"
 
     def analyse_scope(self, scope_list, errorhandler):
-        local_scope_list = [{}] + scope_list
+        local_scope_list = [{"#current_function": self}] + scope_list
         for param in self.params:
             param.analyse_scope(local_scope_list, errorhandler)
         for statement in self.body:
@@ -367,7 +380,7 @@ class StatementDecl(Statement):
             scope_list[0][decl] = self
 
     def get_marm_type_for(self, ident):
-        return self.typee.typee
+        return self.typee
 
     def typecheck(self, errorhandler): pass
 
@@ -383,10 +396,15 @@ class StatementReturn(Statement):
         return "[StatementReturn: return_value=" + str(self.return_value) + "]"
 
     def analyse_scope(self, scope_list, errorhandler):
+        self.function = weakref.proxy(scope_lookup(scope_list, "#current_function"))
         self.return_value.analyse_scope(scope_list, errorhandler)
 
     def typecheck(self, errorhandler):
         self.return_value.typecheck(errorhandler)
+        if self.return_value.marm_type != self.function.marm_type.return_type:
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Can't return value of type {} from function with return type {}".format(
+                                           self.return_value.marm_type, self.function.marm_type.return_type))
         # TODO
 
 
