@@ -255,7 +255,7 @@ A return-statement looks exactly like it does in C, so for an example you would 
 ```c 
 return expr;
 ```
-where `expr` could be any valid expression, defined by [these rules](#exprs).
+where `expr` could be any valid expression, defined by [these rules](#expressions).
 The semicolon is as important as it is in every statement, so don't forget it.
 
 #### Warning
@@ -320,10 +320,23 @@ elseprod  : ELSE statement
 ```
 
 ### <a name="functions"></a> Function calls
+There are two types of function calls: Account creation and calling procedures in a contract.
+The first type (account creation) is called by `create` and takes only one parameter, the amount of Sarns
+the account should initially have.
+
+The second type is called by entering the procedure name (which might include a `msg.` or an identifier
+in front of the procedure name)
+and takes any number of parameters the procedure defines.
+
+*The parameters can **always** be other procedure calls or any complex expression!*
 
 
-
-## Example
+The grammar for function calls is defined by
+```bnf
+expr      : lhsexpression LPAR exprlist_opt RPAR
+          | CREATE LPAR exprlist_opt RPAR
+```
+## Examples
 
 ```c
 int main(int param1,int param2){
@@ -333,6 +346,61 @@ int main(int param1,int param2){
         i=i+param2;
     }
     return i;
+}
+```
+
+```c
+contract {
+	sarn sar;
+	int globalx;
+}
+
+int test(int x){
+	address a, b;
+	sarn s; // sarns are nonnegative integers (uint)
+	int i;
+	i = 0;
+	x = 1;
+	s = 4711;
+	// create takes sarns from the balance and creates an account
+	// whose address it returns
+	a = create(s); 
+
+	s = contract.sar;
+	contract.globalx = x;
+
+	while(i < 1){
+		x = x % 2;
+		i = i + 1;
+	}
+	//messages come with an associated account
+	msg.account; 
+	// a of type address
+	a.balance; 
+	// the address of contract c
+	c.account; 
+
+	// s is sarn, a is address, a receives s sarns from contracts balance
+	a.transfer(s);
+	// call contract a's method with name 'method', paying with s sarns 
+	// from the this contracts and the params 1 and x
+	a.method(s,1,x);
+	s = test2(s, a.methodReturnsBoolean(contract.sar, contract.globalx))
+	
+	b = create(s);
+	return x;
+}
+
+sarn test2(sarn s, int b) {
+    //Do something with s
+    sarn n;
+    if(b == 1) {
+        n = s + 5;
+    } else {
+        n = s - 5;
+    }
+    
+    return n;
 }
 ```
 
