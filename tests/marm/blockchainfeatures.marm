@@ -1,3 +1,8 @@
+contract {
+	sarn s;
+	int x;
+}
+
 //Testprogram for basic contract features
 int test(int x){
 	address a;
