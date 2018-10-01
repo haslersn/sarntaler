@@ -74,13 +74,68 @@ decllist  : decl COMMA decllist
 
 decl      : IDENT
 ```
+<style>
+fieldset legend {
+	/*margin: -1%;
+	margin-right: 0;*/
+	display: block;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+	padding: 5px;
+	width: 100%;
+	min-width: 100%;
+	max-width: 100%;
+}
 
+.alertlegend {
+	/*width: 102.9%;
+	max-width: 102.9%;*/
+	-moz-outline-radius:4px 4px 0 0;
+	-webkit-outline-radius:4px 4px 0 0;
+	outline:2px solid #8c0d0d;
+	border:0;
+	/*margin-left: -8pt;
+	padding-left: 5px;
+	padding-top: 5px;
+	padding-bottom: 5px;*/
+	color: #FFF;
+	background:#A81010;
+	position: relative;
+	font-weight: bold;
+	font-variant: small-caps;
+	font-family: sans-serif;
+}
+
+.alertfieldset {
+	margin-left:8%;
+	margin-right:8%;
+	width: 84%;
+	padding-left:0;
+	padding-bottom:5px;
+	padding-top:5px;
+	padding-right:0;
+	-moz-outline-radius:4px;
+	-webkit-outline-radius:4px;
+	border:0;
+	outline:2px solid #8c0d0d;
+	position:relative;
+	background:#fde8e8;
+}
+
+</style>
+<fieldset class="alertfieldset">
+		<legend class="alertlegend">DANGER</legend>
+		<div style="padding-left:5px">
+		    Until now you <b>must not</b> include variable declarations outside of procedures. It <b>will</b> be implemented
+in the future but right now it will result in an error!
+        </div>
+	</fieldset>
 <div class="panel panel-danger">
 **DANGER**
 {: .panel-heading}
 <div class="panel-body">
-Until now you **must not** include variable declarations outside of procedures. It **will** be implemented
-in the future but right now it will result in an error!
+
 </div>
 </div>
 
