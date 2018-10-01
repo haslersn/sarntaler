@@ -124,7 +124,7 @@ class ErrorHandler:
 marmcompiler_stages = ['lex', 'parse', 'analyse_scope', 'typecheck', 'codegen']
 
 
-def marmcompiler(filename, input, output, errorhandler=None, stages=None):
+def marmcompiler(filename, input, errorhandler=None, stages=None):
     from src.marm.parser import marmparser,ParserError
     #yacc = yacc.yacc()
     if stages is None:
@@ -152,10 +152,7 @@ def marmcompiler(filename, input, output, errorhandler=None, stages=None):
             result.typecheck(errorhandler)
         elif stage == 'codegen':
             assert('typecheck' in completed_stages)
-            code = result.code_gen_with_labels(0)
-            code_file = open(file="test.mass", mode='w')
-            for line in code:
-                print(line, file=code_file, flush=True)
+            result = result.code_gen_with_labels(0)
 
         if errorhandler.roughlyOk():
             completed_stages.append(stage)
@@ -206,8 +203,8 @@ if __name__ == "__main__":
     parser.add_argument('--output', type=argparse.FileType('w'), default=sys.stdout,
                         help="Output file. Defaults to stdout")
     parser.add_argument('--output-format',
-                        choices=['json', 'str', 'list_str'],
-                        default='json',
+                        choices=['json', 'str', 'list_str', 'mass'],
+                        default=None,
                         help="Format used for output. Defaults to json")
     parser.add_argument('--stages', choices=marmcompiler_stages,
                         nargs='*', default=None,
@@ -216,12 +213,17 @@ if __name__ == "__main__":
 
     myinput = args.input.read()
 
-    result = marmcompiler(args.input.name, myinput, args.output, None, args.stages)
+    result = marmcompiler(args.input.name, myinput, None, args.stages)
 
     if result is None:
         print("No result produced.")
         exit(1)
     else:
+        if args.output_format is None:
+            if type(result) is list:
+                args.output_format = 'mass'
+            else:
+                args.output_format = 'json'
         if args.output_format == 'json':
             import json
             args.output.write(result.toJSON())
@@ -230,6 +232,10 @@ if __name__ == "__main__":
         elif args.output_format == 'list_str':
             for el in result:
                 args.output.write(str(el))
+                args.output.write("\n")
+        elif args.output_format == 'mass':
+            for line in result:
+                args.output.write(str(line))
                 args.output.write("\n")
         else:
             print("Unknown output format {}.".format(args.output_format))

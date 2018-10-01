@@ -14,7 +14,7 @@ class TestParserMethods(unittest.TestCase):
         errorhandler = marmcompiler.ErrorHandler()
         try:
             with open(os.path.join(self.testdir, filename), mode='r') as testfile:
-                marmcompiler.marmcompiler(filename, testfile.read(), stdout,
+                marmcompiler.marmcompiler(filename, testfile.read(), 
                                           errorhandler=errorhandler, stages=stages)
                 self.assertEqual(errorhandler.roughlyOk(), roughlyOk)
                 self.assertEqual(errorhandler.cleanCode(), cleanCode)
