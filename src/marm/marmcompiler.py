@@ -120,7 +120,10 @@ class ErrorHandler:
     def __str__(self):
         return self.tostring(False)
 
-marmcompiler_stages = ['lex', 'parse', 'analyse_scope', 'typecheck']
+
+marmcompiler_stages = ['lex', 'parse', 'analyse_scope', 'typecheck', 'codegen']
+
+
 def marmcompiler(filename, input, errorhandler=None, stages=None):
     from src.marm.parser import marmparser,ParserError
     #yacc = yacc.yacc()
@@ -147,6 +150,10 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
         elif stage == 'typecheck':
             assert('analyse_scope' in completed_stages)
             result.typecheck(errorhandler)
+        elif stage == 'codegen':
+            assert('typecheck' in completed_stages)
+            code = result.code_gen_with_labels(0)
+            print(code, "\n", file=open("test.mass", 'w'), flush=True)
 
         if errorhandler.roughlyOk():
             completed_stages.append(stage)
