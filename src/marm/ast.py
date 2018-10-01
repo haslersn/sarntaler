@@ -1,4 +1,5 @@
 import json
+import weakref
 
 def scope_lookup(scope_list, name):
     for scope in scope_list:
@@ -30,7 +31,12 @@ class Node:
         return "[{}]".format(", ".join(map(str,param)))
 
     def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        def json_default(obj):
+            if isinstance(obj, (weakref.ProxyType, weakref.CallableProxyType)):
+                return "<weakref>"
+            else:
+                return obj.__dict__
+        return json.dumps(self, default=json_default, sort_keys=True, indent=4)
 
 
 class Expr(Node):
@@ -389,7 +395,7 @@ class StatementReturn(Statement):
         return "[StatementReturn: return_value=" + str(self.return_value) + "]"
 
     def analyse_scope(self, scope_list, errorhandler):
-        self.function = scope_lookup(scope_list, "#current_function")
+        self.function = weakref.proxy(scope_lookup(scope_list, "#current_function"))
         self.return_value.analyse_scope(scope_list, errorhandler)
 
     def typecheck(self, errorhandler):
