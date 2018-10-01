@@ -14,7 +14,7 @@ class TestParserMethods(unittest.TestCase):
         errorhandler = marmcompiler.ErrorHandler()
         try:
             with open(os.path.join(self.testdir, filename), mode='r') as testfile:
-                marmcompiler.marmcompiler(filename, testfile.read(), 
+                marmcompiler.marmcompiler(filename, testfile.read(),
                                           errorhandler=errorhandler, stages=stages)
                 self.assertEqual(errorhandler.roughlyOk(), roughlyOk)
                 self.assertEqual(errorhandler.cleanCode(), cleanCode)
@@ -125,6 +125,9 @@ class TestParserMethods(unittest.TestCase):
 
     def test_scopes_invalid(self):
         self.generic_test("scopes_invalid.marm", False, False, 4, 0)
+
+    def test_gcd(self):
+        self.generic_test("gcd.marm")
 
 
 if __name__ == '__main__':
