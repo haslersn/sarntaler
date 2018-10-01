@@ -137,6 +137,19 @@ class LocalcallExpr(Expr):
                                                i, dparam_type, param.marm_type))
         self.marm_type = self.fnname.marm_type.return_type
 
+
+class CreateExpr(Expr):
+    def __init__(self, params):
+        super().__init__()
+        self.params = params
+
+    def __str__(self):
+        return "[CreateExpr: params={}]".format(self.liststr(self.params))
+
+    def analyse_scope(self, scope_list, errorhandler):
+        for param in self.params:
+            param.analyse_scope(scope_list, errorhandler)
+
 class UnaryExpr(Expr):
     """ p_exprUNARYEXPRESSIONS """
     def __init__(self, op, operand):
