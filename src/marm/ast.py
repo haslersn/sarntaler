@@ -575,7 +575,7 @@ class BoolexBinary(Boolex):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Right operand of {} must be of type bool.".format(
                                            self.op))
-        self.marm_type = 'bool'
+        self.marm_type = Typename('bool')
 
 
 class BoolexNot(Boolex):
@@ -595,4 +595,4 @@ class BoolexNot(Boolex):
         if self.operand.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Operand of '!' needs to be of type bool.")
-        self.marm_type = 'bool'
+        self.marm_type = Typename('bool')
