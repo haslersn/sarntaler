@@ -1,6 +1,6 @@
 from binascii import hexlify, unhexlify
 from typing import List
-from src.blockchain.crypto import compute_hash, is_hash
+from src.blockchain.crypto import *
 
 def _empty(hash: bytes):
     return hash == bytes(32)
@@ -8,10 +8,6 @@ def _empty(hash: bytes):
 def _check_is_inner_depth(depth):
     if depth < 0 or depth >= 64:
         raise ValueError('Inner node index must be in [0, 63]')
-
-def _check_is_hash(str: bytes):
-    if not is_hash(str):
-        raise ValueError('non-zero hash with length 32 Byte expected')
 
 def _child_index(encoded_path: bytes, depth: int):
     child_index = encoded_path[depth // 2]
@@ -147,7 +143,7 @@ class MerkleTrieStorage:
 class MerkleTrie:
     def __init__(self, storage: MerkleTrieStorage, hash = bytes(32)):
         cls = type(self)
-        _empty(hash) or _check_is_hash(hash)
+        _empty(hash) or check_is_hash(hash)
         self._storage = storage
         self._hash = hash
 
@@ -167,19 +163,19 @@ class MerkleTrie:
         return self.hash == bytes(32)
 
     def put(self, encoded_path: bytes, value: bytes):
-        _check_is_hash(encoded_path)
-        _check_is_hash(value)
+        check_is_hash(encoded_path)
+        check_is_hash(value)
         cls = type(self)
         return cls(self._storage, self._storage._put_internal(self.hash, encoded_path, value, 0))
 
     def remove(self, encoded_path: bytes):
-        _check_is_hash(encoded_path)
+        check_is_hash(encoded_path)
         cls = type(self)
         new_hash = self._storage._remove_internal(self.hash, encoded_path, 0)
         return (cls(self._storage, new_hash), new_hash != self.hash)
 
     def get(self, encoded_path: bytes) -> bytes:
-        _check_is_hash(encoded_path)
+        check_is_hash(encoded_path)
         return self._storage._get_internal(self.hash, encoded_path, 0)
 
     def contains(self, encoded_path: bytes) -> bool:
