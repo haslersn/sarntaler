@@ -568,6 +568,11 @@ class StatementWhile(Statement):
         self.statement.analyse_scope(scope_list, errorhandler)
 
     def typecheck(self, errorhandler):
+        self.boolex.typecheck(errorhandler)
+        if self.boolex.marm_type != 'bool':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Condition in while statement must be of type bool, got {}.".format(
+                                           self.boolex.marm_type))
         self.statement.typecheck(errorhandler)
 
         def _code_gen(self):
