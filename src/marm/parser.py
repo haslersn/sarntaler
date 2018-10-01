@@ -174,7 +174,8 @@ def p_expr(p):
     p[0].set_pos_from(p)
 
 def p_exprSPECIALCONSTANTS(p):
-    '''expr : MSG'''
+    '''expr : MSG
+            |  CONTRACT '''
     p[0] = ast.SpecialExpression(p[1])
     p[0].set_pos_from(p)
 
