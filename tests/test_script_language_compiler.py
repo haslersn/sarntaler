@@ -113,13 +113,7 @@ class TestParserMethods(unittest.TestCase):
     @unittest.expectedFailure
     def test_parse_file_unimplemented_features(self):
         """Tests whether some new features are actually implemented"""
-        errorhandler = marmcompiler.ErrorHandler()
-        try:
-            with open(os.path.join(self.testdir, "blockchainfeatures.marm"), mode='r') as testfile:
-                marmcompiler.marmcompiler("blockchainfeatures.marm", testfile.read(), errorhandler=errorhandler)
-                self.assertTrue(errorhandler.cleanCode())
-        except IOError as e:
-            self.fail(msg="File error: " + str(e))
+        self.generic_test("blockchainfeatures.marm")
 
 
 if __name__ == '__main__':
