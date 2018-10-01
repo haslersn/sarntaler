@@ -165,7 +165,7 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
             depend_on_stage('parse')
             depend_on_stage('analyse_scope')
             depend_on_stage('typecheck')
-            result = result.code_gen_with_labels(0, 0)
+            result = result.code_gen()
         if not errorhandler.roughlyOk():
             raise ErrorInStage(stage)
 
