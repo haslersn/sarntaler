@@ -523,7 +523,6 @@ class Procdecl(Node):
         code = []
         for decl in self.body:
             code += decl.code_gen()
-        code+=['OP_POPVOID']*self.local_depth
         return code
 
 
