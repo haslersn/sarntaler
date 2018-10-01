@@ -1,6 +1,8 @@
 #! /usr/bin/env/python3
 import hashlib
 import logging
+
+from src.blockchain.account import Account
 from .crypto import *
 from binascii import hexlify, unhexlify
 from datetime import datetime
@@ -85,11 +87,13 @@ class ScriptInterpreter:
         'OP_LE',
         'OP_GE',
         'OP_LT',
-        'OP_GT'
+        'OP_GT',
+
+        'OP_GETBAL'
     }
 
-    def __init__(self, state, params_script: str, acc_script: str, tx_hash: bytes):
-        self.acc_script = acc_script
+    def __init__(self, state, params_script: str, acc: Account, tx_hash: bytes):
+        self.acc = acc
         self.state = state
         self.params_script = params_script
         self.tx_hash = tx_hash
@@ -605,7 +609,7 @@ class ScriptInterpreter:
                 logging.warning("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
             return True
 
-        if not execute(self.params_script) or not execute(self.acc_script):
+        if not execute(self.params_script) or not execute(self.acc.code):
             logging.error("Invalid Tx due to invalid code item")
             return None
 

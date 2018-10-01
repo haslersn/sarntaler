@@ -36,7 +36,7 @@ def transit(state : MerkleTrie, transaction : t.Transaction, miner_add : bytes):
         state = state.put(transOutput.address, acc.hash)
 
         if acc.code != None:
-            vm = ScriptInterpreter(state, transOutput.params, acc.code, transaction.hash)
+            vm = ScriptInterpreter(state, transOutput.params, acc, transaction.hash)
             state = vm.execute_script()
 
 
