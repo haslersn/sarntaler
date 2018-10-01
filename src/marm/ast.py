@@ -295,6 +295,8 @@ class StructExpr(Expr):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Value of type {} has not attribute named {}".format(
                                            self.expr.marm_type, self.ident))
+        else:
+            self.marm_type = self.expr.marm_type.attribute_type(self.ident)
 
     def _code_gen(self):
         """TODO has not yet been decided what this should actually do"""
@@ -352,6 +354,9 @@ class Typename(Node):
         raise NotImplementedError
 
     def attribute_type(self, ident):
+        if self.typee == 'msg':
+            if ident == 'account':
+                return Typename('address')
         return None # TODO
 
 
