@@ -25,6 +25,18 @@ If you want to use special characters like a new line, use the usual escape sequ
 
 For Instructions, just write the name of the instruction. The interpreter is case-insensitive. For a list of all instructions see Section XX.
 
+Comments can be added with leading //. They work inline and as an extra line but if they are on an extra line they don't get counted to the codelines you need to specify jumps. So inline comments should be preferred.
+
+For inline comments there has to be whitespace before the comment!
+
+*Example:*
+
+	OP_ADD //this adds two stack elements
+works, but
+
+	OP_ADD//this adds two stack elements
+doesn't work.
+
 Example Program:
 
 	123
@@ -135,8 +147,6 @@ Macros that are implemented:
 	op_popabs			// store in b
 	-31
 	op_jumpr			// jump back to while condition
-
-Note: The comments are just for explanation. Right now, labVM script does not support comments.
 
 *Explanation:* This Code computes the gcd of two numbers already in the first two stack cells. It is based on the Euclid's algorithm:
 
