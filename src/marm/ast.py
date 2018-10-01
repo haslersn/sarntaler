@@ -110,7 +110,7 @@ class BinExpr(Expr):
                                                self.right.marm_type, self.left.marm_type))
             else:
                 self.marm_type = self.right.marm_type
-        elif self.op in ['+', '-', '*', '/']:
+        elif self.op in ['+', '-', '*', '/', '%']:
             if self.left.marm_type != 'int':
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                            "Left operand of {} exspects value of type int, got {}".format(
