@@ -186,8 +186,8 @@ class LocalcallExpr(Expr):
                 dparam_type = self.fnname.marm_type.param_types[i]
                 param.typecheck(errorhandler)
                 if param.marm_type != dparam_type:
-                    errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                               "Parameter {} of function  must be of type {}, got {}.".format(
+                    errorhandler.registerError(param.pos_filename, param.pos_begin_line, param.pos_begin_col,
+                                               "Parameter {} of function must be of type {}, got {}.".format(
                                                    i, dparam_type, param.marm_type))
             self.marm_type = self.fnname.marm_type.return_type
         else:
@@ -209,6 +209,8 @@ class CreateExpr(Expr):
     def analyse_scope(self, scope_list, errorhandler):
         for param in self.params:
             param.analyse_scope(scope_list, errorhandler)
+
+    # TODO typecheck
 
     # TODO code_gen
 
@@ -294,12 +296,11 @@ class StructExpr(Expr):
 
     def typecheck(self, errorhandler):
         self.expr.typecheck(errorhandler)
-        if self.expr.marm_type.attribute_type(self.ident) is None:
+        self.marm_type = self.expr.marm_type.attribute_type(self.ident)
+        if self.marm_type is None:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Value of type {} has not attribute named {}".format(
                                            self.expr.marm_type, self.ident))
-        else:
-            self.marm_type = self.expr.marm_type.attribute_type(self.ident)
 
     def _code_gen(self):
         """TODO has not yet been decided what this should actually do"""
@@ -355,6 +356,8 @@ class Typename(Node):
     def _code_gen(self):
         """Should not be used at all, fails on call"""
         raise NotImplementedError
+
+    def typecheck(self, errorhandler): pass
 
     def attribute_type(self, ident):
         if self.typee == 'msg':
@@ -551,7 +554,6 @@ class StatementReturn(Statement):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Can't return value of type {} from function with return type {}".format(
                                            self.return_value.marm_type, self.function.marm_type.return_type))
-        # TODO
 
     def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Push the return value and do OP_RET"""
@@ -635,7 +637,6 @@ class StatementIf(Statement):
         if self.boolex.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Condition in an if statement must be of type bool.")
-        self.statement.typecheck(errorhandler)
         self.statement.typecheck(errorhandler)
 
     def _code_gen(self):
@@ -790,8 +791,10 @@ class BoolexCMP(Boolex):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Trying to compare values of types {} and {}.".format(
                                            self.left.marm_type, self.right.marm_type))
-        # TODO
-        self.marm_type = 'bool'
+        if self.left.marm_type not in ['int']: #TODO
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Trying to compare two values of type {}.".format(self.left.marm_type))
+        self.marm_type = Typename('bool')
 
     def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Generate code for all types of comparison after executing both sides."""
