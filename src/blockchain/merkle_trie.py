@@ -3,11 +3,20 @@ from binascii import hexlify, unhexlify
 from typing import List
 from src.blockchain.crypto import compute_hash, is_hash
 
-class MerkleTrie(namedtuple("MerkleTrie", ["hash"])):
+class MerkleTrie:
     _DICTS = tuple([ dict() for _ in range(64) ])
 
-    def __new__(cls, hash = bytes(32)):
-        return super().__new__(cls, hash)
+    def __init__(self, hash = bytes(32)):
+        cls = type(self)
+        cls._empty(hash) or cls._check_is_hash(hash)
+        self._hash = hash
+
+    def __eq__(self, other): 
+        return self._hash == other._hash
+
+    @property
+    def hash(self):
+        return self._hash
 
     @property
     def empty(self):
