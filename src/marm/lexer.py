@@ -186,6 +186,15 @@ def t_error(t):
 # Generate lexer
 import ply.lex as lex
 
+
+def marmlexer_minimal():
+    from src.marm.marmcompiler import ErrorHandler
+    locallexer = lex.lex()
+    locallexer.filename='dummy'
+    locallexer.returnWhitespaces=True
+    locallexer.errorhandler = ErrorHandler()
+    return locallexer
+
 def marmlexer(filename,errorhandler,returnWhitespaces=False):
     locallexer = lex.lex()
     locallexer.filename = filename
