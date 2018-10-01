@@ -12,11 +12,13 @@ def test_passWithOne():
     si = ScriptInterpreter(empty_mt, "1", get_dummy_account(), None)
     assert si.execute_script()
 
+test_passWithOne()
 
 def test_failWithMoreThanOneStackElement():
     si = ScriptInterpreter(empty_mt, "1 2 3", get_dummy_account(), None)
     assert not si.execute_script()
 
+test_failWithMoreThanOneStackElement()
 
 def test_dup():
     si = ScriptInterpreter(empty_mt, None, get_dummy_account(), None)
@@ -25,6 +27,7 @@ def test_dup():
     assert si.stack == ['3', '2', '2']
     assert res == True
 
+test_dup()
 
 def test_dup_emptystack():
     si = ScriptInterpreter(empty_mt, None, get_dummy_account(), None)
@@ -32,25 +35,20 @@ def test_dup_emptystack():
     res = si.op_dup()
     assert res == False
 
-
 def test_dup2():
     script_finalstack_test("3 2 OP_DUP 1", [3, 2, 2])
 
-
 def test_swap():
     script_finalstack_test("3 2 1 OP_SWAP 1", [3, 1, 2])
-
 
 def test_swapWithOneElement():
     si = ScriptInterpreter(empty_mt, "1 OP_SWAP 1", get_dummy_account(), None)
     assert not si.execute_script()
 
-
 def test_pushFP():
     si = ScriptInterpreter(empty_mt, "3 2 1 OP_PUSHFP 1", get_dummy_account(), None)
     si.execute_script()
     assert si.stack == [3, 2, 1, -1]
-
 
 def test_popFP():
     si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, "3 2 42 OP_POPFP 1", 1, []), None)
@@ -201,12 +199,12 @@ def test_div_nonintegers():
     assert not si.execute_script()
 
 def test_pack():
-    script_finalstack_test('3 2 1 3 OP_PACK 1', ['3 2 1'])
-    script_finalstack_test('3 "Hello" -100 22 18 0 6 OP_PACK 1', ['3 "Hello" -100 22 18 0'])
+    script_finalstack_test('3 2 1 3 OP_PACK 1', [[3, 2, 1]])
+    script_finalstack_test('3 "Hello" -100 22 18 0 6 OP_PACK 1', [[3, "Hello", -100, 22, 18, 0]])
 
 def test_unpack():
     #script_finalstack_test('"3 2 1" OP_UNPACK 1', [3, 2, 1, 3])
-    script_finalstack_test('"3 \'Hello\' -100 22 18" OP_UNPACK 1', [3, "Hello", -100, 22, 18, 5])
+    script_finalstack_test('[3 \'Hello\' -100 22 18] OP_UNPACK 1', [3, "Hello", -100, 22, 18, 5])
 
 #def emptystack_noninteger_test(op: str):
 
@@ -292,3 +290,19 @@ def test_setstor_invalid():
 def test_create_contr():
     si = ScriptInterpreter(empty_mt, '0 1 2 3 4 "storethis" 2 OP_POPR 1', get_dummy_account(), None)
     si.execute_script()
+
+
+
+
+test_dup2()
+test_swap()
+test_swapWithOneElement()
+test_pushFP()
+test_popFP()
+test_dup_emptystack()
+test_div_nonintegers()
+test_getstor_invalid()
+test_getstor()
+test_setstor()
+test_setstor_invalid()
+test_unpack()

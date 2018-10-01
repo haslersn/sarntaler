@@ -527,33 +527,20 @@ class ScriptInterpreter:
         if len(self.stack) < n:
             logging.warning("OP_PACK: not enough stack elements")
             return False
-        for i in range(0, n):
-            elem = self.stack.pop()
-            if type(elem) is str:
-                packed_str = '"' + elem + '" ' + packed_str
-            elif type(elem) is int:
-                packed_str = str(elem) + ' ' + packed_str
-            else:
-                logging.warning("OP_PACK: invalid element type")
-                return False
-        self.stack.append(packed_str.strip())
+        to_push = list(reversed([ self.stack.pop() for i in range(n) ]))
+        assert to_push[0] is not None
+        self.stack.append(to_push)
         return True
 
     def op_unpack(self):
-        split_str = self._split_script(self.__pop_checked(str))
-        print(split_str)
-        if split_str is None:
-            logging.warning("OP_UNPACK: s_1 is not existent or wrong type")
+        popped = self.__pop_checked(list)
+        if popped is None:
+            logging.warning("OP_UNPACK: s_1 not existing or wrong type")
             return False
-        for item in split_str:
-            typed_item = self._parse_data_item(item)
-            if typed_item is None:
-                logging.warning(item + " could not be parsed")
-                return False
-            self.stack.append(typed_item)
-        self.stack.append(len(split_str))
+        for item in popped:
+            self.stack.append(item)
+        self.stack.append(len(popped))
         return True
-
 
     def _parse_numeric_item(self, item: str):
         try:
@@ -597,13 +584,7 @@ class ScriptInterpreter:
         item = item[1:-1]
         return item
 
-    def _parse_data_item(self, item: str):
-        if item[0] not in [ '"', '\'' ]:  # not a quoted string
-            return self._parse_numeric_item(item)
-        else:  # quoted string
-            return self._parse_string_item(item)
-
-    def _split_script(self, script: str):
+    def _parse_script(self, script: str, allow_opcodes = True, is_recursive_call = False):
         result = []
         script += '\n'  # tailing newline to not get errors at the end of file parsing
         while True:
@@ -611,19 +592,50 @@ class ScriptInterpreter:
             if not script:
                 break
             if script.startswith('//'):
-                first = next(i for i, chr in enumerate(script) if chr in ['\n'])
-            elif script[0] in [ '"', '\'' ]:
+                first = next(i for i, chr in enumerate(script) if chr == '\n')
+                script = script[first+1:]
+                continue
+            if script[0] in [ '"', '\'' ]:
                 first_quote = script[0]
                 first = script[1:].find(first_quote)
                 if first == -1:
                     logging.warning("[!] Error: Invalid Tx: Missing closing quote in script")
-                    return False
-                result.append(script[:first+2])  # Include the quote
-                first += 1
+                    return None
+                item = script[:first+2]
+                result.append(self._parse_string_item(item))
+                if result[-1] is None:
+                    logging.warning("[!] Error: Invalid Tx: Could not parse item")
+                    return None
+                script = script[first+2:]
+                continue
+            if script[0] == '[':
+                sub_call = self._parse_script(script[1:], False, True)
+                if sub_call is None:
+                    return None
+                parsed_list, script = sub_call
+                result.append(parsed_list)
+                continue
+            if script[0] == ']':
+                if not is_recursive_call:
+                    logging.warning("[!] Error: Invalid Tx: Unexpected closing bracket in script")
+                    return None
+                return (result, script[1:])
+            first = next(i for i, chr in enumerate(script) if chr in [ ' ', '\t', '\n', ']' ])
+            item = script[:first]
+            if item.upper() in ScriptInterpreter.operations:
+                result.append(getattr(self, item.lower()))
             else:
-                first = next(i for i, chr in enumerate(script) if chr in [ ' ', '\t', '\n' ])
-                result.append(script[:first])  # Don't include the whitespace
-            script = script[first+1:]
+                to_append = self._parse_numeric_item(item)
+                if to_append is None:
+                    logging.warning("[!] Error: Invalid Tx: Could not parse item")
+                    return None
+                result.append(to_append)  # Don't include the whitespace
+            if script[first] != ']':
+                first += 1
+            script = script[first:]
+        if is_recursive_call:
+            logging.warning("[!] Error: Invalid Tx: Missing closing bracket in script")
+            return None
         return result
 
     def math_operations(self, op):
@@ -653,26 +665,23 @@ class ScriptInterpreter:
 
         def execute_item(item: str):
             # Check if item is data or opcode
-            if (item.upper() in ScriptInterpreter.operations):
+            if callable(item):
                 # Execute the operation
-                logging.warning(item + " is an opcode")
-                op = getattr(self, item.lower())
-                if not op():
+                logging.warning(str(item) + " is an opcode")
+                if not item():
                     return False
             else:
                 # Push data onto the stack
-                logging.warning(item + " is data")
-                typed_item = self._parse_data_item(item)
-                if typed_item is None:
-                    logging.warning(item + " could not be parsed")
-                    return False
-                self.stack.append(typed_item)
+                logging.warning(str(item) + " is data")
+                self.stack.append(item)
             return True
 
         def execute(script: str):
             self.pc = 1
             self.framepointer = -1
-            self.program = self._split_script(script)
+            self.program = self._parse_script(script)
+            if self.program is None:
+                return False
             while self.pc <= len(self.program):
                 item = self.program[self.pc - 1] # Fetch the next item (given by the program counter)
                 logging.info("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
