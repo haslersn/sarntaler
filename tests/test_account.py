@@ -28,3 +28,5 @@ def test_account_storage():
 
     assert "init" == account.get_storage("test_string")
     assert None == account.set_storage("test_string", 2)
+
+    assert None == Account(bytes(1), 0, "code", True, [StorageItem("test_var", int, "not an int"), StorageItem("test_string", str, "init")])

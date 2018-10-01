@@ -7,9 +7,12 @@ import logging
 from src.blockchain.crypto import compute_hash
 from collections import namedtuple
 
-
+# TODO add mapping for types to support Hashes, Signatures, ...
 class StorageItem(namedtuple("StorageItem", ["s_name", "s_type", "s_value"])):
     def __new__(cls, s_name: str, s_type: type, s_value: object):
+        if type(s_value) != s_type:
+            logging.warning("invalid initialization for " + s_name)
+            return None
         return super().__new__(cls, s_name, s_type, s_value)
 
     def to_json_compatible(self):
@@ -44,6 +47,9 @@ class Account(namedtuple("Account", ["pub_key", "balance", "code", "owner_access
             return None
 
     def __new__(cls, pub_key: bytes, balance: int, code: str, owner_access: bool, storage: List[StorageItem]):
+        if None in storage:
+            logging.warning("storage can't contain None " + str(storage))
+            return None
         constructed = super().__new__(cls, pub_key, balance, code, owner_access, storage)
         if constructed.hash in cls._dict:
             return cls._dict[constructed.hash]
