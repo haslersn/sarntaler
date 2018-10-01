@@ -105,7 +105,10 @@ class ConstExpr(Expr):
     def typecheck(self, errorhandler): pass
 
     def code_gen(self):
-        return [self.value]
+        if self.marm_type is 'string':
+            return ['"'+self.value+'" // const string']
+        else:
+            return [str(self.value) + ' // const '+str(self.marm_type)]
 
 
 class BinExpr(Expr):
