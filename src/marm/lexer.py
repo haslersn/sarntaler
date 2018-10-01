@@ -30,7 +30,7 @@ tokens = ['IDENT',
           'COMMENT',
           'WHITESPACE',
           'NEWLINE',
-          'ADDOP', 'SUBOP', 'MULOP', 'DIVOP',
+          'ADDOP', 'SUBOP', 'MULOP', 'DIVOP','MODOP',
           'HASH', 'DOT', 'NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
           'LPAR', 'RPAR'] + list(keywords.values())
 
@@ -106,6 +106,7 @@ t_ADDOP = r'\+'
 t_SUBOP = r'-'
 t_MULOP = r'\*'
 t_DIVOP = r'/'
+t_MODOP = r'%'
 
 # Bool operations
 t_OR = r'\|\|'

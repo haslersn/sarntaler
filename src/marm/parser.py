@@ -160,7 +160,6 @@ def p_statementDECL(p):
 def p_statementERROR(p):
     'statement : error SEMI'
 
-
 def p_expr(p):
     'expr : INTCONST'
     p[0] = ast.ConstExpr(p[1])
@@ -173,19 +172,30 @@ def p_exprSPECIALCONSTANTS(p):
     p[0].set_pos_from(p)
 
 def p_exprFUNCALL(p):
-    '''expr : IDENT LPAR decllist RPAR
-            | IDENT LPAR RPAR'''
+    '''expr : lhsexpression LPAR exprlist RPAR
+            | lhsexpression LPAR RPAR'''
     if len(p)==5:
         p[0] = ast.LocalcallExpr(p[1],p[3])
     else:
         p[0] = ast.LocalcallExpr(p[1],[])
     p[0].set_pos_from(p)
 
+def p_exprlist(p):
+    '''exprlist : expr COMMA exprlist
+                | expr'''
+
+    if len(p)==4:
+        p[3].append(p[1])
+        p[0] = p[3]
+    else:
+        p[0] = []
+
 def p_exprBINARYEXPRESSIONS(p):
     '''expr : expr ASSIGN expr
             | expr MULOP expr
             | expr ADDOP expr
             | expr DIVOP expr
+            | expr MODOP expr
             | expr SUBOP expr '''
     p[0] = ast.BinExpr(p[2], p[1], p[3])
     p[0].set_pos_from(p)
@@ -208,15 +218,16 @@ def p_exprNESTED(p):
     p[0] = p[2]
 
 
-def p_exprSTRUCTACCESS(p):
-    'expr : expr DOT IDENT'
-    p[0] = ast.StructExpr(p[1], p[3])
-    p[0].set_pos_from(p)
 
 
 def p_lhsexpression(p):
     'lhsexpression : IDENT'
     p[0] = ast.LHS(p[1])
+    p[0].set_pos_from(p)
+
+def p_exprSTRUCTACCESS(p):
+    'lhsexpression : expr DOT IDENT'
+    p[0] = ast.StructExpr(p[1], p[3])
     p[0].set_pos_from(p)
 
 
