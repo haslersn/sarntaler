@@ -3,10 +3,10 @@ import os.path
 from src.marm import *
 
 
-# Usage python _jb_pytest_runner.py (for PyCharm) --target test_script_language_compiler.py::TestParserMethods
 class TestParserMethods(unittest.TestCase):
     def setUp(self):
-        self.lexer = lexer.lexer
+        self.lexer = lexer.marmlexer("", None, True)
+
         self.testdir = os.path.join(os.path.dirname(__file__), "marm")
 
     def generic_lex(self, t_text, t_type, t_value, t_lineno=1, t_lexpos=0):
@@ -30,6 +30,10 @@ class TestParserMethods(unittest.TestCase):
         self.generic_lex("return", 'RETURN', 'return')
         self.generic_lex("int", 'INT', 'int')
         self.generic_lex("address", 'ADDRESS', 'address')
+        self.generic_lex("sarn", 'SARN', 'sarn')
+        self.generic_lex("msg", 'MSG', 'msg')
+        self.generic_lex("contract", 'CONTRACT', 'contract')
+        self.generic_lex("create", 'CREATE', 'create')
         self.generic_lex("i", 'IDENT', 'i')
         self.generic_lex("{", 'BEGIN', '{')
         self.generic_lex("}", 'END', '}')
@@ -40,6 +44,17 @@ class TestParserMethods(unittest.TestCase):
         self.generic_lex("0x4", 'ADDRESSVALUE', '0x4')
         self.generic_lex("=", 'ASSIGN', '=')
         self.generic_lex("23", 'INTCONST', 23)
+        self.generic_lex("//wqfwnwekg", 'COMMENT', '//wqfwnwekg')
+        self.generic_lex("""/* qkjqwhrkufgb
+        wekjgbkggbgw
+        ewtkbwgukw
+        wetkjbwejgb*/""", 'COMMENT', '''/* qkjqwhrkufgb
+        wekjgbkggbgw
+        ewtkbwgukw
+        wetkjbwejgb*/''')
+        self.generic_lex(" ", 'WHITESPACE', " ")
+        self.generic_lex("\t", 'WHITESPACE', "\t")
+        # self.generic_lex("\n", 'NEWLINE', "\n",) strange behavior, if lineno is expected to be 2 it's 1 and vice versa
         self.generic_lex("+", 'ADDOP', '+')
         self.generic_lex("-", 'SUBOP', '-')
         self.generic_lex("*", 'MULOP', '*')
