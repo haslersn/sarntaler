@@ -43,7 +43,7 @@ class Node:
     def _code_gen(self):
         return []
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         return self._code_gen()
 
 
@@ -124,14 +124,14 @@ class BinExpr(Expr):
                                                self.op, self.right.marm_type))
             self.marm_type = Typename('int')
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Act differently for ASSIGN expressions and mathematical operations """
         code = []
         if str(self.op) == "=":
             if type(self.left) == LHS:
                 # create rhs code
-                code_right = self.right.code_gen_with_labels(label_id)
-                left_stackaddress = self.left.code_gen_with_labels(label_id)
+                code_right = self.right.code_gen_with_labels(label_loop_id, label_if_id)
+                left_stackaddress = self.left.code_gen_with_labels(label_loop_id, label_if_id)
 
                 code += code_right
                 code += left_stackaddress
@@ -140,8 +140,8 @@ class BinExpr(Expr):
                 # got an expression on the left side like a+b, which we don't want to allow
                 print("BinExpr._code_gen: got a binary expression like a+b = 5 which we don't want to allow")
         else:
-            code_left = self.left.code_gen_with_labels(label_id)
-            code_right = self.right.code_gen_with_labels(label_id)
+            code_left = self.left.code_gen_with_labels(label_loop_id, label_if_id)
+            code_right = self.right.code_gen_with_labels(label_loop_id, label_if_id)
             """Push code_left on stack, then code_right and afterwards the operator """
             code += code_left
             code += code_right
@@ -195,8 +195,6 @@ class LocalcallExpr(Expr):
                                        "Trying to call expression which is not a function.")
             return
 
-
-
     # TODO code_gen
 
 
@@ -245,13 +243,13 @@ class UnaryExpr(Expr):
             errorhandler.registerFatal(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Typechecking failed on unknown operator {}".format(self.op))
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Act differently on hash and negation, although hash is not yet implemented"""
         code = []
         if str(self.op) == "HASH":
             pass  # TODO change when the hashing is decided
         elif str(self.op) == "SUBOP":
-            code_operand = self.operand.code_gen_with_labels(label_id)
+            code_operand = self.operand.code_gen_with_labels(label_loop_id, label_if_id)
             code += code_operand
             code.append("OP_NEG")
         else:
@@ -275,9 +273,9 @@ class LHSExpr(Expr):
     def typecheck(self, errorhandler):
         self.lhs.typecheck(errorhandler)
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Pushes the address of the identifier stored in the lhs"""
-        return self.lhs.code_gen_with_labels(label_id)
+        return self.lhs.code_gen_with_labels(label_loop_id, label_if_id)
 
 
 class StructExpr(Expr):
@@ -388,12 +386,12 @@ class Translationunit(Node):
         for proc in self.procs:
             proc.typecheck(errorhandler)
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Calls codegen for every procedure and stores their addresses before"""
         code = []
         for procdecl in self.procs:
             # TODO do something with the address of the procedure
-            code_proc = procdecl.code_gen_with_labels(label_id)
+            code_proc = procdecl.code_gen_with_labels(label_loop_id, label_if_id)
             code += code_proc
         return code
 
@@ -475,12 +473,12 @@ class Procdecl(Node):
         for statement in self.body:
             statement.typecheck(errorhandler)
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Insert the identifiers in the symboltable(?) and generate the code for the body"""
         code = []
         # TODO decide what to do with the procedure and params addresses
         for decl in self.body:
-            code += decl.code_gen_with_labels(label_id)
+            code += decl.code_gen_with_labels(label_loop_id, label_if_id)
         return code
 
 
@@ -521,7 +519,7 @@ class StatementDecl(Statement):
 
     def typecheck(self, errorhandler): pass
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Ignore the type and call _code_gen on all declarations, whatever they may do"""
         code = []
         for decl in self.decllist:
@@ -529,7 +527,7 @@ class StatementDecl(Statement):
                 code.append("decl " + decl)
                 pass  # Normally there should not happen anything I guess
             else:
-                code += decl.code_gen_with_labels(label_id)
+                code += decl.code_gen_with_labels(label_loop_id, label_if_id)
         return code
 
 
@@ -555,9 +553,9 @@ class StatementReturn(Statement):
                                            self.return_value.marm_type, self.function.marm_type.return_type))
         # TODO
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Push the return value and do OP_RET"""
-        code = self.return_value.code_gen_with_labels(label_id)
+        code = self.return_value.code_gen_with_labels(label_loop_id, label_if_id)
         code.append("OP_RET")
         return code
 
@@ -587,31 +585,31 @@ class StatementWhile(Statement):
     def _code_gen(self):
             pass
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """First gets the bool, then negates it and jumps to end if loop is done. If not it does the body code."""
         code = []
-        label_start = "__label_loop_start" + str(label_id) + ":"
-        label_end = "__label_loop_end" + str(label_id) + ":"
-        code_boolex = self.boolex.code_gen_with_labels(label_id + 1)
-        code_body = self.statement.code_gen_with_labels(label_id + 1)
+        label_start = "__label_loop_start" + str(label_loop_id)
+        label_end = "__label_loop_end" + str(label_loop_id)
+        code_boolex = self.boolex.code_gen_with_labels(label_loop_id + 1,label_if_id)
+        code_body = self.statement.code_gen_with_labels(label_loop_id + 1, label_if_id)
 
         # Start label
-        code.append(label_start)
+        code.append(label_start + ":")
 
         # Get the bool
         code += code_boolex
         code.append("OP_NOT")
 
-        # TODO jump to label_end
+        code.append(label_end)
         code.append("OP_JUMPRC")
 
         # The loop body
         code += code_body
 
-        # TODO Jump to label_start
+        code.append(label_start)
         code.append("OP_JUMPR")
 
-        code.append(label_end)
+        code.append(label_end + ":")
         return code
 
 
@@ -643,29 +641,35 @@ class StatementIf(Statement):
     def _code_gen(self):
         pass
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """First the else block because less code, jumping accordingly"""
         code = []
-        code_boolex = self.boolex.code_gen_with_labels(label_id + 1)
-        code_true = self.statement.code_gen_with_labels(label_id + 1)
-        code_false = self.elseprod.code_gen_with_labels(label_id + 1)
+        code_boolex = self.boolex.code_gen_with_labels(label_loop_id + 1, label_if_id)
+        code_true = self.statement.code_gen_with_labels(label_loop_id, label_if_id + 1)
 
         # Label of true block
-        label_true = "__label_if_true" + str(label_id)
+        label_true = "__label_if_true" + str(label_if_id)
+        label_end = "__label_if_end" + str(label_if_id)
 
         # Get the bool
         code += code_boolex
 
-        # TODO Jump to true label
+        code.append(label_true)
         code.append("OP_JUMPRC")
 
-        # The false body
-        code += code_false
+        if not (self.elseprod is None):
+            code_false = self.elseprod.code_gen_with_labels(label_loop_id, label_if_id + 1)
 
-        code.append(label_true)
+            # The false body
+            code += code_false
 
+            code.append(label_true + ":")
+
+        code.append(label_end)
+        code.append("OP_JUMP")
         # The true body
         code += code_true
+        code.append(label_end + ":")
 
         return code
 
@@ -685,9 +689,9 @@ class StatementExpression(Statement):
     def typecheck(self, errorhandler):
         self.expr.typecheck(errorhandler)
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Just generate the code for the expr whatever that may be"""
-        code = self.expr.code_gen_with_labels(label_id)
+        code = self.expr.code_gen_with_labels(label_loop_id, label_if_id)
         return code
 
 
@@ -709,11 +713,11 @@ class StatementBody(Statement):
         for statement in self.body:
             statement.typecheck(errorhandler)
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Generate the code for all statements in the body"""
         code = []
         for stmnt in self.body:
-            code += stmnt.code_gen_with_labels(label_id)
+            code += stmnt.code_gen_with_labels(label_loop_id, label_if_id)
         return code
 
 
@@ -730,9 +734,9 @@ class StatementBreak(Statement):
 
     def typecheck(self, errorhandler): pass
 
-    def _code_gen(self):
-        """ TODO Need labels!!!!"""
-        code = []
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
+        """Push labelname and jump there"""
+        code = ["__label_loop_end" + str(label_loop_id-1), "OP_JUMP"]
         return code
 
 
@@ -749,20 +753,10 @@ class StatementContinue(Statement):
 
     def typecheck(self, errorhandler): pass
 
-    class StatementContinue(Statement):
-        """ p_statementCONTINUE """
-
-        def __init__(self):
-            super().__init__()
-            pass
-
-        def __str__(self):
-            return "[StatementContinue]"
-
-        def _code_gen(self):
-            """ TODO Need labels!!!!"""
-            code = []
-            return code
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
+        """Push labelname and jump there"""
+        code = ["__label_loop_start" + str(label_loop_id-1), "OP_JUMP"]
+        return code
 
 
 class Boolex(Node):
@@ -799,11 +793,11 @@ class BoolexCMP(Boolex):
         # TODO
         self.marm_type = 'bool'
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Generate code for all types of comparison after executing both sides."""
         code = []
-        code += self.left.code_gen_with_labels(label_id)
-        code += self.right.code_gen_with_labels(label_id)
+        code += self.left.code_gen_with_labels(label_loop_id, label_if_id)
+        code += self.right.code_gen_with_labels(label_loop_id, label_if_id)
         if str(self.op) == "==":
             code.append("OP_EQ")
         elif str(self.op) == "!=":
@@ -850,11 +844,11 @@ class BoolexBinary(Boolex):
                                            self.op))
         self.marm_type = Typename('bool')
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Push both sides and consume them."""
         code = []
-        code += self.left.code_gen_with_labels(label_id)
-        code += self.right.code_gen_with_labels(label_id)
+        code += self.left.code_gen_with_labels(label_loop_id, label_if_id)
+        code += self.right.code_gen_with_labels(label_loop_id, label_if_id)
         if str(self.op) == "||":
             code.append("OP_OR")
         elif str(self.op) == "&&":
@@ -884,9 +878,9 @@ class BoolexNot(Boolex):
                                        "Operand of '!' needs to be of type bool.")
         self.marm_type = Typename('bool')
 
-    def code_gen_with_labels(self, label_id):
+    def code_gen_with_labels(self, label_loop_id, label_if_id):
         """Negate the result of the operand code."""
         code = []
-        code += self.operand.code_gen_with_labels(label_id)
+        code += self.operand.code_gen_with_labels(label_loop_id, label_if_id)
         code.append("OP_NOTS")
         return code
