@@ -5,8 +5,8 @@ import ply.yacc as yacc
 precedence = (
      ('right', 'ASSIGN'),
      ('right', 'HASH', 'NOT'),
-     ('right', 'ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP','MODOP', 'MULOP', 'SUBOP'),
      ('right', 'IF_WITHOUT_ELSE'),
+     ('right', 'ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP','MODOP', 'MULOP', 'SUBOP'),
 )
 
 
