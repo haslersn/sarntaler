@@ -38,6 +38,17 @@ class Expr(Node):
         return "[Expr]"
 
 
+class SpecialExpression(Expr):
+    """ p_exprSPECIALCONSTANTS"""
+    def __init__(self,value):
+        super().__init__()
+        self.value=value
+
+    def __str__(self):
+        return "[SpecialExpr: value="+str(self.value)+"]"
+
+    def analyse_scope(self,scope_list, errorhandler): pass
+
 class ConstExpr(Expr):
     """ p_expr """
     def __init__(self, value):
@@ -116,7 +127,7 @@ class StructExpr(Expr):
         return "[StructExpr: expr=" + str(self.expr) + ", ident=" + str(self.ident) + "]"
 
     def analyse_scope(self, scope_list, errorhandler):
-        self.expr.analyse_scope(self.expr, scope_list)
+        self.expr.analyse_scope(scope_list,errorhandler)
         # TODO: Attributes?
 
 
