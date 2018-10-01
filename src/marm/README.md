@@ -35,29 +35,7 @@ parts of identifiers but not as sole words separated by whitespaces or tabs.
 |:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|
 | `if` | `while` | `break` | `continue` | `else` | 
 | `return` | `int` | `address` | `sarn` | `msg` |
-|<td colspan="5"> `continue` |
-
-<center>
-<table>
-  <tr>
-    <td><b><tt>if</tt></b></td>
-    <td><b><tt>while</tt></b></td>
-    <td><b><tt>break</tt></b></td>
-    <td><b><tt>continue</tt></b></td>
-    <td><b><tt>else</tt></b></td>
-  </tr>
-  <tr>
-    <td><b><tt>return</tt></b></td>
-    <td><b><tt>int</tt></b></td>
-    <td><b><tt>address</tt></b></td>
-    <td><b><tt>sarn</tt></b></td>
-    <td><b><tt>msg</tt></b></td>
-  </tr>
-  <tr>
-    <td colspan="5"><b><tt>contract</tt></b></td>
-  </tr>
-</table>
-</center>
+| | |`contract` | | |
 
 
 ### <a name="comments"></a> Comments
