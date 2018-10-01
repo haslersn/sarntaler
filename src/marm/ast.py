@@ -53,16 +53,30 @@ class Expr(Node):
         return "[Expr]"
 
 
+class MsgType:
+    def __eq__(self, other):
+        return type(other) is MsgType
+    def has_attribute(self, ident):
+        return False # TODO
+class ContractType:
+    def __eq__(self, other):
+        return type(other) is ContractType
+    def has_attribute(self, ident):
+        return False # TODO
+
 class SpecialExpression(Expr):
     """ p_exprSPECIALCONSTANTS"""
-    def __init__(self,value):
+    def __init__(self,value, marm_type):
         super().__init__()
         self.value=value
+        self.marm_type = marm_type
 
     def __str__(self):
         return "[SpecialExpr: value="+str(self.value)+"]"
 
     def analyse_scope(self,scope_list, errorhandler): pass
+
+    def typecheck(self, errorhandler): pass
 
     # TODO code_gen
 
