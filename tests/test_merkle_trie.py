@@ -13,7 +13,7 @@ def test_put_and_remove():
     value = gen_value(1)
 
     # construct
-    trie1 = MerkleTrie()
+    trie1 = MerkleTrie(MerkleTrieStorage())
     assert not trie1.contains(key)
 
     # put
@@ -36,7 +36,7 @@ def test_put_and_remove():
     assert trie3 == trie4
 
 def test_put_multiple():
-    trie = MerkleTrie()
+    trie = MerkleTrie(MerkleTrieStorage())
     for i in range(10):
         trie = trie.put(gen_key(i), gen_value(i))
         for j in range(10):
@@ -49,17 +49,18 @@ def test_put_multiple():
                 assert trie.get(key) is None
 
 def check_serialization(trie):
+    storage = trie.storage  # for deserialization: where to take the shared state from 
     serialized = json.dumps(trie.to_json_compatible([]))
-    deserialized = MerkleTrie.from_json_compatible(json.loads(serialized))
+    deserialized = MerkleTrie.from_json_compatible(json.loads(serialized), storage)
     serialized_again = json.dumps(deserialized.to_json_compatible([]))
     assert trie == deserialized
     assert serialized == serialized_again
 
 def test_serialization_empty():
-    check_serialization(MerkleTrie())
+    check_serialization(MerkleTrie(MerkleTrieStorage()))
 
 def test_serialization_full():
-    trie = MerkleTrie()
+    trie = MerkleTrie(MerkleTrieStorage())
     for i in range(10):
         trie = trie.put(gen_key(i), gen_value(i))
     check_serialization(trie)
