@@ -200,6 +200,14 @@ def test_div_nonintegers():
     si = ScriptInterpreter(empty_mt, "a b OP_DIV 1", get_dummy_account(), None)
     assert not si.execute_script()
 
+def test_pack():
+    script_finalstack_test('3 2 1 3 OP_PACK 1', ['3 2 1'])
+    script_finalstack_test('3 "Hello" -100 22 18 0 6 OP_PACK 1', ['3 "Hello" -100 22 18 0'])
+
+def test_unpack():
+    #script_finalstack_test('"3 2 1" OP_UNPACK 1', [3, 2, 1, 3])
+    script_finalstack_test('"3 \'Hello\' -100 22 18" OP_UNPACK 1', [3, "Hello", -100, 22, 18, 5])
+
 #def emptystack_noninteger_test(op: str):
 
 def emptystack_noninteger_binaryop_test(op: str):
@@ -254,8 +262,6 @@ def test_factorial():
     si = ScriptInterpreter(fstr, "", get_dummy_account(), None)
     si.execute_script()
 
-
-
 def test_getbal():
     si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 100, "OP_GETBAL 1", 1, []), None)
     assert si.execute_script()
@@ -282,3 +288,7 @@ def test_setstor():
 def test_setstor_invalid():
     si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, '42 "invalid" OP_SETSTOR 1', 1, [StorageItem('myvar', 'int', 42)]), None)
     assert not si.execute_script()
+
+def test_create_contr():
+    si = ScriptInterpreter(empty_mt, '0 1 2 3 4 "storethis" 2 OP_POPR 1', get_dummy_account(), None)
+    si.execute_script()

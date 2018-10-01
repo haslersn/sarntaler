@@ -92,7 +92,10 @@ class ScriptInterpreter:
 
         'OP_GETBAL',
         'OP_SETSTOR',
-        'OP_GETSTOR'
+        'OP_GETSTOR',
+
+        'OP_PACK',
+        'OP_UNPACK'
     }
 
     def __init__(self, state: MerkleTrie, params_script: str, acc: Account, tx_hash: bytes):
@@ -515,6 +518,114 @@ class ScriptInterpreter:
         self.state = self.state.put(self.acc.address, self.acc.hash)
         return True
 
+    def op_pack(self):
+        n = self.__pop_checked(int)
+        if n is None:
+            logging.warning("OP_PACK: s_1 not existing or wrong type")
+            return False
+        packed_str = ""
+        if len(self.stack) < n:
+            logging.warning("OP_PACK: not enough stack elements")
+            return False
+        for i in range(0, n):
+            elem = self.stack.pop()
+            if type(elem) is str:
+                packed_str = '"' + elem + '" ' + packed_str
+            elif type(elem) is int:
+                packed_str = str(elem) + ' ' + packed_str
+            else:
+                logging.warning("OP_PACK: invalid element type")
+                return False
+        self.stack.append(packed_str.strip())
+        return True
+
+    def op_unpack(self):
+        split_str = self._split_script(self.__pop_checked(str))
+        print(split_str)
+        if split_str is None:
+            logging.warning("OP_UNPACK: s_1 is not existent or wrong type")
+            return False
+        for item in split_str:
+            typed_item = self._parse_data_item(item)
+            if typed_item is None:
+                logging.warning(item + " could not be parsed")
+                return False
+            self.stack.append(typed_item)
+        self.stack.append(len(split_str))
+        return True
+
+
+    def _parse_numeric_item(self, item: str):
+        try:
+            if len(item) > 2:
+                if item[0:3].lower() == 'k0x':
+                    return Key(unhexlify(item[3:]))
+                if item[0:3].lower() == 'h0x':
+                    return Hash(unhexlify(item[3:]))
+                if item[0:3].lower() == 's0x':
+                    return Signature(unhexlify(item[3:]))
+            return int(item, 0)
+        except ValueError:
+            return None
+
+    def _parse_string_item(self, item: str):
+        quote = item[0]
+        if quote not in [ '"', '\'' ]:
+            logging.error("Could not parse: {}".format(item))
+            return False
+        closing_quote = False
+        i = 1
+        while (i < len(item)):
+            if item[i] == quote:
+                if i+1 == len(item):
+                    closing_quote = True
+                else:
+                    logging.error("Unescaped quote in: {}".format(item))
+                    return None
+            elif item[i] == '\\':
+                if i+1 == len(item):
+                    logging.error("Trailing escape character in: {}".format(item))
+                    return None
+                if item[i+1] not in [ '\\', '"' ]:
+                    logging.error("Trailing escape sequence in: {}".format(item))
+                    return None
+                item = item[:i] + item[i+1:]  # remove the escape character & skip next
+            i += 1
+        if not closing_quote:
+            logging.error("Missing closing quote after: {}".format(item))
+            return None
+        item = item[1:-1]
+        return item
+
+    def _parse_data_item(self, item: str):
+        if item[0] not in [ '"', '\'' ]:  # not a quoted string
+            return self._parse_numeric_item(item)
+        else:  # quoted string
+            return self._parse_string_item(item)
+
+    def _split_script(self, script: str):
+        result = []
+        script += '\n'  # tailing newline to not get errors at the end of file parsing
+        while True:
+            script = script.lstrip()
+            if not script:
+                break
+            if script.startswith('//'):
+                first = next(i for i, chr in enumerate(script) if chr in ['\n'])
+            elif script[0] in [ '"', '\'' ]:
+                first_quote = script[0]
+                first = script[1:].find(first_quote)
+                if first == -1:
+                    logging.warning("[!] Error: Invalid Tx: Missing closing quote in script")
+                    return False
+                result.append(script[:first+2])  # Include the quote
+                first += 1
+            else:
+                first = next(i for i, chr in enumerate(script) if chr in [ ' ', '\t', '\n' ])
+                result.append(script[:first])  # Don't include the whitespace
+            script = script[first+1:]
+        return result
+
     def math_operations(self, op):
         if (len(self.stack) < 2):
             logging.warning("binary math operation: Not enough arguments")
@@ -539,76 +650,6 @@ class ScriptInterpreter:
         """
             Run the script with the input and output scripts
         """
-        def split_script(script: str):
-            result = []
-            script += '\n'  # tailing newline to not get errors at the end of file parsing
-            while True:
-                script = script.lstrip()
-                if not script:
-                    break
-                if script.startswith('//'):
-                    first = next(i for i, chr in enumerate(script) if chr in ['\n'])
-                elif script[0] in [ '"', '\'' ]:
-                    first_quote = script[0]
-                    first = script[1:].find(first_quote)
-                    if first == -1:
-                        logging.warning("[!] Error: Invalid Tx: Missing closing quote in script")
-                        return False
-                    result.append(script[:first+2])  # Include the quote
-                    first += 1
-                else:
-                    first = next(i for i, chr in enumerate(script) if chr in [ ' ', '\t', '\n' ])
-                    result.append(script[:first])  # Don't include the whitespace
-                script = script[first+1:]
-            return result
-
-        def parse_numeric_item(item: str):
-            try:
-                if len(item) > 2:
-                    if item[0:3].lower() == 'k0x':
-                        return Key(unhexlify(item[3:]))
-                    if item[0:3].lower() == 'h0x':
-                        return Hash(unhexlify(item[3:]))
-                    if item[0:3].lower() == 's0x':
-                        return Signature(unhexlify(item[3:]))
-                return int(item, 0)
-            except ValueError:
-                return None
-
-        def parse_string_item(item: str):
-            quote = item[0]
-            if quote not in [ '"', '\'' ]:
-                logging.error("Could not parse: {}".format(item))
-                return False
-            closing_quote = False
-            i = 1
-            while (i < len(item)):
-                if item[i] == quote:
-                    if i+1 == len(item):
-                        closing_quote = True
-                    else:
-                        logging.error("Unescaped quote in: {}".format(item))
-                        return None
-                elif item[i] == '\\':
-                    if i+1 == len(item):
-                        logging.error("Trailing escape character in: {}".format(item))
-                        return None
-                    if item[i+1] not in [ '\\', '"' ]:
-                        logging.error("Trailing escape sequence in: {}".format(item))
-                        return None
-                    item = item[:i] + item[i+1:]  # remove the escape character & skip next
-                i += 1
-            if not closing_quote:
-                logging.error("Missing closing quote after: {}".format(item))
-                return None
-            item = item[1:-1]
-            return item
-
-        def parse_data_item(item: str):
-            if item[0] not in [ '"', '\'' ]:  # not a quoted string
-                return parse_numeric_item(item)
-            else:  # quoted string
-                return parse_string_item(item)
 
         def execute_item(item: str):
             # Check if item is data or opcode
@@ -621,7 +662,7 @@ class ScriptInterpreter:
             else:
                 # Push data onto the stack
                 logging.warning(item + " is data")
-                typed_item = parse_data_item(item)
+                typed_item = self._parse_data_item(item)
                 if typed_item is None:
                     logging.warning(item + " could not be parsed")
                     return False
@@ -631,7 +672,7 @@ class ScriptInterpreter:
         def execute(script: str):
             self.pc = 1
             self.framepointer = -1
-            self.program = split_script(script)
+            self.program = self._split_script(script)
             while self.pc <= len(self.program):
                 item = self.program[self.pc - 1] # Fetch the next item (given by the program counter)
                 logging.info("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
