@@ -659,7 +659,7 @@ class StatementIf(Statement):
     def code_gen_with_labels(self, label_loop_id, label_if_id):
         """First the else block because less code, jumping accordingly"""
         code = []
-        code_boolex = self.boolex.code_gen_with_labels(label_loop_id + 1, label_if_id)
+        code_boolex = self.boolex.code_gen_with_labels(label_loop_id, label_if_id + 1)
         code_true = self.statement.code_gen_with_labels(label_loop_id, label_if_id + 1)
 
         # Label of true block
@@ -678,7 +678,7 @@ class StatementIf(Statement):
             # The false body
             code += code_false
 
-            code.append(label_true + ":")
+        code.append(label_true + ":")
 
         code.append(label_end)
         code.append("OP_JUMP")
