@@ -55,14 +55,17 @@ class Expr(Node):
 
 class SpecialExpression(Expr):
     """ p_exprSPECIALCONSTANTS"""
-    def __init__(self,value):
+    def __init__(self,value, marm_type):
         super().__init__()
         self.value=value
+        self.marm_type = marm_type
 
     def __str__(self):
         return "[SpecialExpr: value="+str(self.value)+"]"
 
     def analyse_scope(self,scope_list, errorhandler): pass
+
+    def typecheck(self, errorhandler): pass
 
     # TODO code_gen
 
@@ -174,24 +177,27 @@ class LocalcallExpr(Expr):
 
     def typecheck(self, errorhandler):
         self.fnname.typecheck(errorhandler)
-        if type(self.fnname.marm_type) is not Proctype:
+        if type(self.fnname.marm_type) is Proctype:
+            if len(self.params) != len(self.fnname.marm_type.param_types):
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Function {} expects {} parameters but gets {}.".format(
+                                               self.fnname, len(self.fnname.marm_type.param_types), len(self.params)))
+                return
+            for i in range(0, len(self.params)):
+                param = self.params[i]
+                dparam_type = self.fnname.marm_type.param_types[i]
+                param.typecheck(errorhandler)
+                if param.marm_type != dparam_type:
+                    errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                               "Parameter {} of function  must be of type {}, got {}.".format(
+                                                   i, dparam_type, param.marm_type))
+                    self.marm_type = self.fnname.marm_type.return_type
+        else:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Trying to call expression which is not a function.")
             return
-        if len(self.params) != len(self.fnname.marm_type.param_types):
-            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Function {} expects {} parameters but gets {}.".format(
-                                           self.fnname, len(self.fnname.marm_type.param_types), len(self.params)))
-            return
-        for i in range(0, len(self.params)):
-            param = self.params[i]
-            dparam_type = self.fnname.marm_type.param_types[i]
-            param.typecheck(errorhandler)
-            if param.marm_type != dparam_type:
-                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Parameter {} of function  must be of type {}, got {}.".format(
-                                               i, dparam_type, param.marm_type))
-        self.marm_type = self.fnname.marm_type.return_type
+
+
 
     # TODO code_gen
 
@@ -227,13 +233,16 @@ class UnaryExpr(Expr):
     def typecheck(self, errorhandler):
         self.operand.typecheck(errorhandler)
         if self.op == '#':
-            pass # TODO
+            if self.operand.marm_type != 'string':
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Operator '#' expects one argument of type string")
+            self.marm_type = Typename('int')
         elif self.op == '-':
             if self.operand.marm_type != 'int':
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                            "Operator '-' expects one argument of type int.")
             else:
-                self.marm_type = 'int'
+                self.marm_type = Typename('int')
         else:
             errorhandler.registerFatal(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Typechecking failed on unknown operator {}".format(self.op))
@@ -288,10 +297,12 @@ class StructExpr(Expr):
 
     def typecheck(self, errorhandler):
         self.expr.typecheck(errorhandler)
-        if not self.expr.marm_type.has_attribute(self.ident):
+        if self.expr.marm_type.attribute_type(self.ident) is None:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Value of type {} has not attribute named {}".format(
                                            self.expr.marm_type, self.ident))
+        else:
+            self.marm_type = self.expr.marm_type.attribute_type(self.ident)
 
     def _code_gen(self):
         """TODO has not yet been decided what this should actually do"""
@@ -348,8 +359,11 @@ class Typename(Node):
         """Should not be used at all, fails on call"""
         raise NotImplementedError
 
-    def has_attribute(self, ident):
-        return False # TODO
+    def attribute_type(self, ident):
+        if self.typee == 'msg':
+            if ident == 'account':
+                return Typename('address')
+        return None # TODO
 
 
 class Translationunit(Node):
@@ -419,14 +433,13 @@ class Paramdecl(Node):
         return code
 
 
-class Proctype():
+class Proctype:
     def __init__(self, return_type, param_types):
         self.return_type = return_type
         self.param_types = param_types
 
-    def has_attribute(self, ident):
-        return False
-
+    def attribute_type(self, ident):
+        return None
 
 class Procdecl(Node):
     """ Non terminal 4 """
@@ -560,6 +573,11 @@ class StatementWhile(Statement):
         self.statement.analyse_scope(scope_list, errorhandler)
 
     def typecheck(self, errorhandler):
+        self.boolex.typecheck(errorhandler)
+        if self.boolex.marm_type != 'bool':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Condition in while statement must be of type bool, got {}.".format(
+                                           self.boolex.marm_type))
         self.statement.typecheck(errorhandler)
 
         def _code_gen(self):

@@ -182,10 +182,14 @@ def p_expr(p):
     p[0] = ast.ConstExpr(p[1], ast.Typename('int'))
     p[0].set_pos_from(p)
 
-def p_exprSPECIALCONSTANTS(p):
-    '''expr : MSG
-            |  CONTRACT '''
-    p[0] = ast.SpecialExpression(p[1])
+def p_exprSPECIALCONSTANTS_MSG(p):
+    'expr : MSG'
+    p[0] = ast.SpecialExpression(p[1], ast.Typename('msg'))
+    p[0].set_pos_from(p)
+
+def p_exprSPECIALCONSTANTS_CONTRACT(p):
+    'expr : CONTRACT'
+    p[0] = ast.SpecialExpression(p[1], ast.Typename('contract'))
     p[0].set_pos_from(p)
 
 def p_exprFUNCALL(p):
