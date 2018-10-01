@@ -115,6 +115,12 @@ class TestParserMethods(unittest.TestCase):
         """Tests whether some new features are actually implemented"""
         self.generic_test("blockchainfeatures.marm")
 
+    def test_typecheck_valid(self):
+        self.generic_test("valid_types.marm")
+
+    def test_typecheck_invalid_1(self):
+        self.generic_test("invalid_types_1.marm", False, False, 2, 0)
+
 
 if __name__ == '__main__':
     unittest.main()
