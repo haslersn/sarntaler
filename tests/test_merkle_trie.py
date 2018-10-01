@@ -8,6 +8,14 @@ def gen_key(i):
 def gen_value(i):
     return compute_hash(bytes([0, i]))
 
+empty_trie = MerkleTrie(MerkleTrieStorage())
+
+example_trie_keys = [ gen_key(i) for i in range(10) ]
+example_trie_values = [ gen_key(i) for i in range(10) ]
+example_trie = MerkleTrie(MerkleTrieStorage())
+for key, value in zip(example_trie_keys, example_trie_values):
+    example_trie = example_trie.put(key, value)
+
 def test_put_and_remove():
     key = gen_key(1)
     value = gen_value(1)
@@ -57,10 +65,7 @@ def check_serialization(trie):
     assert serialized == serialized_again
 
 def test_serialization_empty():
-    check_serialization(MerkleTrie(MerkleTrieStorage()))
+    check_serialization(empty_trie)
 
 def test_serialization_full():
-    trie = MerkleTrie(MerkleTrieStorage())
-    for i in range(10):
-        trie = trie.put(gen_key(i), gen_value(i))
-    check_serialization(trie)
+    check_serialization(example_trie)
