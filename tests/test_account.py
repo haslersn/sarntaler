@@ -19,8 +19,12 @@ def test_account_serializing():
 
 
 def test_account_storage():
-    account_with_int = Account(bytes(1), 0, "code", True, [StorageItem("test_var", int, 42)])
-    assert None == account_with_int.set_storage("nonexistent", 3)
-    assert None == account_with_int.set_storage("test_var", "invalid")
-    new_account = account_with_int.set_storage("test_var", 27)
+    account = Account(bytes(1), 0, "code", True, [StorageItem("test_var", int, 42), StorageItem("test_string", str, "init")])
+    assert None == account.set_storage("nonexistent", 3)
+    assert None == account.set_storage("test_var", "invalid")
+    new_account = account.set_storage("test_var", 27)
     assert new_account.get_storage("test_var") == 27
+    assert None == new_account.get_storage("nonexistent")
+
+    assert "init" == account.get_storage("test_string")
+    assert None == account.set_storage("test_string", 2)
