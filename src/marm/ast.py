@@ -14,6 +14,7 @@ class Node:
         self.pos_end_line = None
         self.pos_begin_col = None
         self.pos_end_col = None
+        self.marm_type = None
 
     def set_pos_from(self, p):
         (self.pos_begin_line, ignore) = p.linespan(1)
@@ -51,14 +52,17 @@ class SpecialExpression(Expr):
 
 class ConstExpr(Expr):
     """ p_expr """
-    def __init__(self, value):
+    def __init__(self, value, marm_type):
         super().__init__()
         self.value = value
+        self.marm_type = marm_type
 
     def __str__(self):
         return "[ConstExpr: value=" + str(self.value) + "]"
 
     def analyse_scope(self, scope_list, errorhandler): pass
+
+    def typecheck(self, errorhandler): pass
 
 
 class BinExpr(Expr):
@@ -76,6 +80,28 @@ class BinExpr(Expr):
         self.left.analyse_scope(scope_list, errorhandler)
         self.right.analyse_scope(scope_list, errorhandler)
 
+    def typecheck(self, errorhandler):
+        self.left.typecheck(errorhandler)
+        self.right.typecheck(errorhandler)
+        if self.op == '=':
+            if self.left.marm_type != self.right.marm_type:
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Tried to assign value of type {} to variable of type {}.".format(
+                                               self.right.marm_type, self.left.marm_type))
+            else:
+                self.marm_type = self.right.marm_type
+        elif self.op in ['+', '-', '*', '/']:
+            if self.left.marm_type != 'int':
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Left operand of {} exspects value of type int, got {}".format(
+                                               self.op, self.left.marm_type))
+            if self.right.marm_type != 'int':
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Right operand of {} exspects value of type int, got {}".format(
+                                               self.op, self.right.marm_type))
+
+
+
 class LocalcallExpr(Expr):
     def __init__(self, fnname, params):
         super().__init__()
@@ -88,6 +114,8 @@ class LocalcallExpr(Expr):
     def analyse_scope(self, scope_list, errorhandler):
         for param in self.params:
             param.analyse_scope(scope_list, errorhandler)
+
+    def typecheck(self, errorhandler): pass # TODO
 
 class UnaryExpr(Expr):
     """ p_exprUNARYEXPRESSIONS """
@@ -102,6 +130,20 @@ class UnaryExpr(Expr):
     def analyse_scope(self, scope_list, errorhandler):
         self.operand.analyse_scope(scope_list, errorhandler)
 
+    def typecheck(self, errorhandler):
+        self.operand.typecheck(errorhandler)
+        if self.op == '#':
+            pass # TODO
+        elif self.op == '-':
+            if self.operand.marm_type != 'int':
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Operator '-' expects one argument of type int.")
+            else:
+                self.marm_type = 'int'
+        else:
+            errorhandler.registerFatal(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Typechecking failed on unknown operator {}".format(self.op))
+
 
 class LHSExpr(Expr):
     """ p_exprLHS """
@@ -114,6 +156,9 @@ class LHSExpr(Expr):
 
     def analyse_scope(self, scope_list, errorhandler):
         self.lhs.analyse_scope(scope_list, errorhandler)
+
+    def typecheck(self, errorhandler):
+        self.lhs.typecheck(errorhandler)
 
 
 class StructExpr(Expr):
@@ -129,6 +174,10 @@ class StructExpr(Expr):
     def analyse_scope(self, scope_list, errorhandler):
         self.expr.analyse_scope(scope_list,errorhandler)
         # TODO: Attributes?
+
+    def typecheck(self, errorhandler):
+        self.expr.typecheck(errorhandler)
+        pass # TODO
 
 
 class LHS(Node):
@@ -146,6 +195,8 @@ class LHS(Node):
         self.definition = scope_lookup(scope_list, self.ident)
         self.lenv_depth = len(scope_list)
 
+    def typecheck(self, errorhandler):
+        self.marm_type = self.definition.get_marm_type_for(self.ident)
 
 class Typename(Node):
     """ Non terminal 18 """
@@ -171,6 +222,10 @@ class Translationunit(Node):
         for proc in self.procs:
             proc.analyse_scope(local_scope_list, errorhandler)
 
+    def typecheck(self, errorhandler):
+        for proc in self.procs:
+            proc.typecheck(errorhandler)
+
 
 class Paramdecl(Node):
     """ Non terminal 3 """
@@ -192,6 +247,13 @@ class Paramdecl(Node):
         self.lenv_depth = len(scope_list)
         scope_list[0][self.name] = self
 
+    def typecheck(self, errorhandler):
+        self.marm_type = self.param_type.typee
+
+    def get_marm_type_for(self, ident):
+        assert(ident == self.name)
+        return self.param_type.typee
+
 
 class Procdecl(Node):
     """ Non terminal 4 """
@@ -212,6 +274,11 @@ class Procdecl(Node):
             param.analyse_scope(local_scope_list, errorhandler)
         for statement in self.body:
             statement.analyse_scope(local_scope_list, errorhandler)
+
+    def typecheck(self, errorhandler):
+        for statement in self.body:
+            statement.typecheck(errorhandler)
+
 
 class Statement(Node):
     """ Non terminal 12 """
@@ -245,6 +312,11 @@ class StatementDecl(Statement):
             self.local_var_indices[decl] = len(scope_list[0])
             scope_list[0][decl] = self
 
+    def get_marm_type_for(self, ident):
+        return self.typee
+
+    def typecheck(self, errorhandler): pass
+
 
 class StatementReturn(Statement):
     """ p_statementRETURN """
@@ -258,6 +330,10 @@ class StatementReturn(Statement):
 
     def analyse_scope(self, scope_list, errorhandler):
         self.return_value.analyse_scope(scope_list, errorhandler)
+
+    def typecheck(self, errorhandler):
+        self.return_value.typecheck(errorhandler)
+        # TODO
 
 
 class StatementWhile(Statement):
@@ -273,6 +349,9 @@ class StatementWhile(Statement):
     def analyse_scope(self, scope_list, errorhandler):
         self.boolex.analyse_scope(scope_list, errorhandler)
         self.statement.analyse_scope(scope_list, errorhandler)
+
+    def typecheck(self, errorhandler):
+        self.statement.typecheck(errorhandler)
 
 
 class StatementIf(Statement):
@@ -292,6 +371,14 @@ class StatementIf(Statement):
         if not (self.elseprod is None):
             self.elseprod.analyse_scope(scope_list, errorhandler)
 
+    def typecheck(self, errorhandler):
+        self.boolex.typecheck(errorhandler)
+        if self.boolex.marm_type != 'bool':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Condition in an if statement must be of type bool.")
+        self.statement.typecheck(errorhandler)
+        self.statement.typecheck(errorhandler)
+
 
 class StatementExpression(Statement):
     """ p_statementEXPRESSIONSTATEMENT """
@@ -304,6 +391,9 @@ class StatementExpression(Statement):
 
     def analyse_scope(self, scope_list, errorhandler):
         self.expr.analyse_scope(scope_list, errorhandler)
+
+    def typecheck(self, errorhandler):
+        self.expr.typecheck(errorhandler)
 
 
 class StatementBody(Statement):
@@ -320,6 +410,10 @@ class StatementBody(Statement):
         for statement in self.body:
             statement.analyse_scope(local_scope_list, errorhandler)
 
+    def typecheck(self, errorhandler):
+        for statement in self.body:
+            statement.typecheck(statement)
+
 
 class StatementBreak(Statement):
     """ p_statementBREAK """
@@ -332,6 +426,8 @@ class StatementBreak(Statement):
 
     def analyse_scope(self, scope_list, errorhandler): pass
 
+    def typecheck(self, errorhandler): pass
+
 
 class StatementContinue(Statement):
     """ p_statementCONTINUE """
@@ -343,6 +439,8 @@ class StatementContinue(Statement):
         return "[StatementContinue]"
 
     def analyse_scope(self, scope_list, errorhandler): pass
+
+    def typecheck(self, errorhandler): pass
 
 
 class Boolex(Node):
@@ -369,6 +467,16 @@ class BoolexCMP(Boolex):
         self.left.analyse_scope(scope_list, errorhandler)
         self.right.analyse_scope(scope_list, errorhandler)
 
+    def typecheck(self, errorhandler):
+        self.left.typecheck(errorhandler)
+        self.right.typecheck(errorhandler)
+        if self.left.marm_type != self.right.marm_type:
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Trying to compare values of types {} and {}.".format(
+                                           self.left.marm_type, self.right.marm_type))
+        # TODO
+        self.marm_type = 'bool'
+
 
 class BoolexBinary(Boolex):
     """ p_boolexBINARY """
@@ -384,6 +492,19 @@ class BoolexBinary(Boolex):
         self.left.analyse_scope(scope_list, errorhandler)
         self.right.analyse_scope(scope_list, errorhandler)
 
+    def typecheck(self, errorhandler):
+        self.left.typecheck(errorhandler)
+        if self.left.marm_type != 'bool':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Left operand of {} must be of type bool.".format(
+                                           self.op))
+        self.right.typecheck(errorhandler)
+        if self.right.marm_type != 'bool':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Right operand of {} must be of type bool.".format(
+                                           self.op))
+        self.marm_type = 'bool'
+
 
 class BoolexNot(Boolex):
     """ p_boolexUNARY """
@@ -397,3 +518,9 @@ class BoolexNot(Boolex):
     def analyse_scope(self, scope_list, errorhandler):
         self.operand.analyse_scope(scope_list, errorhandler)
 
+    def typecheck(self, errorhandler):
+        self.operand.typecheck(errorhandler)
+        if self.operand.marm_type != 'bool':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Operand of '!' needs to be of type bool.")
+        self.marm_type = 'bool'

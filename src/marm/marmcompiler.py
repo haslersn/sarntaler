@@ -120,6 +120,7 @@ class ErrorHandler:
     def __str__(self):
         return self.tostring(False)
 
+marmcompiler_stages = ['lex', 'parse', 'analyse_scope', 'typecheck']
 def marmcompiler(filename, input, errorhandler=None, stages=None):
     from src.marm.parser import marmparser,ParserError
     #yacc = yacc.yacc()
@@ -143,6 +144,9 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
         elif stage == 'analyse_scope':
             assert('parse' in completed_stages)
             result.analyse_scope([], errorhandler)
+        elif stage == 'typecheck':
+            assert('analyse_scope' in completed_stages)
+            result.typecheck(errorhandler)
 
         if errorhandler.roughlyOk():
             completed_stages.append(stage)
@@ -192,11 +196,12 @@ if __name__ == "__main__":
                         help="Input file. Defaults to stdin")
     parser.add_argument('--output', type=argparse.FileType('w'), default=sys.stdout,
                         help="Output file. Defaults to stdout")
-    parser.add_argument('--output-format', choices=['json', 'str', 'list_str'], default='json',
+    parser.add_argument('--output-format',
+                        choices=['json', 'str', 'list_str'],
+                        default='json',
                         help="Format used for output. Defaults to json")
-    parser.add_argument('--stages', choices=['lex', 'parse', 'analyse_scope'],
-                        nargs='*',
-                        default=None,
+    parser.add_argument('--stages', choices=marmcompiler_stages,
+                        nargs='*', default=None,
                         help="Compiler stages to be run, in order. Defaults to all.")
     args = parser.parse_args()
 
