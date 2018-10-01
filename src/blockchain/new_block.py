@@ -1,32 +1,154 @@
+from binascii import hexlify, unhexlify
+import time
+import json
+from typing import List
 
-
+from src.blockchain.new_transaction import *
+from src.blockchain.account import *
+from src.blockchain.crypto import *
+from src.blockchain.merkle_trie import *
 class Block:
-
-    def __init__(self, prev_block_hash, time, nonce, height, received_time, target, transactions, tx_root_hash, id=None):
-        """ This is not meant to be called from the outside, but by create()!  """
-        self.id = id
-        self.prev_block_hash = prev_block_hash
-        self.time = time
-        self.height = height
-        self.received_time = received_time
-        self.target = target
-        self.transactions = transactions
-        self.mpt_root_hash = mpt_root_hash
-        self.id = id
-        self._hash = _get_hash()
+    _dict = dict()
 
     @classmethod
-    def create(cls, chain_difficulty: int, prev_block: 'Block', transactions: List[Transaction], ts=None):
-        # verify and execute transactions
-        state_trie = self.verify_txs(prev_block.state_trie) # TODO TODO TODO !!!
-        # and build new merkle-patricia transaction tree tree
-        tx_trie = MerkleTrie()
+    def get_from_hash(cls, hash: bytes):
+        if hash in cls._dict:
+            return cls._dict[hash]
+        else:
+            return None
+
+    def __new__(cls, skeleton: 'BlockSkeleton', nonce: bytes):
+        target = (2**256 // skeleton._difficulty).to_bytes(32, 'big')
+        to_hash = skeleton.hash + nonce
+        hash = compute_hash(to_hash)
+        if hash > target:
+            raise ValueError("Tried to create block, that doesn't fulfill the difficulty")
+
+        if hash in cls._dict:
+            return cls._dict[hash]
+
+        constructed = super().__new__(cls)
+        constructed._skeleton = skeleton
+        constructed._nonce = nonce
+        constructed._hash = hash
+        cls._dict[hash] = constructed
+        return constructed
+
+    @property
+    def skeleton(self):
+        return self._skeleton
+
+    @property
+    def nonce(self):
+        return self._nonce
+
+    @property
+    def hash(self):
+        return self._hash
+
+    def to_json_compatible(self):
+        var = {}
+        var['skeleton'] = skeleton.to_json_compatible()
+        var['nonce'] = hexlify(nonce).decode()
+        return var
+
+    @classmethod
+    def from_json_compatible(cls, var: dict, transactions: List[Transaction]):
+        skeleton = Skeleton.from_json_compatible(var['skeleton'], transactions)
+        nonce = unhexlify(var['nonce'])
+        return cls(skeleton, nonce)
+
+
+class BlockSkeleton: # contains everything a block needs except for a valid nonce
+
+    def __new__(cls, prev_block: 'Block', transactions: List[Transaction], miner_address: Account, timestamp = None):
+        miner_address == bytes(32) or check_is_hash(miner_address)
+
+        if timestamp is None:
+            timestamp = time.time()
+
+        # sort transactions
+        transactions = sorted(transactions, key = lambda tx: tx.hash)
+
+        # merkle tries
+        state_trie = MerkleTrie(MerkleTrieStorage()) if prev_block is None else prev_block.skeleton.state_trie
+        tx_trie = MerkleTrie(MerkleTrieStorage())
         for tx in transactions:
-            trie = trie.put(tx.hash, tx.hash)
-        id = prev_block.height + 1
-        if ts is None: # ts = timestamp
-            ts = datetime.utcnow()
-        if ts <= prev_block.time:
-            ts = prev_block..time + timedelta(microseconds=1)
-        return Block(   prev_block_hash, ts, 0, prev_block.height + 1, None,
-                        chain_difficulty, transactions, tx_trie.hash, id)
+            state_trie = transit(state, tx, miner_address)
+            tx_trie = tx_trie.put(tx.hash, tx.hash)
+            if state_trie is None:
+                raise ValueError('Invalid transaction')
+
+        prev_accumulated_difficulty = 0 if prev_block is None else prev_block.skeleton.accumulated_difficulty
+
+        constructed = super().__new__(cls)
+        constructed._prev_block_hash = bytes(32) if prev_block is None else prev_block.hash
+        constructed._timestamp = timestamp
+        constructed._height = 1 if prev_block is None else prev_block.skeleton.height + 1
+        constructed._difficulty = 1000 # TODO: protocol rule
+        constructed._accumulated_difficulty = constructed._difficulty + prev_accumulated_difficulty
+        constructed._miner_address = miner_address
+        constructed._state_trie = state_trie
+        constructed._tx_trie = tx_trie
+        return constructed
+
+    @property
+    def prev_block(self):
+        return Block.get_from_hash(self._prev_block_hash)
+
+    @property
+    def timestamp(self):
+        return self._timestamp
+
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def difficulty(self):
+        return self._difficulty
+
+    @property
+    def accumulated_difficulty(self):
+        return self._accumulated_difficulty
+
+    @property
+    def state_trie(self):
+        return self._state_trie
+
+    @property
+    def tx_trie(self):
+        return self._tx_trie
+
+    @property
+    def hash(self):
+        return compute_hash(json.dumps(self.to_json_compatible()).encode())
+
+    def to_json_compatible(self):
+        var = {}
+        var['prev_block_hash'] = None if self.prev_block is None else hexlify(self.prev_block.hash).decode()
+        var['timestamp'] = self.timestamp
+        var['height'] = self.height
+        var['difficulty'] = self.difficulty
+        var['state_root'] = hexlify(self.state_trie.hash).decode()
+        var['tx_root'] = hexlify(self.tx_trie.hash).decode()
+        return var
+
+    @classmethod
+    def from_json_compatible(cls, var: dict, transactions: List[Transaction]):
+        # prev_block
+        prev_block_hash = var['prev_block_hash']
+        if prev_block_hash is None:
+            prev_block = None
+        else:
+            prev_block = Block.get_from_hash(prev_block_hash)
+            if prev_block is None:
+                raise ValueError('Previous block does not exist')
+
+        miner_address = val['miner_address']
+        timestamp = val['timestamp']
+
+        skeleton = BlockSkeleton(prev_block, transactions, miner_address, timestamp)
+        if skeleton.to_json_compatible() != val:
+            raise ValueError('Block verification failed')
+        return skeleton
