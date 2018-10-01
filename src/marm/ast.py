@@ -112,14 +112,30 @@ class LocalcallExpr(Expr):
         return "[LocalcallExpr: fnname={}, params={}]".format(self.fnname,self.liststr(self.params))
 
     def analyse_scope(self, scope_list, errorhandler):
-        self.definition = scope_lookup(scope_list, "fn#"+self.fnname)
-        if self.definition is None:
-            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Calling undefined function '{}'".format(self.fnname))
+        self.fnname.analyse_scope(scope_list, errorhandler)
         for param in self.params:
             param.analyse_scope(scope_list, errorhandler)
 
-    def typecheck(self, errorhandler): pass # TODO
+    def typecheck(self, errorhandler):
+        self.fnname.typecheck(errorhandler)
+        if type(self.fnname.marm_type) is not Proctype:
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Trying to call expression which is not a function.")
+            return
+        if len(self.params) != len(self.fnname.marm_type.param_types):
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Function {} expects {} parameters but gets {}.".format(
+                                           self.fnname, len(self.fnname.marm_type.param_types), len(self.params)))
+            return
+        for i in range(0, len(self.params)):
+            param = self.params[i]
+            dparam_type = self.fnname.marm_type.param_types[i]
+            param.typecheck(errorhandler)
+            if param.marm_type != dparam_type:
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Parameter {} of function  must be of type {}, got {}.".format(
+                                               i, dparam_type, param.marm_type))
+        self.marm_type = self.fnname.marm_type.return_type
 
 class UnaryExpr(Expr):
     """ p_exprUNARYEXPRESSIONS """
@@ -224,11 +240,13 @@ class Translationunit(Node):
     def analyse_scope(self, scope_list=[], errorhandler=None):
         local_scope_list = [{}]+scope_list
         for proc in self.procs:
-            local_scope_list[0]["fn#"+proc.name] = proc
+            local_scope_list[0][proc.name] = proc
         for proc in self.procs:
             proc.analyse_scope(local_scope_list, errorhandler)
 
     def typecheck(self, errorhandler):
+        for proc in self.procs:
+            proc.set_global_definition_types(errorhandler)
         for proc in self.procs:
             proc.typecheck(errorhandler)
 
@@ -241,6 +259,7 @@ class Paramdecl(Node):
         self.name = name
         self.local_var_index = None
         self.lenv_depth = None
+        self.marm_type = self.param_type.typee
 
     def __str__(self):
         return "[Paramdecl: param_type=" + str(self.param_type) + ", name=" + str(self.name) + "]"
@@ -253,13 +272,16 @@ class Paramdecl(Node):
         self.lenv_depth = len(scope_list)
         scope_list[0][self.name] = self
 
-    def typecheck(self, errorhandler):
-        self.marm_type = self.param_type.typee
+    def typecheck(self, errorhandler): pass
 
     def get_marm_type_for(self, ident):
         assert(ident == self.name)
         return self.param_type.typee
 
+class Proctype():
+    def __init__(self, return_type, param_types):
+        self.return_type = return_type
+        self.param_types = param_types
 
 class Procdecl(Node):
     """ Non terminal 4 """
@@ -280,6 +302,17 @@ class Procdecl(Node):
             param.analyse_scope(local_scope_list, errorhandler)
         for statement in self.body:
             statement.analyse_scope(local_scope_list, errorhandler)
+
+    def get_marm_type_for(self, ident):
+        assert(self.name == ident)
+        return self.marm_type
+
+    def set_global_definition_types(self, errorhandler):
+        param_types = []
+        for param in self.params:
+            param.typecheck(errorhandler)
+            param_types.append(param.marm_type)
+        self.marm_type = Proctype(self.return_type, param_types)
 
     def typecheck(self, errorhandler):
         for statement in self.body:
