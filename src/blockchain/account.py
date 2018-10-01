@@ -1,16 +1,44 @@
 import json
 from binascii import hexlify, unhexlify
-from pydoc import locate
+from src.blockchain.crypto import is_hash
 from typing import List
 import logging
 
 from src.blockchain.crypto import compute_hash
 from collections import namedtuple
 
-# TODO add mapping for types to support Hashes, Signatures, ...
+
+def check_int_type(value: int):
+    return type(value) == int
+
+
+def check_str_type(value: str):
+    return type(value) == str
+
+
+def check_hash_type(value: bytes):
+    return is_hash(value)
+
+
+def check_address_type(value: bytes):
+    return is_hash(value)
+
+
+def check_signature_type(value: bytes):  # TODO length
+    return type(value) == bytes
+
+
+def check_key_type(value: bytes):  # TODO length
+    return type(value) == bytes
+
+
 class StorageItem(namedtuple("StorageItem", ["s_name", "s_type", "s_value"])):
-    def __new__(cls, s_name: str, s_type: type, s_value: object):
-        if type(s_value) != s_type:
+    _supported_types = {'int': check_int_type, 'str': check_str_type, 'hash': check_hash_type,
+                        'address': check_address_type, 'signature': check_signature_type,
+                        'key': check_key_type}
+
+    def __new__(cls, s_name: str, s_type: str, s_value: object):
+        if not cls._supported_types[s_type](s_value):
             logging.warning("invalid initialization for " + s_name)
             return None
         return super().__new__(cls, s_name, s_type, s_value)
@@ -19,18 +47,17 @@ class StorageItem(namedtuple("StorageItem", ["s_name", "s_type", "s_value"])):
         """ Returns a JSON-serializable representation of this object. """
         val = {}
         val["s_name"] = self.s_name
-        val["s_type"] = self.s_type.__name__
+        val["s_type"] = self.s_type
         val["s_value"] = self.s_value
         return val
 
     @classmethod
     def from_json_compatible(cls, val):
         """ Create a new StorageItem from its JSON-serializable representation. """
-        s_type = locate(val['s_type'])  # gets type from serialized string
-        return cls(val["s_name"], s_type, val["s_value"])
+        return cls(val["s_name"], val['s_type'], val["s_value"])
 
     def set_value(self, var_name: str, var_value: object):
-        if self.s_name != var_name or self.s_type != type(var_value):
+        if self.s_name != var_name or not self._supported_types[self.s_type](var_value):
             logging.warning("can't set storage for variable " + var_name)
             return None
         return StorageItem(var_name, self.s_type, var_value)
@@ -101,12 +128,15 @@ class Account(namedtuple("Account", ["pub_key", "balance", "code", "owner_access
     def set_storage(self, var_name: str, var_value: object):
         # you can set new values for existing variables with the correct type
         find_item = list(
-            filter(lambda storage_item: storage_item.s_name == var_name and storage_item.s_type == type(var_value),
-                   self.storage))
+            filter(lambda storage_item: storage_item.s_name == var_name and StorageItem._supported_types[
+                storage_item.s_type](var_value), self.storage))
         if not find_item or len(find_item) != 1:
             logging.warning("can't set storage for variable " + var_name)
             return None
         new_item = find_item[0].set_value(var_name, var_value)
+        if new_item == None:
+            logging.warning("can't set storage for variable " + var_name)
+            return None
         new_storage = self.storage + [new_item]
         new_storage.remove(find_item[0])
         return Account(self.pub_key, self.balance, self.code, self.owner_access, new_storage)

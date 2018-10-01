@@ -4,7 +4,7 @@ from src.blockchain.account import Account, StorageItem
 
 
 def test_account_serializing():
-    storage = StorageItem("var", str, "value")
+    storage = StorageItem("var", "str", "value")
     account = Account(bytes(1), 0, "code", True, [storage])
     jsonstr = json.dumps(account.to_json_compatible())
     print(jsonstr)
@@ -19,7 +19,7 @@ def test_account_serializing():
 
 
 def test_account_storage():
-    account = Account(bytes(1), 0, "code", True, [StorageItem("test_var", int, 42), StorageItem("test_string", str, "init")])
+    account = Account(bytes(1), 0, "code", True, [StorageItem("test_var", "int", 42), StorageItem("test_string", "str", "init")])
     assert None == account.set_storage("nonexistent", 3)
     assert None == account.set_storage("test_var", "invalid")
     new_account = account.set_storage("test_var", 27)
@@ -29,4 +29,4 @@ def test_account_storage():
     assert "init" == account.get_storage("test_string")
     assert None == account.set_storage("test_string", 2)
 
-    assert None == Account(bytes(1), 0, "code", True, [StorageItem("test_var", int, "not an int"), StorageItem("test_string", str, "init")])
+    assert None == Account(bytes(1), 0, "code", True, [StorageItem("test_var", "int", "not an int"), StorageItem("test_string", "str", "init")])
