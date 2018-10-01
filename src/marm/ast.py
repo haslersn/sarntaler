@@ -200,6 +200,9 @@ class LocalcallExpr(Expr):
             code+=param.code_gen()
         code+=code_methodid
         code.append("OP_CALL")
+        #TODO extract result from stack
+        for param in self.params:#[::-1]:
+            code.append("OP_POPVOID")
         code.append("// WARNING: We assume a call to be a contract-local call")
         return code
     # TODO code_gen
