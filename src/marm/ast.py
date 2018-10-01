@@ -99,6 +99,7 @@ class BinExpr(Expr):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                            "Right operand of {} exspects value of type int, got {}".format(
                                                self.op, self.right.marm_type))
+            self.marm_type = 'int'
 
 
 
@@ -365,7 +366,7 @@ class StatementDecl(Statement):
             scope_list[0][decl] = self
 
     def get_marm_type_for(self, ident):
-        return self.typee
+        return self.typee.typee
 
     def typecheck(self, errorhandler): pass
 
