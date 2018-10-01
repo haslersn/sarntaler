@@ -105,6 +105,16 @@ class TestParserMethods(unittest.TestCase):
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
+    def test_parse_file_test_for_behaviour(self):
+        """Tests whether some parsable structure results in defined behaviour"""
+        errorhandler = marmcompiler.ErrorHandler()
+        try:
+            with open(os.path.join(self.testdir, "absurd_tests.marm"), mode='r') as testfile:
+                marmcompiler.marmcompiler("absurd_tests.marm", testfile.read(), errorhandler=errorhandler)
+                self.assertTrue(errorhandler.cleanCode())
+        except IOError as e:
+            self.fail(msg="File error: " + str(e))
+
 
 if __name__ == '__main__':
     unittest.main()

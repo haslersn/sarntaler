@@ -6,7 +6,7 @@ class Node:
         self.classname = self.__class__.__name__
 
     def liststr(self, param):
-        return "[{}]".format(", ".join(map(str,param)))
+        return "[{}]".format(", ".join(map(str, param)))
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
@@ -134,6 +134,12 @@ class StructExpr(Expr):
 
     def __str__(self):
         return "[StructExpr: expr=" + str(self.expr) + ", ident=" + str(self.ident) + "]"
+
+    def code_gen(self):
+        """pushes the address of the identifier stored in the lhs"""
+        code = []
+
+        return code
 
 
 class LHS(Node):
