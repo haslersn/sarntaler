@@ -188,7 +188,7 @@ def p_exprlist(p):
         p[3].append(p[1])
         p[0] = p[3]
     else:
-        p[0] = []
+        p[0] = [p[1]]
 
 def p_exprBINARYEXPRESSIONS(p):
     '''expr : expr ASSIGN expr
