@@ -356,16 +356,16 @@ class LHS(Node):
     def code_gen(self):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
-        ident_addr = 2+self.definition.get_local_index_for(self.ident)
-        code.append(ident_addr)
+        ident_addr = self.definition.get_local_index_for(self.ident)
+        code.append(str(ident_addr) + " // address of local "+self.ident)
         code.append('OP_PUSHR')
         return code
 
     def code_gen_LHS(self):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
-        ident_addr = 2+self.definition.get_local_index_for(self.ident)
-        code.append(ident_addr)
+        ident_addr = self.definition.get_local_index_for(self.ident)
+        code.append(str(ident_addr) + " // address of local "+self.ident)
         return code
 
 
@@ -456,7 +456,7 @@ class Paramdecl(Node):
         return self.param_type
 
     def get_local_index_for(self, ident):
-        return -2-self.param_index # TODO: calling convention
+        return (-2)-self.param_index # TODO: calling convention
 
     def code_gen(self):
         """Insert the identifier in the symboltable(?) and or do nothing I guess"""
@@ -558,7 +558,7 @@ class StatementDecl(Statement):
     def get_marm_type_for(self, ident):
         return self.typee
     def get_local_index_for(self, ident):
-        return self.local_var_indices[ident]
+        return 2 + self.local_var_indices[ident]
 
     def typecheck(self, errorhandler): pass
 
@@ -567,7 +567,7 @@ class StatementDecl(Statement):
         code = []
         for i in range(0, len(self.decllist)):
             if isinstance(self.decllist[i], str):
-                code+=[str(self.init_values[i]) + ' //decl '+self.decllist[i]]
+                code+=[str(self.init_values[i]) + ' // decl '+self.decllist[i]]
             else:
                 code += self.decllist[i].code_gen()
         return code
