@@ -24,6 +24,9 @@ tokens = ['IDENT',
           'ADDRESSVALUE',
           'ASSIGN',
           'INTCONST',
+          'COMMENT',
+          'WHITESPACE',
+          'NEWLINE',
           'ADDOP', 'SUBOP', 'MULOP', 'DIVOP',
           'HASH', 'DOT', 'NOT', 'EQ', 'AND', 'OR', 'NEQ', 'GT', 'LT', 'GEQ', 'LEQ',
           'LPAR', 'RPAR'] + list(keywords.values())
@@ -32,7 +35,10 @@ tokens = ['IDENT',
 def t_COMMENT(t):
     r'(\/\*([^*]|\* + [^*\/])*\*+\/)|(\/\/[^\r\n]*)'
     #r'(\/\*([^*]|\* + [^*\/])*\*+\/)|(\/\/[^\r\n]*(\r|\n|\r\n)?)'
-    pass
+    if t.lexer.returnWhitespaces:
+        return t
+    else:
+        pass
 
 
 # Token definitions
@@ -114,13 +120,25 @@ t_LPAR = r'\('
 t_RPAR = r'\)'
 
 # Ignore whitespace
-t_ignore = " \t"
+#t_ignore = " \t"
+def t_whitespace(t):
+    r'[ \t]'
+    if t.lexer.returnWhitespaces:
+        t.type = keywords.get(t.value, 'WHITESPACE')
+        return t
+    else:
+        pass
 
 
 # Track line numbers for better error messages
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
+    if t.lexer.returnWhitespaces:
+        t.type = keywords.get(t.value, 'NEWLINE')
+        return t
+    else:
+        pass
 
 
 # Helper function to calculate the current column number
@@ -149,10 +167,11 @@ class LexerError(RuntimeError):
 ## error handler
 def t_error(t):
     #raise LexerError(t)
-    t.lexer.errorhandler.registerError(t.lexer.filename,
+    t.lexer.errorhandler.registerError(
+            t.lexer.filename,
             t.lexer.lineno,
             column_number(t),
-            ("lexical error: invalid character %s" % (t.value[0]))
+            "lexical error: invalid character {}".format(t.value[0])
             )
 
     t.lexer.skip(1)
@@ -160,22 +179,15 @@ def t_error(t):
 # Generate lexer
 import ply.lex as lex
 
+def marmlexer(filename,errorhandler,returnWhitespaces=False):
+    locallexer = lex.lex()
+    locallexer.filename = filename
+    locallexer.errorhandler = errorhandler
+    locallexer.returnWhitespaces=returnWhitespaces
+    return locallexer
+
+
 lexer = lex.lex()
-
-def marmlexer(filename,input,errorhandler):
-    lexer.filename=filename
-    lexer.errorhandler=errorhandler
-    lexer.input(input)
-
-    tokens = []
-    token = lexer.token()
-    while not (token is None):
-        tokens.append(token)
-        token=lexer.token()
-
-    return tokens
-
-
 # Main for Debugging/Testing
 if __name__ == "__main__":
     # Parse Arguments

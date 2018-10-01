@@ -1,3 +1,4 @@
+from colorama import Fore,Back
 
 class ErrorHandler:
     """ ErrorHandler for registering and querying all sorts of errors during compilation """
@@ -6,21 +7,49 @@ class ErrorHandler:
         self.warnings = []
         self.errors = []
         self.fatals = []
+        self.idx = {}
+
+    class error_iter:
+        def __init__(self,ehandler):
+            self.values=sorted(ehandler.idx.keys())
+            self.ehandler=ehandler
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            if len(self.values)==0:
+                raise StopIteration()
+            else:
+                value = self.values[0]
+                self.values=self.values[1:]
+                return (self.ehandler.idx[value])
+
+    def __iter__(self):
+        eiter = self.error_iter(self)
+        return eiter
+
 
     def registerWarning(self,filename, line, col, message):
-        self.warnings.append((filename,line,col,message))
+        warning = (filename,line,col,message)
+        self.warnings.append(warning)
+        self.idx[(warning[1],warning[2])]=warning
 
     def countWarnings(self):
         return len(self.warnings)
 
     def registerError(self,filename, line, col, message):
-        self.errors.append((filename,line,col,message))
+        error = (filename,line,col,message)
+        self.errors.append(error)
+        self.idx[(error[1],error[2])]=error
     
     def countErrors(self):
         return len(self.errors)
-    
+
     def registerFatal(self,filename, line, col, message):
-        self.fatals.append((filename,line,col,message))
+        fatal=(filename,line,col,message)
+        self.fatals.append(fatal)
+        self.idx[(fatal[1],fatal[2])]=fatal
 
     def countFatals(self):
         return len(self.fatals)
@@ -31,15 +60,65 @@ class ErrorHandler:
     def cleanCode(self):
         return self.countFatals()+self.countErrors()+self.countWarnings()==0
 
-    def __str__(self):
+    def to_explanation(self,input):
+        e_iter = iter(self)
+        try:
+            currenterror = e_iter.__next__()
+        except:
+            currenterror = ('',0,0,'')
+        from src.marm.lexer import marmlexer
+        from src.marm.lexer import keywords
+        mylexer = marmlexer('',ErrorHandler(),True)
+        mylexer.input(input)
+        token = mylexer.token()
+        output='  1 '
+        linecounter=2
+        while not (token is None):
+            if token.type=='IDENT':
+                output+=Fore.YELLOW 
+            if token.type=='INTCONST':
+                output+=Fore.RED 
+            if token.type=='COMMENT':
+                output+=Fore.GREEN
+            if token.type in keywords.values():
+                output+=Fore.CYAN
+            output+= str(token.value)+Fore.RESET
+            if token.type=='NEWLINE':
+                while linecounter-1==currenterror[1]:
+                    col=0
+                    output+='   '
+                    while col<currenterror[2]:
+                        col+=1
+                        output+=' '
+                    output+='^\n   '+Fore.RED+currenterror[3]+Fore.RESET+'\n'
+                    try:
+                        currenterror=e_iter.__next__()
+                    except:
+                        break
+                      
+                output+="{:3} ".format(linecounter)
+                linecounter+=1
+            token = mylexer.token()
+        return output
+
+
+    def tostring(self,color=True):
         retstring = ''
+        if color==True:
+            formatstring=Back.BLACK+Fore.LIGHTYELLOW_EX+"{}:{}.{}: "+Back.RESET+Fore.RED
+        else:
+            formatstring="{}:{}.{}: "
         for f in self.fatals:
-            retstring += "{}:{}.{}: {}\n".format( f[0], f[1], f[2], f[3] )
+            retstring += (formatstring+"{}\n").format( f[0], f[1], f[2], f[3] )
         for e in self.errors:
-            retstring += "{}:{}.{}: {}\n".format( e[0], e[1], e[2], e[3] )
+            retstring += (formatstring+"{}\n").format( e[0], e[1], e[2], e[3] )
         for w in self.warnings :
-            retstring += "{}:{}.{}: {}\n".format( w[0], w[1], w[2], w[3] )
+            retstring += (formatstring+"{}\n").format( w[0], w[1], w[2], w[3] )
+        if color==True:
+            retstring+=Fore.RESET
         return retstring
+    def __str__(self):
+        return self.tostring(False)
 
 def marmcompiler(filename, input, errorhandler=None, stages=None):
     from src.marm.parser import marmparser,ParserError
@@ -68,12 +147,41 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
         if errorhandler.roughlyOk():
             completed_stages.append(stage)
         else:
-            print(errorhandler)
+            print(coloring(input))
+            print(errorhandler.tostring())
+            print(errorhandler.to_explanation(input))
             print("Errors occured during {}.".format(stage))
             return None
 
+    print(coloring(input))
+    print(errorhandler.tostring())
+    print(errorhandler.to_explanation(input))
+
     return result
 
+def coloring(input):
+    from src.marm.lexer import marmlexer
+    from src.marm.lexer import keywords
+    mylexer = marmlexer('',ErrorHandler(),True)
+    mylexer.input(input)
+    token = mylexer.token()
+    output='  1 '
+    linecounter=2
+    while not (token is None):
+        if token.type=='IDENT':
+            output+=Fore.YELLOW 
+        if token.type=='INTCONST':
+            output+=Fore.RED 
+        if token.type=='COMMENT':
+            output+=Fore.GREEN
+        if token.type in keywords.values():
+            output+=Fore.CYAN
+        output+= str(token.value)+Fore.RESET
+        if token.type=='NEWLINE':
+            output+="{:3} ".format(linecounter)
+            linecounter+=1
+        token = mylexer.token()
+    return output
 
 if __name__ == "__main__":
     # Parse Arguments
@@ -92,7 +200,9 @@ if __name__ == "__main__":
                         help="Compiler stages to be run, in order. Defaults to all.")
     args = parser.parse_args()
 
-    result = marmcompiler(args.input.name, args.input.read(), None, args.stages)
+    myinput = args.input.read()
+
+    result = marmcompiler(args.input.name, myinput, None, args.stages)
 
     if result is None:
         print("No result produced.")

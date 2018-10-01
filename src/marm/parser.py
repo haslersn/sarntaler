@@ -1,4 +1,5 @@
 from src.marm import ast as ast
+from src.marm.lexer import marmlexer
 import ply.yacc as yacc
 
 precedence = (
@@ -35,7 +36,7 @@ def p_procdeclERROR(p):
     '''procdecl : error END
                 | LPAR paramlistopt RPAR statementlistOPT
                 | error statementlistOPT'''
-    print('hi')
+    None
 
 def p_statementlistOPT_body(p):
     'statementlistOPT : body'
@@ -280,23 +281,24 @@ def p_error(t):
         raise EofError()
     else:
         from src.marm.lexer import column_number
+        action_str = ' '.join([s for s in yacc.action[yacc.state]])
         yacc.errorhandler.registerError(yacc.filename,
             t.lexer.lineno,
             column_number(t),
-            ("syntax error: unexpected token %s:%s" % (t.type,t.value))
+            ("syntax error: unexpected token %s:%s, instead expected one of [%s]" % (t.type,t.value,action_str))
             )
             
 
-from src.marm.lexer import lexer, tokens
+from src.marm.lexer import marmlexer, tokens
 # Generate parser
 yacc = yacc.yacc()
 
 def marmparser(filename,input,errorhandler):
-    lexer.filename=filename
-    lexer.errorhandler=errorhandler
+    mylexer = marmlexer(filename,errorhandler)
+    mylexer.input(input)
     yacc.filename=filename
     yacc.errorhandler=errorhandler
-    return yacc.parse(input,lexer=lexer,tracking=True)
+    return yacc.parse(input,mylexer,tracking=True)
 
 # Main for Debugging/Testing
 if __name__ == "__main__":
