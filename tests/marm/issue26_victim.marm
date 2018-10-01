@@ -1,0 +1,15 @@
+/*
+ * Example implementation of
+ * the example contract of
+ * issue #26.
+ */
+contract {
+    sarn balance;
+    int public_key;
+}
+
+int unlock(int private_key) {
+    if (check_key_pair(contract.public_key, contract.private_key)) {
+        msg.account.transfer(balance);
+    }
+}
