@@ -153,7 +153,9 @@ def marmcompiler(filename, input, output, errorhandler=None, stages=None):
         elif stage == 'codegen':
             assert('typecheck' in completed_stages)
             code = result.code_gen_with_labels(0)
-            print(code, "\n", file=output, flush=True)
+            code_file = open(file="test.mass", mode='w')
+            for line in code:
+                print(line, file=code_file, flush=True)
 
         if errorhandler.roughlyOk():
             completed_stages.append(stage)

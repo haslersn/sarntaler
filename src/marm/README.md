@@ -330,12 +330,20 @@ and takes any number of parameters the procedure defines.
 
 *The parameters can **always** be other procedure calls or any complex expression!*
 
-
 The grammar for function calls is defined by
 ```bnf
 expr      : lhsexpression LPAR exprlist_opt RPAR
           | CREATE LPAR exprlist_opt RPAR
 ```
+#### Calling Conventions
+Usually we use the *right-to-left* calling convention for procedure calls. In other words for an example procedure with
+four parameters like
+```c
+...
+test_calling_convention(param1, param2, param3, param4);
+```
+`param1` is the last and `param4` the first value that is pushed to the stack.
+
 ## Examples
 
 ```c

@@ -100,11 +100,11 @@ class TestParserMethods(unittest.TestCase):
 
     def test_parse_file_valid_standard(self):
         """Tests some standard valid file"""
-        self.generic_test("test.marm")
+        self.generic_test("test.marm", stages=['parse', 'analyse_scope', 'typecheck', 'codegen'])
 
     def test_parse_file_valid_double_functions(self):
         """Tests some valid easy file with two functions and a call"""
-        self.generic_test("valid.marm", stages=['parse', 'analyse_scope', 'typecheck', 'codegen'])
+        self.generic_test("valid.marm")
 
     @unittest.expectedFailure
     def test_parse_file_test_for_behaviour(self):

@@ -5,8 +5,8 @@ import ply.yacc as yacc
 precedence = (
      ('right', 'ASSIGN'),
      ('right', 'HASH', 'NOT'),
-     ('right', 'ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP','MODOP', 'MULOP', 'SUBOP'),
      ('right', 'IF_WITHOUT_ELSE'),
+     ('right', 'ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP','MODOP', 'MULOP', 'SUBOP'),
 )
 
 
@@ -184,12 +184,12 @@ def p_expr(p):
 
 def p_exprSPECIALCONSTANTS_MSG(p):
     'expr : MSG'
-    p[0] = ast.SpecialExpression(p[1], ast.MsgType())
+    p[0] = ast.SpecialExpression(p[1], ast.Typename('msg'))
     p[0].set_pos_from(p)
 
 def p_exprSPECIALCONSTANTS_CONTRACT(p):
     'expr : CONTRACT'
-    p[0] = ast.SpecialExpression(p[1], ast.ContractType())
+    p[0] = ast.SpecialExpression(p[1], ast.Typename('contract'))
     p[0].set_pos_from(p)
 
 def p_exprFUNCALL(p):
