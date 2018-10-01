@@ -3,6 +3,7 @@ import hashlib
 import logging
 
 from src.blockchain.account import Account
+from src.blockchain.merkle_trie import MerkleTrie
 from .crypto import *
 from binascii import hexlify, unhexlify
 from datetime import datetime
@@ -89,10 +90,12 @@ class ScriptInterpreter:
         'OP_LT',
         'OP_GT',
 
-        'OP_GETBAL'
+        'OP_GETBAL',
+        'OP_SETSTOR',
+        'OP_GETSTOR'
     }
 
-    def __init__(self, state, params_script: str, acc: Account, tx_hash: bytes):
+    def __init__(self, state: MerkleTrie, params_script: str, acc: Account, tx_hash: bytes):
         self.acc = acc
         self.state = state
         self.params_script = params_script
@@ -481,6 +484,35 @@ class ScriptInterpreter:
         del self.stack[(self.framepointer+1):]          # reset the stack pointer
         self.framepointer = self.stack.pop()        # restore the framepointer
         self.stack.append(result)
+        return True
+
+    def op_getbal(self):
+        self.stack.append(self.acc.balance)
+        return True
+
+    def op_getstor(self):
+        if not self.stack:
+            logging.warning("OP_GETSTOR: Stack is empty")
+            return False
+        var_name = self.stack.pop()
+        var_value = self.acc.get_storage(var_name)
+        if None == var_value:
+            return False
+        self.stack.append(var_value)
+        return True
+
+    def op_setstor(self):
+        if len(self.stack) < 2:
+            logging.warning("OP_SETSTOR: Not enough arguments")
+            return False
+        var_name = self.stack.pop()
+        var_value = self.stack.pop()
+        new_acc = self.acc.set_storage(var_name, var_value)
+        if new_acc == None:
+            logging.warning("OP_SETSTOR: Could not set storage for " + var_name)
+            return False
+        self.acc = new_acc
+        self.state = self.state.put(self.acc.address, self.acc.hash)
         return True
 
     def math_operations(self, op):

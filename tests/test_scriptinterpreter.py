@@ -1,4 +1,4 @@
-from src.blockchain.account import Account
+from src.blockchain.account import Account, StorageItem
 from src.scriptinterpreter import ScriptInterpreter
 from src.blockchain.merkle_trie import MerkleTrie, MerkleTrieStorage
 
@@ -256,6 +256,29 @@ def test_factorial():
 
 
 
-def test_create_contr():
-    si = ScriptInterpreter(empty_mt, '0 1 2 3 4 "storethis" 2 OP_POPR 1', get_dummy_account(), None)
-    si.execute_script()
+def test_getbal():
+    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 100, "OP_GETBAL 1", 1, []), None)
+    assert si.execute_script()
+    assert si.stack == [100]
+
+def test_getstor():
+    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, '"myvar" OP_GETSTOR 1', 1, [StorageItem('myvar', 'int', 42)]), None)
+    assert si.execute_script()
+    assert si.stack == [42]
+
+def test_getstor_invalid():
+    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, '"invalid" OP_GETSTOR 1', 1, [StorageItem('myvar', 'int', 42)]), None)
+    assert not si.execute_script()
+
+def test_setstor():
+    myacc = Account(bytes(27), 278, '42 "myvar" OP_SETSTOR 1', 1, [StorageItem('myvar', 'int', 0)])
+    my_mt = empty_mt.put(myacc.address, myacc.hash)
+    si = ScriptInterpreter(my_mt, "", myacc, None)
+    new_state = si.execute_script()
+    assert new_state
+    new_acc = Account.get_from_hash(new_state.get(myacc.address))
+    assert new_acc.get_storage('myvar') == 42
+
+def test_setstor_invalid():
+    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, '42 "invalid" OP_SETSTOR 1', 1, [StorageItem('myvar', 'int', 42)]), None)
+    assert not si.execute_script()
