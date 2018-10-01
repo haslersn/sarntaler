@@ -1,4 +1,5 @@
 from src.marm import ast as ast
+from src.marm.lexer import marmlexer
 import ply.yacc as yacc
 
 precedence = (
@@ -13,14 +14,27 @@ start = 'translationunit'
 
 
 def p_translationunit(p):
-    'translationunit : procdecl'
+    'translationunit : procdecllist'
     p[0] = ast.Translationunit(p[1])
 
+def p_procdecllist(p):
+    '''procdecllist : procdecl procdecllist
+                    | procdecl'''
+    if len(p)==3:
+        p[2].append(p[1])
+        p[0]=p[2]
+    else: 
+        p[0] = [p[1]]
 
 def p_procdecl(p):
     'procdecl : type IDENT LPAR paramlistopt RPAR statementlistOPT'
     p[0] = ast.Procdecl(p[1], p[2], p[4], p[6])
 
+def p_procdeclERROR(p):
+    '''procdecl : error END
+                | LPAR paramlistopt RPAR statementlistOPT
+                | error statementlistOPT'''
+    None
 
 def p_statementlistOPT_body(p):
     'statementlistOPT : body'
@@ -138,6 +152,13 @@ def p_expr(p):
     'expr : INTCONST'
     p[0] = ast.ConstExpr(p[1])
 
+def p_exprFUNCALL(p):
+    '''expr : IDENT LPAR decllist RPAR
+            | IDENT LPAR RPAR'''
+    if len(p)==5:
+        p[0] = ast.BinExpr("localcall",p[1],p[3])
+    else:  
+        p[0] = ast.BinExpr("localcall",p[1],[])
 
 def p_exprBINARYEXPRESSIONS(p):
      '''expr : expr ASSIGN expr
@@ -246,16 +267,16 @@ def p_error(t):
             )
             
 
-from src.marm.lexer import lexer, tokens
+from src.marm.lexer import marmlexer, tokens
 # Generate parser
 yacc = yacc.yacc()
 
 def marmparser(filename,input,errorhandler):
-    lexer.filename=filename
-    lexer.errorhandler=errorhandler
+    mylexer = marmlexer(filename,errorhandler)
+    mylexer.input(input)
     yacc.filename=filename
     yacc.errorhandler=errorhandler
-    return yacc.parse(input,lexer=lexer)
+    return yacc.parse(input,mylexer)
 
 # Main for Debugging/Testing
 if __name__ == "__main__":

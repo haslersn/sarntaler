@@ -1,8 +1,15 @@
 import json
 
+def scope_lookup(scope_list, name):
+    for scope in scope_list:
+        if name in scope:
+            return scope[name]
+    return None
+
 class Node:
     def __init__(self):
         self.classname = self.__class__.__name__
+        self.local_var_indices = None
 
     def liststr(self, param):
         return "[{}]".format(", ".join(map(str,param)))
@@ -26,6 +33,8 @@ class ConstExpr(Expr):
     def __str__(self):
         return "[ConstExpr: value=" + str(self.value) + "]"
 
+    def analyse_scope(self, scope_list): pass
+
 
 class BinExpr(Expr):
     """ p_exprBINARYEXPRESSIONS """
@@ -38,6 +47,10 @@ class BinExpr(Expr):
     def __str__(self):
         return "[BinExpr: op=" + str(self.op) + ", left=" + str(self.left) + ", right=" + str(self.right) + "]"
 
+    def analyse_scope(self, scope_list):
+        self.left.analyse_scope(scope_list)
+        self.right.analyse_scope(scope_list)
+
 
 class UnaryExpr(Expr):
     """ p_exprUNARYEXPRESSIONS """
@@ -49,6 +62,9 @@ class UnaryExpr(Expr):
     def __str__(self):
         return "[UnaryExpr: op=" + str(self.op) + ", operand=" + str(self.operand) + "]"
 
+    def analyse_scope(self, scope_list):
+        self.operand.analyse_scope(scope_list)
+
 
 class LHSExpr(Expr):
     """ p_exprLHS """
@@ -58,6 +74,9 @@ class LHSExpr(Expr):
 
     def __str__(self):
         return "[LHSExpr: lhs=" + str(self.lhs) + "]"
+
+    def analyse_scope(self, scope_list):
+        self.lhs.analyse_scope(scope_list)
 
 
 class StructExpr(Expr):
@@ -70,6 +89,10 @@ class StructExpr(Expr):
     def __str__(self):
         return "[StructExpr: expr=" + str(self.expr) + ", ident=" + str(self.ident) + "]"
 
+    def analyse_scope(self, scope_list):
+        self.expr.analyse_scope(self.expr, scope_list)
+        # TODO: Attributes?
+
 
 class LHS(Node):
     """ Non terminal 14 """
@@ -79,6 +102,9 @@ class LHS(Node):
 
     def __str__(self):
         return "[LHS: ident=" + str(self.ident) + "]"
+
+    def analyse_scope(self, scope_list):
+        self.definition = scope_lookup(scope_list, self.ident)
 
 
 class Typename(Node):
@@ -93,12 +119,17 @@ class Typename(Node):
 
 class Translationunit(Node):
     """ Non terminal 0 """
-    def __init__(self, procdecl):
+    def __init__(self, procdecllist):
         super().__init__()
-        self.proc = procdecl
+        self.procs = procdecllist
 
     def __str__(self):
-        return "[Translationunit: procdecl=" + str(self.proc) + "]"
+        return "[Translationunit: procs=" + str(self.procs) + "]"
+
+    def analyse_scope(self, scope_list=[]):
+        local_scope_list = [{}]+scope_list
+        for proc in self.procs:
+            proc.analyse_scope(local_scope_list)
 
 
 class Paramdecl(Node):
@@ -110,6 +141,12 @@ class Paramdecl(Node):
 
     def __str__(self):
         return "[Paramdecl: param_type=" + str(self.param_type) + ", name=" + str(self.name) + "]"
+
+    def analyse_scope(self, scope_list):
+        if self.name in scope_list[0]:
+            print("Multiple parameters have the name {}.".format(self.name))
+        scope_list[0][self.name] = self
+        self.local_var_index = len(scope_list[0])
 
 
 class Procdecl(Node):
@@ -125,6 +162,12 @@ class Procdecl(Node):
         return "[Procdecl: return_type=" + str(self.return_type) + ", name=" + str(self.name) + ", params=" +\
                self.liststr(self.params) + ", body=" + self.liststr(self.body) + "]"
 
+    def analyse_scope(self, scope_list):
+        local_scope_list = [{}] + scope_list
+        for param in self.params:
+            param.analyse_scope(local_scope_list)
+        for statement in self.body:
+            statement.analyse_scope(local_scope_list)
 
 class Statement(Node):
     """ Non terminal 12 """
@@ -146,6 +189,14 @@ class StatementDecl(Statement):
     def __str__(self):
         return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + self.liststr(self.decllist) + "]"
 
+    def analyse_scope(self, scope_list):
+        self.local_var_indices = {}
+        for decl in self.decllist:
+            if decl in scope_list[0]:
+                print("Variable {} declared twice".format(decl)) # TODO error handling
+            scope_list[0][decl] = self
+            self.local_var_indices[decl] = len(scope_list[0])
+
 
 class StatementReturn(Statement):
     """ p_statementRETURN """
@@ -157,6 +208,9 @@ class StatementReturn(Statement):
     def __str__(self):
         return "[StatementReturn: return_value=" + str(self.return_value) + "]"
 
+    def analyse_scope(self, scope_list):
+        self.return_value.analyse_scope(scope_list)
+
 
 class StatementWhile(Statement):
     """ p_statementLOOPS """
@@ -167,6 +221,10 @@ class StatementWhile(Statement):
 
     def __str__(self):
         return "[StatementWhile: boolex=" + str(self.boolex) + ", statement=" + str(self.statement) + "]"
+
+    def analyse_scope(self, scope_list):
+        self.boolex.analyse_scope(scope_list)
+        self.statement.analyse_scope(scope_list)
 
 
 class StatementIf(Statement):
@@ -180,6 +238,12 @@ class StatementIf(Statement):
     def __str__(self):
         return "[StatementIf: boolex={}, statement={}, elseprod={}]".format(self.boolex,self.statement,self.elseprod)
 
+    def analyse_scope(self, scope_list):
+        self.boolex.analyse_scope(scope_list)
+        self.statement.analyse_scope(scope_list)
+        if not (self.elseprod is None):
+            self.elseprod.analyse_scope(scope_list)
+
 
 class StatementExpression(Statement):
     """ p_statementEXPRESSIONSTATEMENT """
@@ -189,6 +253,9 @@ class StatementExpression(Statement):
 
     def __str__(self):
         return "[StatementExpression: expr={}]".format(self.expr)
+
+    def analyse_scope(self, scope_list):
+        self.expr.analyse_scope(scope_list)
 
 
 class StatementBody(Statement):
@@ -200,6 +267,11 @@ class StatementBody(Statement):
     def __str__(self):
         return "[StatementBody: body={}]".format(self.liststr(self.body))
 
+    def analyse_scope(self, scope_list):
+        local_scope_list = [{}] + scope_list
+        for statement in self.body:
+            statement.analyse_scope(local_scope_list)
+
 
 class StatementBreak(Statement):
     """ p_statementBREAK """
@@ -210,6 +282,8 @@ class StatementBreak(Statement):
     def __str__(self):
         return "[StatementBreak]"
 
+    def analyse_scope(self, scope_list): pass
+
 
 class StatementContinue(Statement):
     """ p_statementCONTINUE """
@@ -219,6 +293,8 @@ class StatementContinue(Statement):
 
     def __str__(self):
         return "[StatementContinue]"
+
+    def analyse_scope(self, scope_list): pass
 
 
 class Boolex(Node):
@@ -241,6 +317,10 @@ class BoolexCMP(Boolex):
     def __str__(self):
         return "[BoolexCMP: op={}, left={}, right={}]".format(self.op,self.left,self.right)
 
+    def analyse_scope(self, scope_list):
+        self.left.analyse_scope(scope_list)
+        self.right.analyse_scope(scope_list)
+
 
 class BoolexBinary(Boolex):
     """ p_boolexBINARY """
@@ -252,6 +332,10 @@ class BoolexBinary(Boolex):
     def __str__(self):
         return "[BoolexBinary: op={}, left={}, right={}]".format(self.op,self.left,self.right)
 
+    def analyse_scope(self, scope_list):
+        self.left.analyse_scope(scope_list)
+        self.right.analyse_scope(scope_list)
+
 
 class BoolexNot(Boolex):
     """ p_boolexUNARY """
@@ -261,4 +345,7 @@ class BoolexNot(Boolex):
 
     def __str__(self):
         return "[BoolexNot: operand={}]".format(str(self.operand))
+
+    def analyse_scope(self, scope_list):
+        self.operand.analyse_scope(scope_list)
 

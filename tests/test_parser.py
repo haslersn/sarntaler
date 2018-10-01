@@ -18,6 +18,7 @@ class TestParserMethods(unittest.TestCase):
             unittest.fail(msg=t_text + " could not be lexed. " + str(e))
 
     def test_lex_tokens(self):
+        """"Tests all known tokens, has to be updated always"""
         self.generic_lex("if", 'IF', 'if')
         self.generic_lex("while", 'WHILE', 'while')
         self.generic_lex("break", 'BREAK', 'break')
@@ -31,8 +32,8 @@ class TestParserMethods(unittest.TestCase):
         self.generic_lex("}", 'END', '}')
         self.generic_lex(";", 'SEMI', ';')
         self.generic_lex(",", 'COMMA', ',')
-        self.generic_lex("0x0000000000000000000000000000000000000000012345678912345678901234"
-                         , 'ADDRESSVALUE', '0x0000000000000000000000000000000000000000012345678912345678901234')
+        self.generic_lex("0x0000000000000000000000000000000000000000012345678912345678901234",
+                         'ADDRESSVALUE', '0x0000000000000000000000000000000000000000012345678912345678901234')
         self.generic_lex("0x4", 'ADDRESSVALUE', '0x4')
         self.generic_lex("=", 'ASSIGN', '=')
         self.generic_lex("23", 'INTCONST', 23)
@@ -57,21 +58,47 @@ class TestParserMethods(unittest.TestCase):
     def test_tokens_not_empty(self):
         self.assertFalse(lexer.tokens.__len__() == 0)
 
-    @unittest.skip("No error raised")
     def test_parse_file_error(self):
-        with self.assertRaises(parser.ParserError):
-            try:
-                testfile = open("./marm/notvalid.marm", mode='r')
-                parser.marmparser("test.marm", testfile.read())
-            except IOError as e:
-                self.fail(msg="File error: " + str(e))
+        """Tests some quite complicated errors"""
+        errorhandler = marmcompiler.ErrorHandler()
+        try:
+            testfile = open("./marm/notvalid.marm", mode='r')
+            marmcompiler.marmcompiler("notvalid.marm", testfile.read(), errorhandler=errorhandler)
+            self.assertFalse(errorhandler.roughlyOk())
+            self.assertEqual(errorhandler.countErrors(), 2)
+            self.assertEqual(errorhandler.countFatals(), 0)
+        except IOError as e:
+            self.fail(msg="File error: " + str(e))
+
+    def test_parse_file_error2(self):
+        """Tests some easy errors"""
+        errorhandler = marmcompiler.ErrorHandler()
+        try:
+            testfile = open("./marm/invalid.marm", mode='r')
+            marmcompiler.marmcompiler("invalid.marm", testfile.read(), errorhandler=errorhandler)
+            self.assertFalse(errorhandler.roughlyOk())
+            self.assertEqual(errorhandler.countErrors(), 5)
+           # self.assertEqual(errorhandler.countFatals(), 3) TODO lexical errors should be fatals
+        except IOError as e:
+            self.fail(msg="File error: " + str(e))
             
-    def test_parse_file(self):
+    def test_parse_file_valid_standard(self):
+        """Tests some standard valid file"""
+        errorhandler = marmcompiler.ErrorHandler()
         try:
             testfile = open("./marm/test.marm", mode='r')
-            parser.marmparser("test.marm", testfile.read())
-        except parser.ParserError:
-            self.fail(msg="Couldn't parse file.")
+            marmcompiler.marmcompiler("test.marm", testfile.read(), errorhandler=errorhandler)
+            self.assertTrue(errorhandler.cleanCode())
+        except IOError as e:
+            self.fail(msg="File error: " + str(e))
+
+    def test_parse_file_valid_double_functions(self):
+        """Tests some valid easy file with two functions and a call"""
+        errorhandler = marmcompiler.ErrorHandler()
+        try:
+            testfile = open("./marm/valid.marm", mode='r')
+            marmcompiler.marmcompiler("valid.marm", testfile.read(), errorhandler=errorhandler)
+            self.assertTrue(errorhandler.cleanCode())
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
