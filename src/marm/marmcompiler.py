@@ -124,7 +124,7 @@ class ErrorHandler:
 marmcompiler_stages = ['lex', 'parse', 'analyse_scope', 'typecheck', 'codegen']
 
 
-def marmcompiler(filename, input, errorhandler=None, stages=None):
+def marmcompiler(filename, input, output, errorhandler=None, stages=None):
     from src.marm.parser import marmparser,ParserError
     #yacc = yacc.yacc()
     if stages is None:
@@ -153,7 +153,7 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
         elif stage == 'codegen':
             assert('typecheck' in completed_stages)
             code = result.code_gen_with_labels(0)
-            print(code, "\n", file=open("test.mass", 'w'), flush=True)
+            print(code, "\n", file=output, flush=True)
 
         if errorhandler.roughlyOk():
             completed_stages.append(stage)
@@ -214,7 +214,7 @@ if __name__ == "__main__":
 
     myinput = args.input.read()
 
-    result = marmcompiler(args.input.name, myinput, None, args.stages)
+    result = marmcompiler(args.input.name, myinput, args.output, None, args.stages)
 
     if result is None:
         print("No result produced.")

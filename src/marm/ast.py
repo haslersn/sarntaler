@@ -1,11 +1,13 @@
 import json
 import weakref
 
+
 def scope_lookup(scope_list, name):
     for scope in scope_list:
         if name in scope:
             return scope[name]
     return None
+
 
 class Node:
     def __init__(self):
@@ -38,6 +40,12 @@ class Node:
                 return obj.__dict__
         return json.dumps(self, default=json_default, sort_keys=True, indent=4)
 
+    def _code_gen(self):
+        return []
+
+    def code_gen_with_labels(self, label_id):
+        return self._code_gen()
+
 
 class Expr(Node):
     """ Non terminal 13 """
@@ -56,6 +64,9 @@ class SpecialExpression(Expr):
 
     def analyse_scope(self,scope_list, errorhandler): pass
 
+    # TODO code_gen
+
+
 class ConstExpr(Expr):
     """ p_expr """
     def __init__(self, value, marm_type):
@@ -69,6 +80,9 @@ class ConstExpr(Expr):
     def analyse_scope(self, scope_list, errorhandler): pass
 
     def typecheck(self, errorhandler): pass
+
+    def _code_gen(self):
+        return [self.value]
 
 
 class BinExpr(Expr):
@@ -96,7 +110,7 @@ class BinExpr(Expr):
                                                self.right.marm_type, self.left.marm_type))
             else:
                 self.marm_type = self.right.marm_type
-        elif self.op in ['+', '-', '*', '/']:
+        elif self.op in ['+', '-', '*', '/', '%']:
             if self.left.marm_type != 'int':
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                            "Left operand of {} exspects value of type int, got {}".format(
@@ -107,6 +121,41 @@ class BinExpr(Expr):
                                                self.op, self.right.marm_type))
             self.marm_type = Typename('int')
 
+    def code_gen_with_labels(self, label_id):
+        """Act differently for ASSIGN expressions and mathematical operations """
+        code = []
+        if str(self.op) == "ASSIGN":
+            if type(self.left) == LHSExpr:
+                # create rhs code
+                code_right = self.right.code_gen_with_labels(label_id)
+                left_stackaddress = self.left.code_gen_with_labels(label_id)
+                # OP_POPABS
+                operator = "OP_POPABS"
+
+                code.append(left_stackaddress)
+                code.append(operator)
+                code += code_right
+            else:
+                # got an expression on the left side like a+b, which we don't want to allow
+                print("BinExpression._code_gen: got a binary expression like a+b = 5 which we don't want to allow")
+        else:
+            code_left = self.left.code_gen_with_labels(label_id)
+            code_right = self.right.code_gen_with_labels(label_id)
+            """Push code_left on stack, then code_right and afterwards the operator """
+            code += code_left
+            code += code_right
+            if str(self.op) == "ADDOP":
+                code.append("OP_ADD")
+            elif str(self.op) == "SUBOP":
+                code.append("OP_SUB")
+            elif str(self.op) == "MULOP":
+                code.append("OP_MUL")
+            elif str(self.op) == "DIVOP":
+                code.append("OP_DIV")
+            else:
+                # we should not end up in this case
+                print("BinExpr._code_gen: got an operator that is not valid")
+        return code
 
 
 class LocalcallExpr(Expr):
@@ -144,6 +193,8 @@ class LocalcallExpr(Expr):
                                                i, dparam_type, param.marm_type))
         self.marm_type = self.fnname.marm_type.return_type
 
+    # TODO code_gen
+
 
 class CreateExpr(Expr):
     def __init__(self, params):
@@ -156,6 +207,9 @@ class CreateExpr(Expr):
     def analyse_scope(self, scope_list, errorhandler):
         for param in self.params:
             param.analyse_scope(scope_list, errorhandler)
+
+    # TODO code_gen
+
 
 class UnaryExpr(Expr):
     """ p_exprUNARYEXPRESSIONS """
@@ -183,6 +237,19 @@ class UnaryExpr(Expr):
         else:
             errorhandler.registerFatal(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Typechecking failed on unknown operator {}".format(self.op))
+    def code_gen_with_labels(self, label_id):
+        """Act differently on hash and negation, although hash is not yet implemented"""
+        code = []
+        if str(self.op) == "HASH":
+            pass  # TODO change when the hashing is decided
+        elif str(self.op) == "SUBOP":
+            code_operand = self.operand.code_gen_with_labels(label_id)
+            code += code_operand
+            code.append("OP_NEG")
+        else:
+            # we should not end up in this case
+            print("UnaryExpr._code_gen: got an operator that is not valid")
+        return code
 
 
 class LHSExpr(Expr):
@@ -199,6 +266,10 @@ class LHSExpr(Expr):
 
     def typecheck(self, errorhandler):
         self.lhs.typecheck(errorhandler)
+
+    def code_gen_with_labels(self, label_id):
+        """Pushes the address of the identifier stored in the lhs"""
+        return self.lhs.code_gen_with_labels(label_id)
 
 
 class StructExpr(Expr):
@@ -217,7 +288,15 @@ class StructExpr(Expr):
 
     def typecheck(self, errorhandler):
         self.expr.typecheck(errorhandler)
-        pass # TODO
+        if not self.expr.marm_type.has_attribute(self.ident):
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Value of type {} has not attribute named {}".format(
+                                           self.expr.marm_type, self.ident))
+
+    def _code_gen(self):
+        """TODO has not yet been decided what this should actually do"""
+        code = []
+        return code
 
 
 class LHS(Node):
@@ -233,10 +312,21 @@ class LHS(Node):
 
     def analyse_scope(self, scope_list, errorhandler):
         self.definition = scope_lookup(scope_list, self.ident)
+        if self.definition is None:
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Use of undeclared identifier {}.".format(self.ident))
         self.lenv_depth = len(scope_list)
 
     def typecheck(self, errorhandler):
         self.marm_type = self.definition.get_marm_type_for(self.ident)
+
+    def _code_gen(self):
+        """Pushes the address of the identifier from the symbol table on the stack"""
+        code = []
+        ident_addr = ""  # TODO get address from symbol table
+        code.append(ident_addr)
+        return code
+
 
 class Typename(Node):
     """ Non terminal 18 """
@@ -253,6 +343,13 @@ class Typename(Node):
         elif type(other) is str: # TODO: replace with better mechanism
             return self.typee == other
         else: return False
+
+    def _code_gen(self):
+        """Should not be used at all, fails on call"""
+        raise NotImplementedError
+
+    def has_attribute(self, ident):
+        return False # TODO
 
 
 class Translationunit(Node):
@@ -277,6 +374,15 @@ class Translationunit(Node):
             proc.set_global_definition_types(errorhandler)
         for proc in self.procs:
             proc.typecheck(errorhandler)
+
+    def code_gen_with_labels(self, label_id):
+        """Calls codegen for every procedure and stores their addresses before"""
+        code = []
+        for procdecl in self.procs:
+            # TODO do something with the address of the procedure
+            code_proc = procdecl.code_gen_with_labels(label_id)
+            code += code_proc
+        return code
 
 
 class Paramdecl(Node):
@@ -306,10 +412,21 @@ class Paramdecl(Node):
         assert(ident == self.name)
         return self.param_type
 
+    def _code_gen(self):
+        """Insert the identifier in the symboltable(?) and or do nothing I guess"""
+        code = []
+        # TODO decide if this method should do anything at all
+        return code
+
+
 class Proctype():
     def __init__(self, return_type, param_types):
         self.return_type = return_type
         self.param_types = param_types
+
+    def has_attribute(self, ident):
+        return False
+
 
 class Procdecl(Node):
     """ Non terminal 4 """
@@ -345,6 +462,14 @@ class Procdecl(Node):
     def typecheck(self, errorhandler):
         for statement in self.body:
             statement.typecheck(errorhandler)
+
+    def code_gen_with_labels(self, label_id):
+        """Insert the identifiers in the symboltable(?) and generate the code for the body"""
+        code = []
+        # TODO decide what to do with the procedure and params addresses
+        code_body = self.body.code_gen_with_labels(label_id)
+        code += code_body
+        return code
 
 
 class Statement(Node):
@@ -384,6 +509,13 @@ class StatementDecl(Statement):
 
     def typecheck(self, errorhandler): pass
 
+    def code_gen_with_labels(self, label_id):
+        """Ignore the type and call _code_gen on all declarations, whatever they may do"""
+        code = []
+        for decl in self.decllist:
+            code += decl.code_gen_with_labels(label_id)
+        return code
+
 
 class StatementReturn(Statement):
     """ p_statementRETURN """
@@ -407,6 +539,11 @@ class StatementReturn(Statement):
                                            self.return_value.marm_type, self.function.marm_type.return_type))
         # TODO
 
+    def code_gen_with_labels(self, label_id):
+        """Push the return value and do OP_RET"""
+        code = [self.return_value.code_gen_with_labels(label_id), "OP_RET"]
+        return code
+
 
 class StatementWhile(Statement):
     """ p_statementLOOPS """
@@ -424,6 +561,35 @@ class StatementWhile(Statement):
 
     def typecheck(self, errorhandler):
         self.statement.typecheck(errorhandler)
+
+        def _code_gen(self):
+            pass
+
+        def code_gen_with_labels(self, label_id):
+            """First gets the bool, then negates it and jumps to end if loop is done. If not it does the body code."""
+            code = []
+            code_boolex = self.boolex.code_gen_with_labels(label_id + 1)
+            code_body = self.statement.code_gen_with_labels(label_id + 1)
+
+            label_start = "__label_loop_start" + str(label_id)
+            label_end = "__label_loop_end" + str(label_id)
+
+            # Start label
+            code.append(label_start)
+
+            # Get the bool
+            code += code_boolex
+            code.append("OP_NOT")
+
+            # TODO jump to label_end
+            code.append("OP_JUMPRC")
+
+            # The loop body
+            code += code_body
+
+            # TODO Jump to label_start
+            code.append("OP_JUMPR")
+            return code
 
 
 class StatementIf(Statement):
@@ -451,6 +617,35 @@ class StatementIf(Statement):
         self.statement.typecheck(errorhandler)
         self.statement.typecheck(errorhandler)
 
+    def _code_gen(self):
+        pass
+
+    def code_gen_with_labels(self, label_id):
+        """First the else block because less code, jumping accordingly"""
+        code = []
+        code_boolex = self.boolex.code_gen_with_labels(label_id + 1)
+        code_true = self.statement.code_gen_with_labels(label_id + 1)
+        code_false = self.elseprod.code_gen_with_labels(label_id + 1)
+
+        # Label of true block
+        label_true = "__label_if_true" + str(label_id)
+
+        # Get the bool
+        code += code_boolex
+
+        # TODO Jump to true label
+        code.append("OP_JUMPRC")
+
+        # The false body
+        code += code_false
+
+        code.append(label_true)
+
+        # The true body
+        code += code_true
+
+        return code
+
 
 class StatementExpression(Statement):
     """ p_statementEXPRESSIONSTATEMENT """
@@ -466,6 +661,11 @@ class StatementExpression(Statement):
 
     def typecheck(self, errorhandler):
         self.expr.typecheck(errorhandler)
+
+    def code_gen_with_labels(self, label_id):
+        """Just generate the code for the expr whatever that may be"""
+        code = [self.expr.code_gen_with_labels(label_id)]
+        return code
 
 
 class StatementBody(Statement):
@@ -486,6 +686,13 @@ class StatementBody(Statement):
         for statement in self.body:
             statement.typecheck(errorhandler)
 
+    def _code_gen(self):
+        """Generate the code for all statements in the body"""
+        code = []
+        for stmnt in self.body:
+            code += stmnt.code_hen()
+        return code
+
 
 class StatementBreak(Statement):
     """ p_statementBREAK """
@@ -500,6 +707,11 @@ class StatementBreak(Statement):
 
     def typecheck(self, errorhandler): pass
 
+    def _code_gen(self):
+        """ TODO Need labels!!!!"""
+        code = []
+        return code
+
 
 class StatementContinue(Statement):
     """ p_statementCONTINUE """
@@ -513,6 +725,21 @@ class StatementContinue(Statement):
     def analyse_scope(self, scope_list, errorhandler): pass
 
     def typecheck(self, errorhandler): pass
+
+    class StatementContinue(Statement):
+        """ p_statementCONTINUE """
+
+        def __init__(self):
+            super().__init__()
+            pass
+
+        def __str__(self):
+            return "[StatementContinue]"
+
+        def _code_gen(self):
+            """ TODO Need labels!!!!"""
+            code = []
+            return code
 
 
 class Boolex(Node):
@@ -549,6 +776,29 @@ class BoolexCMP(Boolex):
         # TODO
         self.marm_type = 'bool'
 
+    def code_gen_with_labels(self, label_id):
+        """Generate code for all types of comparison after executing both sides."""
+        code = []
+        code += self.left.code_gen_with_labels(label_id)
+        code += self.right.code_gen_with_labels(label_id)
+        if str(self.op) == "EQ":
+            code.append("OP_EQ")
+        elif str(self.op) == "NEQ":
+            code.append("OP_EQ")
+            code.append("OP_NOT")
+        elif str(self.op) == "LEQ":
+            code.append("OP_LE")
+        elif str(self.op) == "GEQ":
+            code.append("OP_GE")
+        elif str(self.op) == "LT":
+            code.append("OP_LT")
+        elif str(self.op) == "GT":
+            code.append("OP_GT")
+        else:
+            # we should not end up in this case
+            print("BoolexCMP._code_gen: got an operator that is not valid")
+        return code
+
 
 class BoolexBinary(Boolex):
     """ p_boolexBINARY """
@@ -575,7 +825,21 @@ class BoolexBinary(Boolex):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Right operand of {} must be of type bool.".format(
                                            self.op))
-        self.marm_type = 'bool'
+        self.marm_type = Typename('bool')
+
+    def code_gen_with_labels(self, label_id):
+        """Push both sides and consume them."""
+        code = []
+        code += self.left.code_gen_with_labels(label_id)
+        code += self.right.code_gen_with_labels(label_id)
+        if str(self.op) == "OR":
+            code.append("OP_OR")
+        elif str(self.op) == "AND":
+            code.append("OP_AND")
+        else:
+            # we should not end up in this case
+            print("BoolexBinary._code_gen: got an operator that is not valid")
+        return code
 
 
 class BoolexNot(Boolex):
@@ -595,4 +859,11 @@ class BoolexNot(Boolex):
         if self.operand.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Operand of '!' needs to be of type bool.")
-        self.marm_type = 'bool'
+        self.marm_type = Typename('bool')
+
+    def code_gen_with_labels(self, label_id):
+        """Negate the result of the operand code."""
+        code = []
+        code += self.operand.code_gen_with_labels(label_id)
+        code.append("OP_NOTS")
+        return code
