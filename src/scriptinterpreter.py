@@ -4,6 +4,9 @@ import logging
 from .crypto import *
 from binascii import hexlify, unhexlify
 from datetime import datetime
+import src.crypto as cr
+from Crypto.PublicKey import RSA
+
 
 # TODO: Put the following two classes into crypt.py
 
@@ -39,6 +42,7 @@ class ScriptInterpreter:
 
     operations = {
         'OP_SHA256',
+        'OP_CHECKKEYPAIR',
         'OP_CHECKSIG',
         'OP_KILL',
         'OP_CHECKLOCKTIME',
@@ -127,6 +131,26 @@ class ScriptInterpreter:
         self.stack.append(Hash(sha256.digest()))
         return True
 
+    def op_checkkeypair(self):
+        """Checks if public-key (1. argument) and privat-key (2. argument) are
+        part of the same key-pair."""
+        privKey = self.__pop_checked(Key)
+        if privKey is None:
+            logging.warning("OP_CHECKKEY: Stack is empty or top element not a key")
+            return False
+
+        pubKey = self.__pop_checked(Key)
+        if pubKey is None:
+            logging.warning("OP_CHECKKEY: Stack is empty or top element not a key")
+            return False
+
+        beforenc = cr.get_random_int(pubKey.rsa.n)
+        enctxt = pubKey.rsa.encrypt(beforenc, 1)[0]
+        afterenc = privKey.rsa.decrypt(enctxt)
+        if beforenc != afterenc:
+            return False
+
+        return True
 
     def op_checksig(self):
         # The signature used by OP_CHECKSIG must be a valid signature for
