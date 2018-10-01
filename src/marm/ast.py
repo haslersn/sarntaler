@@ -304,8 +304,9 @@ class StructExpr(Expr):
         code = []
         code.append("// code for struct access not implemented yet")
         return code
+
     def code_gen_LHS(self):
-        """Pushes the address of the identifier from the symbol table on the stack"""
+        """TODO do stuff"""
         code = []
         code.append("// codeLHS for struct access not implemented yet")
         return code
