@@ -134,7 +134,13 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
 
     completed_stages=[]
     result = None
-    for stage in stages:
+
+    def depend_on_stage(stage):
+        nonlocal completed_stages, result
+        if stage not in completed_stages:
+            run_stage(stage)
+    def run_stage(stage):
+        nonlocal completed_stages, result
         if stage == 'lex':
             from src.marm.lexer import marmlexer
             result = marmlexer(filename, input, errorhandler)
@@ -145,15 +151,20 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
             except ParserError as err:
                 print(err)
         elif stage == 'analyse_scope':
-            assert('parse' in completed_stages)
+            depend_on_stage('parse')
             result.analyse_scope([], errorhandler)
         elif stage == 'typecheck':
-            assert('analyse_scope' in completed_stages)
+            depend_on_stage('parse')
+            depend_on_stage('analyse_scope')
             result.typecheck(errorhandler)
         elif stage == 'codegen':
-            assert('typecheck' in completed_stages)
-            result = result.code_gen_with_labels(0)
+            depend_on_stage('parse')
+            depend_on_stage('analyse_scope')
+            depend_on_stage('typecheck')
+            result = result.code_gen_with_labels(0, 0)
 
+    for stage in stages:
+        run_stage(stage)
         if errorhandler.roughlyOk():
             completed_stages.append(stage)
         else:
