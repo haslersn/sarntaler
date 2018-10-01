@@ -11,8 +11,22 @@ class Storage(Generic[T]):
     pass
 
 class Account(namedtuple("Account", ["pub_key", "balance", "code", "owner_access", "storage"])):
-    def __new__(self, pub_key: bytes, balance: int, code: str, owner_access: bool, storage: Storage[T]):
-        return super().__new__(self, pub_key, balance, code, owner_access, storage)
+    _dict = dict()
+
+    @classmethod
+    def _get_from_hash(cls, hash: bytes):
+        if hash in cls._dict:
+            return cls._dict[hash]
+        else:
+            return None
+
+    def __new__(cls, pub_key: bytes, balance: int, code: str, owner_access: bool, storage: list):
+        constructed = super().__new__(cls, pub_key, balance, code, owner_access, storage)
+        if constructed.hash in cls._dict:
+            return cls._dict[constructed.hash]
+        else:
+            cls._dict[constructed.hash] = constructed
+            return constructed
 
     def to_json_compatible(self):
         """ Returns a JSON-serializable representation of this object. """
