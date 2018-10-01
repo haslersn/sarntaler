@@ -135,12 +135,16 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
     completed_stages=[]
     result = None
 
+    class ErrorInStage(RuntimeError):
+        def __init__(self, stage):
+            super().__init__("An error occured in stage {}".format(stage))
+            self.stage = stage
     def depend_on_stage(stage):
         nonlocal completed_stages, result
         if stage not in completed_stages:
             run_stage(stage)
     def run_stage(stage):
-        nonlocal completed_stages, result
+        nonlocal completed_stages, result, errorhandler
         if stage == 'lex':
             from src.marm.lexer import marmlexer
             result = marmlexer(filename, input, errorhandler)
@@ -162,16 +166,17 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
             depend_on_stage('analyse_scope')
             depend_on_stage('typecheck')
             result = result.code_gen_with_labels(0, 0)
+        if not errorhandler.roughlyOk():
+            raise ErrorInStage(stage)
 
     for stage in stages:
-        run_stage(stage)
-        if errorhandler.roughlyOk():
-            completed_stages.append(stage)
-        else:
+        try:
+            run_stage(stage)
+        except ErrorInStage as e:
 #            print(coloring(input))
             print(errorhandler.tostring())
             print(errorhandler.to_explanation(input))
-            print("Errors occured during {}.".format(stage))
+            print(e)
             return None
 
  #   print(coloring(input))
