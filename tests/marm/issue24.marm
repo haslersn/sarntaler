@@ -1,0 +1,14 @@
+/*
+ * Example implementation of
+ * the example contract of
+ * issue #24.
+ */
+contract {
+    sarn balance;
+    sarn price;
+    address owner;
+}
+
+int buy(sarn x) {
+    contract.owner.transfer(prize);
+}

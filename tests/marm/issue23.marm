@@ -1,0 +1,36 @@
+/*
+ * Example implementation of
+ * the example contract of
+ * issue #23.
+ */
+contract {
+    address owner;
+    int followers;
+    sarn balance;
+}
+
+int join(sarn x) { //changed return value from void to int
+    if(x > 1) {
+        contract.owner.transfer(1);
+        contract.followers = contract.followers + 1; // ++ is always expanded in MARM!
+        if(power_of_two(contract.followers) == 1) {
+            msg.account.transfer(contract.balance / 2);
+        }
+    }
+    return 0;
+}
+
+/*
+ * Another procedure in this file, changed return value from boolean to int ...
+ */
+int power_of_two(int x) {
+    if (x > 0) {
+        while (x % 2 == 0) {
+            x = x / 2;
+        }
+        if (x == 1) {
+            return 1;
+        }
+    }
+    return 0;
+}
