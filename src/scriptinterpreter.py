@@ -698,9 +698,10 @@ class ScriptInterpreter:
                 if ret in [False, "ret"]:
                     return self.stack.pop() if ret == "ret" else None
                 logging.warning("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
-            return None
+            return True if param else None
 
-        execute(self.params_script, True)
+        if not execute(self.params_script, True):
+            return None
         ret = execute(self.acc.code, False)
         return None if not ret else (self.state, ret)
 

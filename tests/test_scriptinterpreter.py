@@ -65,14 +65,11 @@ def test_popFP():
     emptystack_test("OP_POPFP")
 
 def test_incfp():
-    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, "3 2 7 OP_INCFP 1 OP_RET", 1, []), None)
-    si.framepointer = 1
+    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, "3 2 7 OP_INCFP", 1, []), None)
     si.execute_script()
     assert si.stack == [3, 2]
     assert si.framepointer == 6
     emptystack_test("OP_INCFP")
-
-
 
 ## TEST UPDATED UNTIL HERE
 
@@ -182,19 +179,22 @@ def test_gt():
 
 
 def test_pushr():
-    si = ScriptInterpreter(empty_mt, "0 1 2 3 2 OP_PUSHR 1", get_dummy_account(), None)
+    mt, acc = get_account(empty_mt, "0 1 2 3 2 OP_PUSHR 1 OP_RET")
+    si = ScriptInterpreter(mt, "", acc, None)
     si.framepointer = 3
     si.execute_script()  # should push 3 (framepointer) + 2 (operand) = 5th element
     assert si.stack == [0, 1, 2, 3, 1]
 
 def test_pushr_2():
-    si = ScriptInterpreter(empty_mt, '0 2 \"three\" 4 5 3 OP_PUSHR 1', get_dummy_account(), None)
+    mt, acc = get_account(empty_mt, '0 2 \"three\" 4 5 3 OP_PUSHR 1 OP_RET')
+    si = ScriptInterpreter(mt, "", acc, None)
     si.framepointer = 0
     si.execute_script()  # should push 0 (framepointer) + 3 (operand) = 3rd element
     assert si.stack == [0, 2, "three", 4, 5, "three"]
 
 def test_popr():
-    si = ScriptInterpreter(empty_mt, '0 1 2 3 4 "storethis" 2 OP_POPR 1', get_dummy_account(), None)
+    mt, acc = get_account(empty_mt, '0 1 2 3 4 "storethis" 2 OP_POPR 1 OP_RET')
+    si = ScriptInterpreter(mt, "", acc, None)
     si.framepointer = 1
     si.execute_script()  # should store to 1 (framepointer) + 2 (operand) = 3rd element
     assert si.stack == [0, "storethis", 2, 3, 4]
@@ -207,7 +207,8 @@ def script_finalstack_test(script: str, finalstack: list):
     assert si.stack == finalstack
 
 def test_div_nonintegers():
-    si = ScriptInterpreter(empty_mt, "a b OP_DIV 1", get_dummy_account(), None)
+    mt, acc = get_account(empty_mt, "a b OP_DIV 1 OP_RET")
+    si = ScriptInterpreter(mt, "", acc, None)
     assert not si.execute_script()
 
 def test_pack():
@@ -236,6 +237,8 @@ def emptystack_test(op: str):
     si_emptystack = ScriptInterpreter(empty_mt, op, get_dummy_account(), None)
     assert not si_emptystack.execute_script()
 
+# fixed until here
+
 
 # TODO SHA256 test
 from math import gcd, factorial
@@ -246,7 +249,8 @@ def test_gcd_script():
     gcdstr = gcdfile.read()
     gcdstr = str(a) + "\n" + str(b) + "\n" + gcdstr
     gcdfile.close()
-    si = ScriptInterpreter(empty_mt, gcdstr, get_dummy_account(), None)
+    mt, acc = get_account(empty_mt, gcdstr)
+    si = ScriptInterpreter(mt, "", acc, None)
     si.execute_script()
     print("Stack after gcd script:",si.stack)
     assert si.stack[0] == gcd(a,b)
@@ -256,7 +260,8 @@ def test_call_test():
     f = open("./src/labvm/testprograms/calltest.labvm","r")
     fstr = f.read()
     f.close()
-    si = ScriptInterpreter(empty_mt, fstr, get_dummy_account(), None)
+    mt, acc = get_account(empty_mt, fstr)
+    si = ScriptInterpreter(mt, "", acc, None)
     assert si.execute_script()
 
 import os
@@ -269,46 +274,49 @@ def test_factorial():
     f.close()
     #fstr = fstr.replace('FACOPERAND', str(i))
     #fstr = fstr.replace('FACRESULT', str(factorial(i)))
-    si = ScriptInterpreter(fstr, "", get_dummy_account(), None)
+    mt, acc = get_account(empty_mt, fstr)
+    si = ScriptInterpreter(mt, "", acc, None)
     si.execute_script()
 
 def test_getbal():
-    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 100, "OP_GETBAL 1", 1, []), None)
+    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 100, "OP_GETBAL 1 OP_RET", 1, []), None)
     assert si.execute_script()
     assert si.stack == [100]
 
 def test_getstor():
-    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, '"myvar" OP_GETSTOR 1', 1, [StorageItem('myvar', 'int', 42)]), None)
+    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, '"myvar" OP_GETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 42)]), None)
     assert si.execute_script()
     assert si.stack == [42]
 
 def test_getstor_invalid():
-    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, '"invalid" OP_GETSTOR 1', 1, [StorageItem('myvar', 'int', 42)]), None)
+    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, '"invalid" OP_GETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 42)]), None)
     assert not si.execute_script()
 
 def test_setstor():
-    myacc = Account(bytes(27), 278, '42 "myvar" OP_SETSTOR 1', 1, [StorageItem('myvar', 'int', 0)])
+    myacc = Account(bytes(27), 278, '42 "myvar" OP_SETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 0)])
     my_mt = empty_mt.put(myacc.address, myacc.hash)
     si = ScriptInterpreter(my_mt, "", myacc, None)
-    new_state = si.execute_script()
+    new_state,_ = si.execute_script()
     assert new_state
     new_acc = Account.get_from_hash(new_state.get(myacc.address))
     assert new_acc.get_storage('myvar') == 42
 
 def test_setstor_invalid():
-    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, '42 "invalid" OP_SETSTOR 1', 1, [StorageItem('myvar', 'int', 42)]), None)
+    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, '42 "invalid" OP_SETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 42)]), None)
     assert not si.execute_script()
 
 def test_create_contr():
-    si = ScriptInterpreter(empty_mt, '0 1 2 3 4 "storethis" 2 OP_POPR 1', get_dummy_account(), None)
+    si = ScriptInterpreter(empty_mt, '0 1 2 3 4 "storethis" 2 OP_POPR 1 OP_RET', get_dummy_account(), None)
     si.execute_script()
 
 def test_pack_different_types():
-    si = ScriptInterpreter(empty_mt, "h0xABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD 0 'abc' 3 OP_PACK 'def' OP_SWAP 2 OP_PACK 1", get_dummy_account(), None)
+    mt, acc = get_account(empty_mt, "h0xABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD 0 'abc' 3 OP_PACK 'def' OP_SWAP 2 OP_PACK 1 OP_RET")
+    si = ScriptInterpreter(mt, "", acc, None)
     assert si.execute_script()
 
 def test_unpack_different_types():
-    si = ScriptInterpreter(empty_mt,"h0xABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD 0 'abc' 3 OP_PACK 'def' OP_SWAP 2 OP_PACK OP_UNPACK OP_POPVOID OP_UNPACK OP_POPVOID 1", get_dummy_account(), None)
+    mt, acc = get_account(empty_mt, "h0xABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD 0 'abc' 3 OP_PACK 'def' OP_SWAP 2 OP_PACK OP_UNPACK OP_POPVOID OP_UNPACK OP_POPVOID 1 OP_RET")
+    si = ScriptInterpreter(mt, "", acc, None)
     assert si.execute_script()
 
 def test_checkkeypair_suc():
@@ -317,10 +325,10 @@ def test_checkkeypair_suc():
 
     privKey = key.exportKey('DER')
     pubKey = key.publickey().exportKey('DER')
-    fstr = "K0x" + str(pubKey.hex()) + "\nK0x" + str(privKey.hex()) + "\nop_checkkeypair\n1"
-
-    si = ScriptInterpreter(fstr, "", None)
-    assert si.execute_script() == True
+    fstr = "K0x" + str(pubKey.hex()) + "\nK0x" + str(privKey.hex()) + "\nop_checkkeypair\n1 OP_RET"
+    mt, acc = get_account(empty_mt, fstr)
+    si = ScriptInterpreter(mt, "", acc, None)
+    assert si.execute_script()
 
 def test_checkkeypair_fail():
     #fail test
@@ -329,7 +337,8 @@ def test_checkkeypair_fail():
 
     privKey = key1.exportKey('DER')
     pubKey = key2.publickey().exportKey('DER')
-    fstr = "K0x" + str(pubKey.hex()) + "\nK0x" + str(privKey.hex()) + "\nop_checkkeypair\n1"
+    fstr = "K0x" + str(pubKey.hex()) + "\nK0x" + str(privKey.hex()) + "\nop_checkkeypair\n1 OP_RET"
 
-    si = ScriptInterpreter(fstr, "", None)
-    assert si.execute_script() == False
+    mt, acc = get_account(empty_mt, fstr)
+    si = ScriptInterpreter(mt, "", acc, None)
+    assert not si.execute_script()
