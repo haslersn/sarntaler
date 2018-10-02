@@ -3,7 +3,7 @@ import hashlib
 import logging
 
 from src.blockchain.account import Account, StorageItem
-from src.blockchain.crypto import compute_hash
+from src.blockchain.crypto import *
 from src.blockchain.merkle_trie import MerkleTrie
 from .crypto import *
 from binascii import hexlify, unhexlify
@@ -740,7 +740,6 @@ class ScriptInterpreter:
 
         def execute(script: str):
             self.pc = 1
-            self.stack = []
             self.retval = None
             self.framepointer = -1
             self.program = self._parse_script(script, True)
