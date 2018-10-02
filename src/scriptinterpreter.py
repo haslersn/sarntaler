@@ -668,11 +668,9 @@ class ScriptInterpreter:
             Returns (State, RetVal) if script succeeded
         """
 
-        def execute_item(item: str, param=False):
+        def execute_item(item: str):
             # Check if item is data or opcode
             if callable(item):
-                if param:
-                    return False
                 # Execute the operation
                 logging.warning(str(item) + " is an opcode")
                 ret = item()
@@ -687,7 +685,7 @@ class ScriptInterpreter:
         def execute(script: str, param=False):
             self.pc = 1
             self.framepointer = -1
-            self.program = self._parse_script(script)
+            self.program = self._parse_script(script, not param)
             if self.program is None:
                 return None
             while self.pc <= len(self.program):
