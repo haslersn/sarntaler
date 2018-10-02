@@ -23,7 +23,7 @@ cb = None
 pers = None
 
 def rpc_server(port: int, chainbuilder: ChainBuilder, persist: Persistence):
-    #ToDo
+    #ToDo: right parameters
     """ Runs the RPC server (forever). """
     global cb
     cb = chainbuilder
@@ -50,4 +50,4 @@ def send_transaction():
     HTTP Method: `'PUT'`
     """
     trans = Transaction.from_json_compatible(flask.request.json)
-    #todo
+    #todo: transacton to blockchain
