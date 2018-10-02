@@ -332,7 +332,9 @@ class UnaryExpr(Expr):
         """Act differently on hash and negation, although hash is not yet implemented"""
         code = []
         if str(self.op) == "HASH":
-            pass  # TODO change when the hashing is decided
+            code_operand = self.operand.code_gen()
+            code += code_operand
+            code.append("OP_HASH")
         elif str(self.op) == "SUBOP":
             code_operand = self.operand.code_gen()
             code += code_operand
