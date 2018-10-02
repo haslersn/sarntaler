@@ -105,6 +105,7 @@ class ScriptInterpreter:
         'OP_CREATECONTR'
     }
 
+
     def __init__(self, state: MerkleTrie, params_script: str, acc: Account, tx_hash: bytes):
         self.acc = acc
         self.state = state
@@ -113,9 +114,10 @@ class ScriptInterpreter:
 
         self.stack = []
         self.program = []
+        self.retval = None
 
-        self.framepointer = 0  # maybe initialize with -1
-        self.pc = 0            # maybe initialize with -1
+        self.framepointer = -1
+        # self.pc = 0            # maybe initialize with -1
 
 
     def to_string(self):
@@ -490,10 +492,11 @@ class ScriptInterpreter:
             logging.warning("OP_RET: Stack is empty")
             return False
 
-        if self.framepointer == -1:
-            logging.warning("OP_RET: Last Return, gonna exit program")
-            return "ret"
         result = self.stack.pop()
+        if self.framepointer == -1:
+            logging.warning("OP_RET: Last Return, gonna exit program " + str(result))
+            self.retval = result
+            return False
         self.pc = self.stack[self.framepointer + 1] # restore the program counter
         del self.stack[(self.framepointer+1):]          # reset the stack pointer
         self.framepointer = self.stack.pop()        # restore the framepointer
@@ -716,9 +719,8 @@ class ScriptInterpreter:
             if callable(item):
                 # Execute the operation
                 logging.warning(str(item) + " is an opcode")
-                ret = item()
-                if ret in [False, "ret"]:
-                    return ret
+                if not item():
+                    return False
             else:
                 # Push data onto the stack
                 logging.warning(str(item) + " is data")
@@ -727,24 +729,22 @@ class ScriptInterpreter:
 
         def execute(script: str, param=False):
             self.pc = 1
-            self.framepointer = -1
             self.program = self._parse_script(script, not param)
             if self.program is None:
-                return None
+                return True if param else False
             while self.pc <= len(self.program):
                 item = self.program[self.pc - 1] # Fetch the next item (given by the program counter)
                 logging.info("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
                 self.pc = self.pc + 1
-                ret = execute_item(item)
-                if ret in [False, "ret"]:
-                    return self.stack.pop() if ret == "ret" else None
+                if not execute_item(item):
+                    return False
                 logging.warning("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
-            return True if param else None
+            return True if param else False
 
         if not execute(self.params_script, True):
             return None
         ret = execute(self.acc.code, False)
-        return None if not ret else (self.state, ret)
+        return None if self.retval == None else (self.state, self.retval)
 
         ## exit_code = self.__pop_checked(int)
         ## if exit_code == 1:

@@ -187,21 +187,18 @@ def test_gt():
 def test_pushr():
     mt, acc = get_account(empty_mt, "0 1 2 3 2 OP_PUSHR 1 OP_RET")
     si = ScriptInterpreter(mt, "", acc, None)
-    si.framepointer = 3
     si.execute_script()  # should push 3 (framepointer) + 2 (operand) = 5th element
     assert si.stack == [0, 1, 2, 3, 1]
 
 def test_pushr_2():
     mt, acc = get_account(empty_mt, '0 2 \"three\" 4 5 3 OP_PUSHR 1 OP_RET')
     si = ScriptInterpreter(mt, "", acc, None)
-    si.framepointer = 0
     si.execute_script()  # should push 0 (framepointer) + 3 (operand) = 3rd element
     assert si.stack == [0, 2, "three", 4, 5, "three"]
 
 def test_popr():
     mt, acc = get_account(empty_mt, '0 1 2 3 4 "storethis" 2 OP_POPR 1 OP_RET')
     si = ScriptInterpreter(mt, "", acc, None)
-    si.framepointer = 1
     si.execute_script()  # should store to 1 (framepointer) + 2 (operand) = 3rd element
     assert si.stack == [0, "storethis", 2, 3, 4]
     emptystack_test('OP_POPR')
