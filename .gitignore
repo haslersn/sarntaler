@@ -4,5 +4,6 @@ __pycache__
 /doc/_build/
 .cache
 *.wallet
+*.hwallet
 *.pem
 *.json.gz

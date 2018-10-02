@@ -10,21 +10,12 @@ miner.
 
 __all__ = ['Wallet']
 import json
+import logging
 import os.path
-
-class WalletHierarchical(object):
-    pass
-class WalletOld(object):
-    pass
-
-
-
-from datetime import datetime
 from binascii import hexlify
+from datetime import datetime
 from io import IOBase
 from typing import List, Tuple, Optional
-
-import logging
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(message)s")
 
@@ -38,21 +29,6 @@ class Wallet:
     :ivar _wallet_path: Path to the wallet file. Set in the constructor
     :vartype: string
     """
-
-    @classmethod
-    def init_Wallet(cls, wallet_path: str, ip_address="localhost", miner_port=40203):
-        """
-        A factory for the two wallet types.
-        :param wallet_path: path to the wallet file. Ending: .wallet -> old Wallet
-                                                             .hwallet -> hierarchical Wallet
-        :param ip_address: address for the rpc_client
-        :param miner_port: port for the rpc_client
-        :return: The Wallet on this path. If there is no File, a new hierarchical Wallet is instantiated
-        """
-        if wallet_path.endswith(".wallet"):
-            return WalletOld(wallet_path, ip_address, miner_port)
-        if wallet_path.endswith(".hwallet"):
-            return WalletHierarchical(wallet_path, ip_address, miner_port)
 
     def __init__(self, wallet_path: str, ip_address="localhost", miner_port=40203):
         """
@@ -89,8 +65,13 @@ class Wallet:
         """generates a new private key for the wallet. In the hierarchical wallet this key is determined"""
         raise Exception("abstract method")
 
+    def add_next_key(self):
+        change_key = self.generate_next_key()
+        Key.write_many_private(self._wallet_path, self.wallet_keys() + [change_key])
+
     def wallet_keys(self) -> List[Key]:
-        return self.read_wallet(self._wallet_path)[0]
+        keys, _ = self.read_wallet(self._wallet_path)
+        return keys
 
     def get_addresses(self):
         return json.dumps(self.rpc.get_addresses())
@@ -112,7 +93,7 @@ class Wallet:
 
     def create_address(self, outputs: List[IOBase]):
         """
-        Generates for each file a private key and stores the key in this file.
+        Generates for each file a private key and stores the public key in this file.
         All generated keys are added to the wallet file as well.
         :param outputs: files to store the keys
         :return: --

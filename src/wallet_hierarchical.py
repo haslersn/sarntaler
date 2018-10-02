@@ -11,9 +11,7 @@ from Crypto.PublicKey import RSA
 
 from src.crypto import Key
 from src.rpc_client import RPCClient
-from .wallet import Wallet
-
-__all__ = ['WalletHierarchical']
+from src.wallet import Wallet
 
 
 class WalletHierarchical(Wallet):
@@ -22,13 +20,13 @@ class WalletHierarchical(Wallet):
 
     def __init__(self, wallet_path: str, ip_address="localhost", miner_port=40203):
         super().__init__(wallet_path, ip_address, miner_port)
-        self._key_generation: RandomKeys = None  # just declaration instantiated in init_key_generation
+        self._key_generation = None  # RandomKeys: just declaration instantiated in init_key_generation
         self.init_key_generation()
 
     def init_key_generation(self):
         if self._key_generation is None:
             keys = self.wallet_keys()
-            if not keys:
+            if keys:
                 self._key_generation = RandomKeys(keys)
             else:
                 self._key_generation = RandomKeys()
@@ -38,17 +36,18 @@ class WalletHierarchical(Wallet):
         (keys, path) = self.read_wallet_private(path)
         # checking if the keys were generated correctly
         # for this to work correct, the keys read from the file should be always read and wrote in the same order
-        if RandomKeys.check_keys(keys):
+
+        if self._key_generation and self._key_generation.check_keys(keys):
+            return keys, path
+        if RandomKeys.check_keys_class(keys):
             return keys, path
         raise RandomKeys.InvalidKeyFile()
 
     def generate_next_key(self) -> Key:
-        self.init_key_generation()
         return self._key_generation.next_key()
 
     def write_master_key(self, backup_path: str):
         """writes the master key to a backup file. From this file the wallet can be recreated with the recover method"""
-        self.init_key_generation()
         Key.write_many_private(backup_path, [self._key_generation.get_master_key()])
 
     @classmethod
@@ -102,11 +101,11 @@ class RandomKeys:
         #source: https://stackoverflow.com/questions/18264314/generating-a-public-private-key-pair-using-an-initial-key
         """
 
-        def __init__(self, seed):
+        def __init__(self, seed: Key):
             self.index = 0
             if not seed:
                 raise Exception("no seed specified")
-            self.seed = seed
+            self.seed = seed.as_bytes(True)
             self.buffer = b""
 
         def __call__(self, n):
@@ -135,6 +134,7 @@ class RandomKeys:
         if not self._master_key.has_private:
             raise Exception("master key is not private")
         self._prng = RandomKeys.PRNG(self._master_key)
+        self._last_checked = []
         if not keys:
             return
 
@@ -143,9 +143,10 @@ class RandomKeys:
         for k in keys[1:]:
             if k != self.next_key():
                 raise RandomKeys.InvalidKeyFile
+        self._last_checked = keys  # List[Key] list of the keys with the correct hierarchy (for efficiency)
 
     @classmethod
-    def check_keys(cls, keys: List[Key]) -> bool:
+    def check_keys_class(cls, keys: List[Key]) -> bool:
         if not keys:
             return True
         prng = RandomKeys.PRNG(keys[0])
@@ -154,14 +155,28 @@ class RandomKeys:
                 return False
         return True
 
+    def check_keys(self, keys: List[Key]) -> bool:
+        # print('check')
+        # print('keys')
+        # print('\n'.join([str(k) + str(k.as_bytes(True)) for k in keys]))
+        # print('last checked:')
+        # print('\n'.join([str(k) + str(k.as_bytes(True)) for k in self._last_checked]))
+        if self._last_checked == keys:  # TODO this equals is not working correct, so the check is always executed (time consuming)
+            return True
+        if RandomKeys.check_keys_class(keys):
+            self._last_checked = keys
+            return True
+        return False
+
     @classmethod
     def next_key_prng(cls, prng: PRNG) -> Key:
-        """generates a ney private key from the random number generator"""
-        # TODO check whether this is always a new key, because my Crypto package is not working
+        """generates a new private key from the random number generator"""
         return Key(RSA.generate(1024, prng).exportKey())
 
     def next_key(self) -> Key:
-        return RandomKeys.next_key_prng(self._prng)
+        next_key = RandomKeys.next_key_prng(self._prng)
+        self._last_checked += [next_key]
+        return next_key
 
     def get_master_key(self):
         return self._master_key

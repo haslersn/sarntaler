@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
 from src.crypto import Key
-from .wallet import Wallet
+from src.wallet import Wallet
 
 """
 This is the standard Wallet
 All generated Keys are random. They are lost if the key is lost and can't be created again.
 """
 
-__all__ = ['WalletOld']
 
 from typing import List, Tuple
 
