@@ -1,4 +1,5 @@
 from binascii import hexlify
+import logging
 
 from src.blockchain import crypto
 from src.blockchain.account import Account, StorageItem
@@ -364,3 +365,27 @@ def test_checkkeypair_fail():
     mt, acc = get_account(empty_mt, fstr)
     si = ScriptInterpreter(mt, "", acc)
     assert not si.execute_script()
+
+def test_transfer():
+    trie = MerkleTrie(MerkleTrieStorage())
+    key1 = generate_keypair()
+    key2 = generate_keypair()
+
+    target_acc = Account(pubkey_from_keypair(key2), 0, '1 OP_RET', True, {})
+    contract_acc = Account(pubkey_from_keypair(key1), 100, "[] h0x" + hexlify(target_acc.address).decode() +" 10 OP_TRANSFER 1 OP_RET", False, {})
+
+    trie = trie.put(contract_acc.address, contract_acc.hash)
+    assert Account.get_from_hash(trie.get(contract_acc.address))
+    trie = trie.put(target_acc.address, target_acc.hash)
+    assert Account.get_from_hash(trie.get(target_acc.address))
+
+    print(type(trie))
+    si = ScriptInterpreter(trie, '', contract_acc)
+    trie, _ = si.execute_script()
+    print(type(trie))
+
+    assert trie
+    print("trie:" + str(trie.get(contract_acc.address)))
+    contract_acc = Account.get_from_hash(trie.get(contract_acc.address))
+    assert contract_acc.balance is 90
+    #assert trie.get(0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB) is 10

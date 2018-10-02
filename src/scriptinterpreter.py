@@ -4,6 +4,9 @@ import logging
 
 from src.blockchain.account import Account, StorageItem
 from src.blockchain.merkle_trie import MerkleTrie
+from src.blockchain.new_transaction import TransactionInput, TransactionOutput, TransactionData, Transaction
+from src.blockchain.state_transition import transit
+
 from .crypto import *
 from binascii import hexlify, unhexlify
 from datetime import datetime
@@ -585,6 +588,30 @@ class ScriptInterpreter:
         self.stack.append(len(popped))
         return True
 
+    def op_transfer(self):
+        logging.info("OP_TRANSFER called")
+        amount = self.__pop_checked(int)
+        target_addr = self.__pop_checked(Hash)
+        params = self.__pop_checked(list)
+        if amount is None:
+            logging.warning("OP_TRANSFER: Amount must be int")
+        if target_addr is None:
+            logging.warning("OP_TRANSFER: Target must be Hash")
+        if params is None:
+            logging.warning("OP_TRANSFER: Params must be Array")
+        target_addr = target_addr.value # now bytes
+        #print(self.state.get(self.acc.address)
+
+        input = TransactionInput(self.acc.address, amount)
+        output = TransactionOutput(target_addr, amount, params)
+        tx_data = TransactionData([input], [output], 0, (int(datetime.now().timestamp() * 1000)).to_bytes(32, 'big'))
+
+        self.state = transit(ScriptInterpreter, self.state, Transaction(tx_data, [bytes(32)]), bytes(32))
+        if self.state is None:
+            logging.warning("OP_TRANSFER: Empty state returned")
+            return False
+        return True
+
     def _parse_numeric_item(self, item: str):
         try:
             if len(item) > 2:
@@ -631,8 +658,10 @@ class ScriptInterpreter:
     def _parse_script(self, script: str, allow_opcodes = False, is_recursive_call = False):
         result = []
         script += '\n'  # tailing newline to not get errors at the end of file parsing
+        #logging.warning("script: " + script)
         while True:
             script = script.lstrip()
+            #logging.warning("current result: " + str(result))
             if not script:
                 break
             if script.startswith('//'):
@@ -680,6 +709,7 @@ class ScriptInterpreter:
         if is_recursive_call:
             logging.warning("[!] Error: Invalid Tx: Missing closing bracket in script")
             return None
+        #logging.warning("end result: " + str(result))
         return result
 
     def math_operations(self, op):
@@ -733,19 +763,25 @@ class ScriptInterpreter:
                 return False
             while self.pc <= len(self.program):
                 item = self.program[self.pc - 1] # Fetch the next item (given by the program counter)
+                #logging.warning("executing " + str(item))
                 logging.info("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
                 self.pc = self.pc + 1
                 if not execute_item(item):
+                    logging.warning("execution failed: " + str(item))
                     return False
                 logging.warning("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
             return False
 
+        logging.warning("executing new script: " + self.acc.code)
         if type(self.params_script) == list:
+            #logging.warning("params_script iss list " + str(self.params_script))
             self.stack = self.params_script
         else:
+            #logging.warning("params script ist script " + self.params_script)
             self.stack = self._parse_script(self.params_script)
 
         if self.stack is None:
+            logging.warning("Parse failed")
             return None
 
         execute(self.acc.code)
