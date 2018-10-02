@@ -479,8 +479,12 @@ class Translationunit(Node):
             code.append("0")
             code.append(str(name))
             code.append("OP_CALL")
+            code.append("disp_end")
+            code.append("OP_JUMP")
         code.append("disp_fail:")
-        code.append("OP_KILL // end dispatcher")
+        code.append("OP_KILL")
+        code.append("disp_end:")
+        code.append("OP_RET // end dispatcher")
         for procdecl in self.procs:
             code_proc = procdecl.code_gen()
             code += code_proc
