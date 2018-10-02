@@ -2,7 +2,7 @@
 import hashlib
 import logging
 
-from src.blockchain.account import Account
+from src.blockchain.account import Account, StorageItem
 from src.blockchain.merkle_trie import MerkleTrie
 from .crypto import *
 from binascii import hexlify, unhexlify
@@ -18,6 +18,10 @@ class Hash:
         self.value = value
 
 class Signature:
+    def __init__(self, value: bytes):
+        self.value = value
+
+class Key:
     def __init__(self, value: bytes):
         self.value = value
 
@@ -96,7 +100,9 @@ class ScriptInterpreter:
         'OP_TRANSFER',
 
         'OP_PACK',
-        'OP_UNPACK'
+        'OP_UNPACK',
+
+        'OP_CREATECONTR'
     }
 
     def __init__(self, state: MerkleTrie, params_script: str, acc: Account, tx_hash: bytes):
@@ -127,8 +133,9 @@ class ScriptInterpreter:
             logging.warning("Wrong type on top of stack. Expected {} but found {}".format(
                 t.__name__, type(top).__name__))
             return None
-        if type(top) in [ Hash, Signature ]:
+        if type(top) in [ Hash, Signature, Key]:
             return top.value
+        assert t in [ str, int, list ]
         return top
 
     def op_sha256(self):
@@ -502,6 +509,9 @@ class ScriptInterpreter:
             logging.warning("OP_GETSTOR: Stack is empty")
             return False
         var_name = self.__pop_checked(str)
+        if var_name is None:
+            logging.warning("OP_GETSTOR: s_1 not existing or wrong type")
+            return False
         var_value = self.acc.get_storage(var_name)
         if None == var_value:
             return False
@@ -513,6 +523,9 @@ class ScriptInterpreter:
             logging.warning("OP_SETSTOR: Not enough arguments")
             return False
         var_name = self.__pop_checked(str)
+        if var_name is None:
+            logging.warning("OP_SETSTOR: s_1 not existing or wrong type")
+            return False
         var_value = self.stack.pop()
         new_acc = self.acc.set_storage(var_name, var_value)
         if new_acc == None:
@@ -521,6 +534,34 @@ class ScriptInterpreter:
         self.acc = new_acc
         self.state = self.state.put(self.acc.address, self.acc.hash)
         return True
+
+    def op_createcontr(self):
+        if len(self.stack) < 5:
+            logging.warning("OP_CREATECONTR: Not enough arguments")
+            return False
+        pub_key = self.__pop_checked(Key)
+        code = self.__pop_checked(str)
+        owner_access_flag = self.__pop_checked(int)
+        storage_var_names = self.__pop_checked(list)
+        storage_initial_values = self.__pop_checked(list)
+        if any(v == None for v in [pub_key, code, owner_access_flag, storage_var_names, storage_initial_values]):
+            logging.warning("OP_CREATECONTR: error parsing arguments")
+            return False
+        if len(storage_var_names) != len(storage_initial_values):
+            logging.warning("OP_CREATECONTR: storage lists are not of equal length")
+            return False
+        storage = list()
+        for name, initval in zip(storage_var_names, storage_initial_values):  # TODO typename correct?
+            item = StorageItem(name, type(initval).__name__, initval)
+            if item == None:
+                logging.warning("OP_CREATECONTR: error parsing storage lists")
+                return False
+            storage.append(item)
+
+        new_acc = Account(pub_key, 0, code, owner_access_flag, storage)
+        self.state = self.state.put(new_acc.address, new_acc.hash)
+        return True
+
 
     def op_pack(self):
         n = self.__pop_checked(int)
@@ -545,7 +586,6 @@ class ScriptInterpreter:
             self.stack.append(item)
         self.stack.append(len(popped))
         return True
-
 
     def _parse_numeric_item(self, item: str):
         try:
@@ -633,7 +673,7 @@ class ScriptInterpreter:
             else:
                 to_append = self._parse_numeric_item(item)
                 if to_append is None:
-                    logging.warning("[!] Error: Invalid Tx: Could not parse numeric item")
+                    logging.warning("[!] Error: Invalid Tx: Could not parse numeric item " + item)
                     return None
                 result.append(to_append)  # Don't include the whitespace
             if script[first] != ']':

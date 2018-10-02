@@ -38,8 +38,8 @@ class StorageItem(namedtuple("StorageItem", ["s_name", "s_type", "s_value"])):
                         'key': check_key_type}
 
     def __new__(cls, s_name: str, s_type: str, s_value: object):
-        if not cls._supported_types[s_type](s_value):
-            logging.warning("invalid initialization for " + s_name)
+        if s_type not in cls._supported_types or not cls._supported_types[s_type](s_value):
+            logging.warning("invalid storage item for " + s_name)
             return None
         return super().__new__(cls, s_name, s_type, s_value)
 

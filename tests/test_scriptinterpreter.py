@@ -1,4 +1,8 @@
+from binascii import hexlify
+
+from src.blockchain import crypto
 from src.blockchain.account import Account, StorageItem
+from src.crypto import Key
 from src.scriptinterpreter import ScriptInterpreter
 from src.blockchain.merkle_trie import MerkleTrie, MerkleTrieStorage
 from Crypto.PublicKey import RSA
@@ -308,8 +312,15 @@ def test_setstor_invalid():
     assert not si.execute_script()
 
 def test_create_contr():
-    si = ScriptInterpreter(empty_mt, '0 1 2 3 4 "storethis" 2 OP_POPR 1 OP_RET', get_dummy_account(), None)
-    si.execute_script()
+    pubkey = crypto.pubkey_from_keypair(crypto.generate_keypair())
+    myacc = Account(bytes(27), 278, '[42] ["myint"] 1 "OP_RET" k0x' + hexlify(pubkey).decode() + ' OP_CREATECONTR 1 OP_RET', 1, [])
+    my_mt = empty_mt.put(myacc.address, myacc.hash)
+    si = ScriptInterpreter(my_mt, "", myacc, None)
+    new_state, ret_val = si.execute_script()
+    assert new_state
+    new_acc = Account.get_from_hash(new_state.get(crypto.compute_hash(pubkey)))
+    assert new_acc.get_storage('myint') == 42
+
 
 def test_pack_different_types():
     mt, acc = get_account(empty_mt, "h0xABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD 0 'abc' 3 OP_PACK 'def' OP_SWAP 2 OP_PACK 1 OP_RET")
