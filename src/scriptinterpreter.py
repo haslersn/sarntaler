@@ -558,8 +558,13 @@ class ScriptInterpreter:
                 return False
             storage.append(item)
 
+        if self.state.contains(compute_hash(pub_key.value)):
+            logging.warning("OP_CREATECONTR: Address already exists")
+            self.stack.append(0)
+            return True
         new_acc = Account(pub_key.value, 0, code, owner_access_flag, storage)
         self.state = self.state.put(new_acc.address, new_acc.hash)
+        self.stack.append(1)
         return True
 
 
