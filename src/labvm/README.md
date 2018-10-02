@@ -5,7 +5,8 @@ The labVM is a stack-based Virtual Machine. The Stack can hold references to eit
 
 ## Registers and Data Structures
  PC, FP, SP
- Stack(, Memory?)
+
+ Stack, Storage
 
 ## Syntax
 The syntax of labVM Script is very simple. A labVM script consist of two kind of elements each seperated by a newline: data and machine instructions. Empty lines will be ignored.
@@ -25,6 +26,8 @@ If you want to use special characters like a new line, use the usual escape sequ
 
 For Instructions, just write the name of the instruction. The interpreter is case-insensitive. For a list of all instructions see Section XX.
 
+**A valid program should end its execution with a OP_RET and a framepointer of -1(default value)**
+
 Comments can be added with leading //. They work inline and as an extra line but if they are on an extra line they don't get counted to the codelines you need to specify jumps. So inline comments should be preferred.
 
 For inline comments there has to be whitespace before the comment!
@@ -42,9 +45,9 @@ Example Program:
 	123
 	0x41324
 	op_add
-	"hallo"
 	0x1111111
 	OP_ADD
+	OP_RET
 
 ## Instructions
 remark: For the highest element on the stack **before the execution** s_1, for the second highest s_2, and so on:

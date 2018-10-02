@@ -532,7 +532,7 @@ class ScriptInterpreter:
             return False
         var_value = self.stack.pop()
         new_acc = self.acc.set_storage(var_name, var_value)
-        if new_acc == None:
+        if new_acc is None:
             logging.warning("OP_SETSTOR: Could not set storage for " + var_name)
             return False
         self.acc = new_acc
@@ -548,7 +548,7 @@ class ScriptInterpreter:
         owner_access_flag = self.__pop_checked(int)
         storage_var_names = self.__pop_checked(list)
         storage_initial_values = self.__pop_checked(list)
-        if any(v == None for v in [pub_key, code, owner_access_flag, storage_var_names, storage_initial_values]):
+        if any(v is None for v in [pub_key, code, owner_access_flag, storage_var_names, storage_initial_values]):
             logging.warning("OP_CREATECONTR: error parsing arguments")
             return False
         if len(storage_var_names) != len(storage_initial_values):
@@ -557,7 +557,7 @@ class ScriptInterpreter:
         storage = list()
         for name, initval in zip(storage_var_names, storage_initial_values):  # TODO typename correct?
             item = StorageItem(name, type(initval).__name__, initval)
-            if item == None:
+            if item is None:
                 logging.warning("OP_CREATECONTR: error parsing storage lists")
                 return False
             storage.append(item)
@@ -745,7 +745,7 @@ class ScriptInterpreter:
         if not execute(self.params_script, True):
             return None
         ret = execute(self.acc.code, False)
-        return None if self.retval == None else (self.state, self.retval)
+        return None if self.retval is None else (self.state, self.retval)
 
         ## exit_code = self.__pop_checked(int)
         ## if exit_code == 1:
