@@ -1,5 +1,6 @@
 import unittest
 import os.path
+import os
 from src.marm import *
 from sys import stdout
 
@@ -134,7 +135,7 @@ class TestParserMethods(unittest.TestCase):
     def test_gcd(self):
         self.generic_test("gcd.marm")
 
-    @unittest.skipIf(False, "no crypto module")
+    @unittest.skipIf(os.name == 'nt', "no crypto module on windows")
     def test_gcd_script(self):
         from subprocess import call
         from src.scriptinterpreter import ScriptInterpreter
