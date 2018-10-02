@@ -497,7 +497,7 @@ class ScriptInterpreter:
         if not self.stack:
             logging.warning("OP_GETSTOR: Stack is empty")
             return False
-        var_name = self.stack.pop()
+        var_name = self.__pop_checked(str)
         var_value = self.acc.get_storage(var_name)
         if None == var_value:
             return False
@@ -508,7 +508,7 @@ class ScriptInterpreter:
         if len(self.stack) < 2:
             logging.warning("OP_SETSTOR: Not enough arguments")
             return False
-        var_name = self.stack.pop()
+        var_name = self.__pop_checked(str)
         var_value = self.stack.pop()
         new_acc = self.acc.set_storage(var_name, var_value)
         if new_acc == None:
