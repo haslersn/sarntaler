@@ -155,7 +155,7 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signatures"])):
         return Transaction(self, tx_data, signatures[0:index:] + (new_sig,) + signatures[index+1:])
 
     def signed(self):
-        return all(map(is_signature, signatures))
+        return all(map(is_signature, self.signatures))
 
     @property
     def hash(self):
