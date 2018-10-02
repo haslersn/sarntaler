@@ -387,10 +387,13 @@ def test_transfer():
     assert trie
     print("trie:" + str(trie.get(contract_acc.address)))
     contract_acc = Account.get_from_hash(trie.get(contract_acc.address))
+    target_acc = Account.get_from_hash(trie.get(target_acc.address))
     assert contract_acc.balance is 90
+    assert target_acc.balance is 10
 
 def test_op_hash():
     script_finalstack_test('"hashthis" OP_HASH 1 OP_RET', [compute_hash('hashthis'.encode())])
     script_finalstack_test('42 OP_HASH 1 OP_RET', [compute_hash(str(42).encode())])
     dummy = get_dummy_account()
     script_finalstack_test('h0x' + hexlify(dummy.pub_key).decode() + ' OP_HASH 1 OP_RET', [dummy.address])
+    
