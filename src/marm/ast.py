@@ -467,13 +467,13 @@ class Typename(Node):
 
     def typecheck(self, errorhandler): pass
 
-    def attribute_type(self, ident, errorhandler):
+    def attribute_type(self, ident, errorhandler): # TODO: Add **all+* attributes we have available
         if self.typee == 'msg':
             if ident == 'account':
                 return Typename('address')
         if self.typee == 'address':
             return Typename('generic')
-        return None # TODO
+        return None
 
 
 class Translationunit(Node):
@@ -555,7 +555,7 @@ class Paramdecl(Node):
     def analyse_scope(self, scope, errorhandler):
         if scope.has_direct_definition(self.name):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Multiple parameters have the name {}.".format(self.name)) #TODO
+                                       "Multiple parameters have the name {}.".format(self.name))
         scope.define(self.name, self)
 
     def typecheck(self, errorhandler): pass
