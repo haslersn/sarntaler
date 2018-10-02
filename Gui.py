@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import filedialog
 from tkinter import SEPARATOR
-
+from docutils.utils import column_indices
 from src.config import *
 from src.crypto import Key
 from src.transaction import TransactionTarget
@@ -12,11 +12,12 @@ from src.mining import Miner
 from src.persistence import Persistence
 from src.rpc_server import rpc_server
 import src.wallet as wallet
-
 import json
 import os.path
 
+
 class Gui(object):
+
     _lblWidth = 25
     _btnWidth = 50
     _window = Tk()
@@ -27,7 +28,6 @@ class Gui(object):
     _wallet = None
     _minerRunning = FALSE
     _known_addresses = None
-
 
     def __init__(self):
         self.initializeGui()
@@ -100,7 +100,34 @@ class Gui(object):
             message = "You need to specify a wallet first!"
         #TODO output message to the user
         popup.destroy()
-     
+    
+    def initSmartContractView(self):
+        popup = Tk()
+        popup.title("New Smart Contract")
+        
+        editor = Text(popup)
+        editor.insert(INSERT, "test")
+        editor.pack(fill=BOTH, expand=1)
+        editor.grid(row=0, column=1, columnspan=2)
+        
+        btnOk = Button(popup, text="Run", width=10, command=lambda: print(editor.get("1.0", END)))
+        btnOk.grid(row=3, column=1, pady=5)
+        btnCancel = Button(popup, text="Cancel", width=10, command=popup.destroy)
+        btnCancel.grid(row=3, column=2, pady=5)
+        
+        def validateKey(key):
+            if key.keysym in ("Tab"):
+                return "break"
+        def preparePaste(key):
+            try:
+                str = popup.clipboard_get()
+                popup.clipboard_clear()
+                popup.clipboard_append(str.replace("\t", " "))
+            except TclError:
+                return 
+        editor.bind("<Key>", validateKey)
+        editor.bind("<Control-v>", preparePaste)
+        
     def initPopup(self):
         popup = Tk()
         popup.title("New Transaction")
