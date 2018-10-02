@@ -135,31 +135,34 @@ class TestParserMethods(unittest.TestCase):
     def test_gcd(self):
         self.generic_test("gcd.marm")
 
-    @unittest.skipIf(os.name == 'nt', "no crypto module on windows")
-    def test_gcd_script(self):
+    def generic_run_test(self, filename, expected_result, fnname, params=[]):
         from subprocess import call
         from src.scriptinterpreter import ScriptInterpreter
-        from math import gcd
-        a = 12
-        b = 26
-        self.generic_test("gcd.marm", print_out=True)
+        self.generic_test(filename, print_out=True)
         call(["rm", os.path.join(self.testdir, "o.out")])
         call(["python3", "-m", "src.labvm.scriptlinker", os.path.join(self.testdir, "test.labvm"),
               "-o", os.path.join(self.testdir, "o.out")])
-        with open(os.path.join(self.testdir, "o.out"), "r") as gcdfile:
-            gcdstr = gcdfile.read()
+        with open(os.path.join(self.testdir, "o.out")) as bytecode_file:
+            bytecode = bytecode_file.read()
 
-        si = ScriptInterpreter(gcdstr, "", bytes(0))
-        si.stack.append(a)
-        si.stack.append(b)
-        si.stack.append("gcd")
-        si.stack.append(3)
+        si = ScriptInterpreter(bytecode, "", bytes(0))
+        for param in params[::-1]:
+            si.stack.append(param)
+        si.stack.append(fnname)
+        si.stack.append(len(params)+1)
         try:
             si.execute_script()
         except IndexError:
             print("Test is successful, but OP_RET does not work up until now")
             return
-        self.assertEqual(gcd(a, b), si.stack[0])
+        self.assertEqual(expected_result, si.stack[0])
+
+
+    @unittest.skipIf(os.name == 'nt', "no crypto module on windows")
+    def test_gcd_script(self):
+        from math import gcd
+        for (a,b) in [(12,26)]:
+            self.generic_run_test("gcd.marm", gcd(a,b), "gcd", [a, b])
 
 
 if __name__ == '__main__':
