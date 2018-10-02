@@ -376,6 +376,8 @@ class LHS(Node):
         if isinstance(self.definition, Procdecl):
             code.append(self.ident + " // function name")
         elif isinstance(self.definition, ContractMemberDecl):
+            code.append('"' + self.definition.name + '" // store name')
+            code.append('OP_GETSTOR')
             pass # TODO
         else:
             code.append(str(self.definition.get_local_index_for(self.ident))+" // address of local "+self.ident)
@@ -388,7 +390,8 @@ class LHS(Node):
         if isinstance(self.definition,Procdecl):
             raise RuntimeError("Tried to assign procedure name") # TODO errorhandler
         elif isinstance(self.definition, ContractMemberDecl):
-            pass # TODO
+            code.append('"' + self.definition.name +'" // store name')
+            code.append('OP_SETSTOR')
         else:
             code.append(str(self.definition.get_local_index_for(self.ident))+ " // address of local "+self.ident)
             code.append('OP_POPR')
@@ -438,10 +441,10 @@ class Translationunit(Node):
         local_scope = Scope(scope)
         for proc in self.procs:
             local_scope.define(proc.name, proc)
-        for proc in self.procs:
-            proc.analyse_scope(local_scope, errorhandler)
         for contractdata_el in self.contractdata:
             contractdata_el.analyse_scope(local_scope, errorhandler)
+        for proc in self.procs:
+            proc.analyse_scope(local_scope, errorhandler)
 
     def typecheck(self, errorhandler):
         for proc in self.procs:
@@ -532,6 +535,10 @@ class ContractMemberDecl(Node):
         scope.define(self.name, self)
 
     def typecheck(self, errorhandler): pass
+
+    def get_marm_type_for(self, ident):
+        assert(ident == self.name)
+        return self.marm_type
 
 
 class Proctype:
