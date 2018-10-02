@@ -679,7 +679,7 @@ class StatementDecl(Statement):
         self.typee = typee
         self.decllist = decllist
         self.local_var_indices = None
-        self.init_values = [0]*len(self.decllist) # TODO
+        self.init_values = [0]*len(self.decllist)
 
     def __str__(self):
         return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + self.liststr(self.decllist) + "]"
