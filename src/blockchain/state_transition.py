@@ -26,7 +26,7 @@ def transit(script_interpreter_cls: type, state : MerkleTrie, transaction : Tran
         acc = acc.add_to_balance(output.value)
         state = state.put(output.address, acc.hash)
         if acc.code is not None:
-            vm = script_interpreter_cls(state, output.params, acc, transaction.hash)
+            vm = script_interpreter_cls(state, output.params, acc)
             state = vm.execute_script()
 
     if miner_address != bytes(32):
