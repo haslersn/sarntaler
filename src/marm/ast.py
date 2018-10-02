@@ -154,11 +154,10 @@ class BinExpr(Expr):
             if type(self.left) == LHS:
                 # create rhs code
                 code_right = self.right.code_gen()
-                left_stackaddress = self.left.code_gen_LHS()
+                left_setcode = self.left.code_gen_LHS()
 
                 code += code_right
-                code += left_stackaddress
-                code.append("OP_POPABS")
+                code += left_setcode
             else:
                 # got an expression on the left side like a+b, which we don't want to allow
                 print("BinExpr.code_gen: got a binary expression like a+b = 5 which we don't want to allow")
@@ -219,7 +218,7 @@ class LocalcallExpr(Expr):
             return
     def code_gen(self):
         """TODO create code for inter-contract call"""
-        code_methodid = self.fnname.code_gen_LHS()
+        code_methodid = self.fnname.code_gen()
 
         code = []
         for param in self.params:#[::-1]:
@@ -374,23 +373,28 @@ class LHS(Node):
     def code_gen(self):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
-        #print(self.definition.__class__)
-        #if isinstance(self.definition,Procdecl):
-        #    ident_addr = self.ident
-        #else:
-        ident_addr = self.definition.get_local_index_for(self.ident)
-        code.append(str(ident_addr) + " // address of local "+self.ident)
-        code.append('OP_PUSHR')
+        if isinstance(self.definition, Procdecl):
+            code.append(self.ident + " // function name")
+        elif isinstance(self.definition, ContractMemberDecl):
+            code.append('"' + self.definition.name + '" // store name')
+            code.append('OP_GETSTOR')
+            pass # TODO
+        else:
+            code.append(str(self.definition.get_local_index_for(self.ident))+" // address of local "+self.ident)
+            code.append('OP_PUSHR')
         return code
 
     def code_gen_LHS(self):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
         if isinstance(self.definition,Procdecl):
-            ident_addr = self.ident + " // function name"
+            raise RuntimeError("Tried to assign procedure name") # TODO errorhandler
+        elif isinstance(self.definition, ContractMemberDecl):
+            code.append('"' + self.definition.name +'" // store name')
+            code.append('OP_SETSTOR')
         else:
-            ident_addr = str(self.definition.get_local_index_for(self.ident))+ " // address of local "+self.ident
-        code.append(ident_addr)
+            code.append(str(self.definition.get_local_index_for(self.ident))+ " // address of local "+self.ident)
+            code.append('OP_POPR')
         return code
 
 
@@ -437,6 +441,8 @@ class Translationunit(Node):
         local_scope = Scope(scope)
         for proc in self.procs:
             local_scope.define(proc.name, proc)
+        for contractdata_el in self.contractdata:
+            contractdata_el.analyse_scope(local_scope, errorhandler)
         for proc in self.procs:
             proc.analyse_scope(local_scope, errorhandler)
 
@@ -474,7 +480,7 @@ class Translationunit(Node):
             code.append(str(name))
             code.append("OP_CALL")
         code.append("disp_fail:")
-        code.append("OP_RET // end dispatcher")
+        code.append("OP_KILL // end dispatcher")
         for procdecl in self.procs:
             code_proc = procdecl.code_gen()
             code += code_proc
@@ -530,6 +536,10 @@ class ContractMemberDecl(Node):
         scope.define(self.name, self)
 
     def typecheck(self, errorhandler): pass
+
+    def get_marm_type_for(self, ident):
+        assert(ident == self.name)
+        return self.marm_type
 
 
 class Proctype:
@@ -709,13 +719,13 @@ class StatementWhile(Statement):
         code.append("OP_NOT")
 
         code.append(label_end)
-        code.append("OP_JUMPRC")
+        code.append("OP_JUMPC")
 
         # The loop body
         code += code_body
 
         code.append(label_start)
-        code.append("OP_JUMPR")
+        code.append("OP_JUMP")
 
         code.append(label_end + ":")
         return code
@@ -763,7 +773,7 @@ class StatementIf(Statement):
         code += code_boolex
 
         code.append(label_true)
-        code.append("OP_JUMPRC")
+        code.append("OP_JUMPC")
 
         if not (self.elseprod is None):
             code_false = self.elseprod.code_gen()
@@ -771,11 +781,11 @@ class StatementIf(Statement):
             # The false body
             code += code_false
 
-        code.append(label_true + ":")
-
         code.append(label_end)
         code.append("OP_JUMP")
+
         # The true body
+        code.append(label_true + ":")
         code += code_true
         code.append(label_end + ":")
 
@@ -912,9 +922,9 @@ class BoolexCMP(Boolex):
         code += self.left.code_gen()
         code += self.right.code_gen()
         if str(self.op) == "==":
-            code.append("OP_EQ")
+            code.append("OP_EQU")
         elif str(self.op) == "!=":
-            code.append("OP_EQ")
+            code.append("OP_EQU")
             code.append("OP_NOT")
         elif str(self.op) == "<=":
             code.append("OP_LE")

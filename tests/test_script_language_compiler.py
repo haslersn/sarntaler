@@ -10,16 +10,23 @@ class TestParserMethods(unittest.TestCase):
 
         self.testdir = os.path.join(os.path.dirname(__file__), "marm")
 
-    def generic_test(self, filename, cleanCode=True, roughlyOk=True, error_count=0, fatals_count=0, stages=None):
+    def generic_test(self, filename, cleanCode=True, roughlyOk=True, error_count=0, fatals_count=0, stages=None,
+                     print_out=False):
         errorhandler = marmcompiler.ErrorHandler()
         try:
             with open(os.path.join(self.testdir, filename), mode='r') as testfile:
-                marmcompiler.marmcompiler(filename, testfile.read(),
+                result = marmcompiler.marmcompiler(filename, testfile.read(),
                                           errorhandler=errorhandler, stages=stages)
                 self.assertEqual(errorhandler.roughlyOk(), roughlyOk)
                 self.assertEqual(errorhandler.cleanCode(), cleanCode)
                 self.assertEqual(errorhandler.countErrors(), error_count)
                 self.assertEqual(errorhandler.countFatals(), fatals_count)
+                if print_out:
+                    output = open("test.labvm", "w")
+                    for line in result:
+                        output.write(str(line))
+                        output.write("\n")
+                    output.close()
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
@@ -111,7 +118,6 @@ class TestParserMethods(unittest.TestCase):
         """Tests whether some parsable structure results in defined behaviour, should probably fail"""
         self.generic_test("absurd_tests.marm")
 
-
     @unittest.expectedFailure
     def test_parse_file_unimplemented_features(self):
         """Tests whether some new features are actually implemented and should be have any other flaws"""
@@ -128,6 +134,25 @@ class TestParserMethods(unittest.TestCase):
 
     def test_gcd(self):
         self.generic_test("gcd.marm")
+
+    @unittest.skipIf(True, "no crypto module")
+    def test_gcd_script(self):
+        from src.scriptinterpreter import ScriptInterpreter
+        from math import gcd
+        a = 12
+        b = 26
+        gcdfile = open("./o.out", "r")
+        gcdstr = gcdfile.read()
+        gcdfile.close()
+        print(gcdstr)
+        si = ScriptInterpreter(gcdstr, "", bytes(0))
+        si.stack.append(a)
+        si.stack.append(b)
+        si.stack.append("gcd")
+        si.stack.append(3)
+        si.execute_script()
+        print("Stack after gcd script:", si.stack)
+        self.assertEqual(gcd(a, b), si.stack[0])
 
 
 if __name__ == '__main__':
