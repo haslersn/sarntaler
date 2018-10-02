@@ -33,7 +33,7 @@ def check_is_keypair(keypair: bytes):
     if not is_keypair(keypair):
         raise ValueError('non-zero keypair with length 32 Byte expected')
 
-def check_is_hash(pubkey: bytes):
+def check_is_pubkey(pubkey: bytes):
     if not is_pubkey(pubkey):
         raise ValueError('non-zero pubkey with length 32 Byte expected')
 
