@@ -137,14 +137,17 @@ class TestParserMethods(unittest.TestCase):
 
     @unittest.skipIf(False, "no crypto module")
     def test_gcd_script(self):
+        from subprocess import call
         from src.scriptinterpreter import ScriptInterpreter
         from math import gcd
         a = 12
         b = 26
+        self.generic_test("gcd.marm", print_out=True)
+        call(["python3", "-m", "src.labvm.scriptlinker", ".\test.labvm", "-o", "o.out"])
         gcdfile = open("./o.out", "r")
         gcdstr = gcdfile.read()
         gcdfile.close()
-        print(gcdstr)
+
         si = ScriptInterpreter(gcdstr, "", bytes(0))
         si.stack.append(a)
         si.stack.append(b)
