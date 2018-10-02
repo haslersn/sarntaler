@@ -3,6 +3,9 @@ import json
 import os
 import sys
 import signal
+import platform
+import subprocess as sub
+import multiprocessing as mu
 
 import select
 from threading import Thread, Condition
@@ -15,7 +18,7 @@ from . import mining_strategy
 
 __all__ = ['Miner']
 
-signal.signal(signal.SIGCHLD, signal.SIG_IGN)
+#signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 
 
 def exit_on_pipe_close(pipe):
@@ -24,6 +27,25 @@ def exit_on_pipe_close(pipe):
     poller.register(pipe, select.POLLERR)
     poller.poll()
     os._exit(1)
+
+def child_func(func: Callable, wx):
+    try:
+        #print(wx)
+        os.close(0)
+        os.closerange(3, wx)
+        os.closerange(wx + 1, 2 ** 16)
+
+        Thread(target=exit_on_pipe_close, args=(wx,), daemon=True).start()
+
+        res = func().to_json_compatible()
+        with os.fdopen(wx, "w") as fp:
+            json.dump(res, sys.stdout)
+            json.dump(res, fp)
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        os._exit(1)
+    os._exit(0)
 
 
 def start_process(func: Callable) -> Tuple[int, int]:
@@ -34,28 +56,25 @@ def start_process(func: Callable) -> Tuple[int, int]:
     :rval: A tuple of the pipe where the result will be written to and the process id of the
            forked process.
     """
-    rx, wx = os.pipe()
-    pid = os.fork()
-    if pid == 0:  # child
-        try:
-            os.close(0)
-            os.closerange(3, wx)
-            os.closerange(wx + 1, 2 ** 16)
-
-            Thread(target=exit_on_pipe_close, args=(wx,), daemon=True).start()
-
-            res = func().to_json_compatible()
-            with os.fdopen(wx, "w") as fp:
-                json.dump(res, sys.stdout)
-                json.dump(res, fp)
-        except Exception:
-            import traceback
-            traceback.print_exc()
-            os._exit(1)
-        os._exit(0)
-    else:  # parent
+    if platform.system() == 'Windows':
+        rx, wx = os.pipe()
+        #TODO: Windows Problems not fixed jet
+        #mu.Process(target=child_func(func, wx))
+        pid = sub.Popen(child_func(func, wx)).pid
+        #pid = os.spawnl(os.P_NOWAIT, child_func(func, wx))
         os.close(wx)
         return rx, pid
+
+    #Linux
+    else:
+        rx, wx = os.pipe()
+
+        pid = os.fork()
+        if pid == 0:  # child
+            child_func(func, wx)
+        else:  # parent
+            os.close(wx)
+            return rx, pid
 
 
 def wait_for_result(pipes: List[int], cls: type):

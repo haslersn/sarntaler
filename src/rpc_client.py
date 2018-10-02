@@ -2,27 +2,34 @@
 
 import json
 import sys
-from typing import List, Tuple, Iterator
 from datetime import datetime
+from typing import List, Tuple, Iterator
 
 import requests
 
-from .transaction import Transaction, TransactionTarget, TransactionInput
 from .crypto import Key
+from .transaction import Transaction, TransactionTarget, TransactionInput
 
 
 class RPCClient:
     """ The RPC methods used by the wallet to talk to the miner application. """
 
-    def __init__(self, miner_port: int):
+    def __init__(self, ip_address="localhost", miner_port=40203):
         self.sess = requests.Session()
-        self.url = "http://localhost:{}/".format(miner_port)
+        self.url = "http://{}:{}/".format(ip_address, miner_port)
 
     def send_transaction(self, transaction: Transaction):
         """ Sends a transaction to the miner. """
         resp = self.sess.put(self.url + 'new-transaction', data=json.dumps(transaction.to_json_compatible()),
                              headers={"Content-Type": "application/json"})
         resp.raise_for_status()
+
+    def get_addresses(self) -> List[Key]:
+        """ Returns all public addresses in the blockchain. """
+        resp = self.sess.post(self.url + 'explorer/addresses', data=None,
+                              headers={"Content-Type": "application/json"})
+        resp.raise_for_status()
+        return [Key.from_json_compatible(t) for t in resp.json()]
 
     def network_info(self) -> List[Tuple[str, int]]:
         """ Returns the peers connected to the miner. """
@@ -39,7 +46,7 @@ class RPCClient:
 
     def get_transaction(self, tx_hash: bytes) -> Transaction:
         """ Returns the transaction with hash tx_hash """
-        resp = self.sess.post(self.url + 'transaction', data=tx_hash,          headers={"Content-Type": "application/json"})
+        resp = self.sess.post(self.url + 'transaction', data=tx_hash, headers={"Content-Type": "application/json"})
         resp.raise_for_status()
         return Transaction.from_json_compatible(resp.json())
 
@@ -79,4 +86,3 @@ class RPCClient:
                   for i, inp in enumerate(temp_inputs)]
 
         return Transaction(inputs, targets, timestamp)
-

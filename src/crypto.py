@@ -4,6 +4,7 @@ import os
 import os.path
 import tempfile
 import random
+import platform
 import string
 from binascii import hexlify, unhexlify
 from typing import Iterator, Iterable
@@ -109,22 +110,40 @@ class Key:
     @staticmethod
     def write_many_private(path: str, keys: 'Iterable[Key]'):
         """ Writes the private keys in `keys` to the file at `path`. """
-        dirname = os.path.dirname(path) or "."
-        with tempfile.NamedTemporaryFile("wb", delete=False, dir=dirname) as fp:
+        if platform.system() == 'Windows':
+            dirname = os.path.dirname(path) or "."
+            with tempfile.NamedTemporaryFile("wb", delete=False, dir=dirname) as fp:
+                try:
+                    for key in keys:
+                        fp.write(key.as_bytes(include_priv=True) + b"\n")
+
+                    fp.flush()
+                    os.fsync(fp.fileno())
+
+                    fp.close()  # new
+                    os.remove(path)  # new
+                    os.rename(fp.name, path)
+                except Exception as e:
+                    os.unlink(fp.name) #possible Error?
+                    raise e
+
+        else:
+            dirname = os.path.dirname(path) or "."
+            with tempfile.NamedTemporaryFile("wb", delete=False, dir=dirname) as fp:
+                try:
+                    for key in keys:
+                        fp.write(key.as_bytes(include_priv=True) + b"\n")
+
+                    fp.flush()
+                    os.fsync(fp.fileno())
+
+                    os.rename(fp.name, path)
+                except Exception as e:
+                    os.unlink(fp.name)
+                    raise e
+
+            fd = os.open(dirname, os.O_DIRECTORY)
             try:
-                for key in keys:
-                    fp.write(key.as_bytes(include_priv=True) + b"\n")
-
-                fp.flush()
-                os.fsync(fp.fileno())
-
-                os.rename(fp.name, path)
-            except Exception as e:
-                os.unlink(fp.name)
-                raise e
-
-        fd = os.open(dirname, os.O_DIRECTORY)
-        try:
-            os.fsync(fd)
-        finally:
-            os.close(fd)
+                os.fsync(fd)
+            finally:
+                os.close(fd)
