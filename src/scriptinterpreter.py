@@ -135,9 +135,7 @@ class ScriptInterpreter:
             logging.warning("Wrong type on top of stack. Expected {} but found {}".format(
                 t.__name__, type(top).__name__))
             return None
-        if type(top) in [ Hash, Signature, Key]:
-            return top.value
-        assert t in [ str, int, list ]
+        assert t in [ str, int, list, Hash, Signature, Key]
         return top
 
     def op_sha256(self):
@@ -164,6 +162,8 @@ class ScriptInterpreter:
             logging.warning("OP_CHECKKEY: Stack is empty or top element not a key")
             return False
 
+        privKey = privKey.value
+        pubKey = pubKey.value
         beforenc = cr.get_random_int(256)
         enctxt = pubKey.rsa.encrypt(beforenc, 1)[0]
         afterenc = privKey.rsa.decrypt(enctxt)
@@ -180,11 +180,12 @@ class ScriptInterpreter:
         if pubKey is None:
             logging.warning("OP_CHECKSIG: Stack is empty or top element not a key")
             return False
-
+        pubKey = pubKey.value
         sig = self.__pop_checked(Signature)
         if sig is None:
             logging.warning("OP_CHECKSIG: Stack is empty or top element not a signature")
             return False
+        sig = sig.value
 
         if pubKey.verify_sign(self.tx_hash, sig):
             self.stack.append(1)
@@ -561,7 +562,7 @@ class ScriptInterpreter:
                 return False
             storage.append(item)
 
-        new_acc = Account(pub_key, 0, code, owner_access_flag, storage)
+        new_acc = Account(pub_key.value, 0, code, owner_access_flag, storage)
         self.state = self.state.put(new_acc.address, new_acc.hash)
         return True
 
