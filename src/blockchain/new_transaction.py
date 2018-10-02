@@ -154,6 +154,9 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signatures"])):
         new_sig = sign(keypair, tx_data.hash)
         return Transaction(self, tx_data, signatures[0:index:] + (new_sig,) + signatures[index+1:])
 
+    def signed(self):
+        return all(map(is_signature, signatures))
+
     @property
     def hash(self):
         """ Computes the hash by just hasing the object's JSON representation
