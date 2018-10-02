@@ -214,7 +214,7 @@ class Gui(object):
             output = dict()
             #if 
             return output
-        btnStart.config(command=lambda : self.startMiner(self.mining_pubkey, kwinput()))
+        btnStart.config(command=lambda : self.startMiner(self.mining_pubkey, **kwinput()))
 
         btnCancel = Button(popup2, text = "Cancel", width = self._btnWidth)
         btnCancel.grid(row= 7, column = 1, pady = 10, padx = self._padx)
@@ -224,7 +224,7 @@ class Gui(object):
 
 
 
-    def startMiner(self, btn, mining_pubkey, listen_address : str = "", listen_port : int = 0,
+    def startMiner(self, mining_pubkey, listen_address : str = "", listen_port : int = 0,
          bootstrap_peer = [], rpc_port : int = 40203, persist_path : str = None):
         """
         if self._minerRunning:
