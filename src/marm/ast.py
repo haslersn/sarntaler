@@ -217,12 +217,12 @@ class ContractcallExpr(Expr):
         code.append("// start construction site for TRANSFER")
         for param in self.params:#[::-1]:
             code+=param.code_gen()
-        code+=code_methodid
         code.append(len(self.params)+1)
         code.append("OP_PACK // S3 == params")
-        code.append("// S2 == contract address")
+        code+=code_methodid+"// S2 == contract address"
         for fe in self.fee:
             code+=fe.code_gen()
+            break
         code.append("// S1 == FEE")
         code.append("OP_TRANSFER")
         for param in self.params:#[::-1]:
