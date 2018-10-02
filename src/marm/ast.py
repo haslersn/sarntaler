@@ -199,27 +199,35 @@ class ContractcallExpr(Expr):
 
     def typecheck(self, errorhandler):
         self.fnname.typecheck(errorhandler)
-        #errorhandler.registerWarning(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-        #                               "Warning: We currently do not check whether a contract call expression actually types.")
+        errorhandler.registerWarning(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Warning: We currently do not check whether a contract call expression actually types.")
+        if len(self.fee)!=1:
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Error: Contract calls have only a single parameter for the fee part")
         for i in range(0, len(self.params)):
             param = self.params[i]
             param.typecheck(errorhandler)
-        self.marm_type = None
-        #TODO introduce unknown type
+        self.marm_type = Typename('generic')
 
     def code_gen(self, errorhandler):
         """TODO create code for inter-contract call"""
         code_methodid = self.fnname.code_gen()
 
         code = []
+        code.append("// start construction site for TRANSFER")
         for param in self.params:#[::-1]:
             code+=param.code_gen()
-        code+=code_methodid
-        code.append(len(param))
+        code.append(len(self.params)+1)
+        code.append("OP_PACK // S3 == params")
+        code+=code_methodid+"// S2 == contract address"
+        for fe in self.fee:
+            code+=fe.code_gen()
+            break
+        code.append("// S1 == FEE")
         code.append("OP_TRANSFER")
-        for param in self.params:#[::-1]:
-            code.append("OP_SWAP")
-            code.append("OP_POPVOID")
+        code.append("OP_POPVOID // S1==success?")
+        code.append("//OP_POPVOID // S2==retval")
+        code.append("// end construction site for TRANSFER")
         return code
 
 class LocalcallExpr(Expr):
@@ -469,13 +477,13 @@ class Typename(Node):
 
     def typecheck(self, errorhandler): pass
 
-    def attribute_type(self, ident, errorhandler):
+    def attribute_type(self, ident, errorhandler): # TODO: Add **all+* attributes we have available
         if self.typee == 'msg':
             if ident == 'account':
                 return Typename('address')
         if self.typee == 'address':
             return Typename('generic')
-        return None # TODO
+        return None
 
 
 class Translationunit(Node):
@@ -672,7 +680,7 @@ class StatementDecl(Statement):
         self.typee = typee
         self.decllist = decllist
         self.local_var_indices = None
-        self.init_values = [0]*len(self.decllist) # TODO
+        self.init_values = [0]*len(self.decllist)
 
     def __str__(self):
         return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + self.liststr(self.decllist) + "]"
