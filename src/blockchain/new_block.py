@@ -70,6 +70,9 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
         # sort transactions
         transactions = sorted(transactions, key = lambda tx: tx.hash)
 
+        if not all(t.signed() for t in transactions):
+            raise ValueError('Unsigned transaction')
+
         # merkle tries
         state_trie = MerkleTrie(MerkleTrieStorage()) if prev_block is None else prev_block.skeleton.state_trie
         tx_trie = MerkleTrie(MerkleTrieStorage())
