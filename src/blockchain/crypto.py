@@ -41,14 +41,14 @@ def sign(keypair: bytes, hash: bytes) -> bytes:
     """ Sign a hashed value with the private key. """
     signer = PKCS1_PSS.new(RSA.importKey(keypair))
     h = SHA256.new()
-    h.update(hashed_value)
+    h.update(hash)
     return signer.sign(h)
 
 def verify_sign(pubkey: bytes, hash: bytes, signature: bytes):
     """ Verify a signature for an already hashed value and a public key. """
     signer = PKCS1_PSS.new(RSA.importKey(pubkey))
     h = SHA256.new()
-    h.update(hashed_value)
+    h.update(hash)
     return singer.verify(h, signature)
 
 def generate_keypair():
