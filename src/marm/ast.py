@@ -225,11 +225,10 @@ class LocalcallExpr(Expr):
         for param in self.params:#[::-1]:
             code+=param.code_gen()
         code+=code_methodid
-        code.append("OP_CALL")
+        code.append("OP_CALL // WARNING: We assume a call to be a contract-local call")
         for param in self.params:#[::-1]:
             code.append("OP_SWAP")
             code.append("OP_POPVOID")
-        code.append("// WARNING: We assume a call to be a contract-local call")
         return code
     # TODO code_gen
 
@@ -543,8 +542,8 @@ class Procdecl(Node):
 
     def code_gen(self):
         """Insert the identifiers in the symboltable(?) and generate the code for the body"""
-        code = ["// start proc %s"%self.name]
-        code.append("%s:"%self.name)
+        code = []
+        code.append("%s: // start proc %s" %(self.name,self.name))
         # TODO decide what to do with the procedure and params addresses
         for decl in self.body:
             code += decl.code_gen()
