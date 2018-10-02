@@ -42,8 +42,8 @@ Variables of type `address` can store any address (an integer with 32 bytes). Th
 be assigned by calling the specific procedures to create accounts or calling the message sender. 
 ```c
 address a, b;
-a = create(value_amount); // value_amount is of type sarn
-b = msg.account; // stores the associated account of the message sender in b
+a = msg; // stores the associated account of the message sender in b
+b = contract; // stores the address of the own smart contract in c
 ``` 
 
 #### <a name="identifier"></a> Identifiers
@@ -80,7 +80,7 @@ disregarded.
 
 ### <a name="contractdata"></a> Contract data
 At the beginning of every file you can write contract-global variables you later can easily access. 
-You can do so by writing a `contract` block that includes many declaration statements for variables. 
+You can do so by writing a `contract` block that includes many declaration statements for variables.
 For example:
 ```c
 contract {
@@ -202,8 +202,13 @@ boolex : expr EQ expr
 ```
 #### <a name="lhs"></a> Expressions for accessing variables
 You can access variables simply by entering the variable name. If you want to access information which is 
-encapsulated by the message sender or is a contract-global variable in a contract, you can do so by firstly
-entering `msg` or `contract` and then separated by a `.` (dot) the variable name (or procedure name).
+a contract-global variable, you can do so by simply entering the variable name. Of course this implies that all
+variables (contract-global **and** -local) **must** be unique so that there will never be two variables with the same
+name in one scope (*one scope includes hereby all outer scopes*).
+
+If you want to access one accounts balance you might do so by writing the accounts address (either your contracts by writing
+`contract` or any other account by writing a variable which includes that address) and then separated by a simple dot (`.`)
+`balance`. Otherwise the machine *may* halt.
 
 The grammar is defined by
 ```bnf
@@ -333,7 +338,6 @@ and takes any number of parameters the procedure defines.
 The grammar for function calls is defined by
 ```bnf
 expr      : lhsexpression LPAR exprlist_opt RPAR
-          | CREATE LPAR exprlist_opt RPAR
 ```
 #### Calling Conventions
 Usually we use the *right-to-left* calling convention for procedure calls. In other words for an example procedure with
@@ -374,19 +378,19 @@ int test(int x){
 	// whose address it returns
 	a = create(s); 
 
-	s = contract.sar;
-	contract.globalx = x;
+	s = sar;
+	globalx = x;
 
 	while(i < 1){
 		x = x % 2;
 		i = i + 1;
 	}
 	//messages come with an associated account
-	msg.account; 
+	msg; 
 	// a of type address
 	a.balance; 
 	// the address of contract c
-	c.account; 
+	contract; 
 
 	// s is sarn, a is address, a receives s sarns from contracts balance
 	a.transfer(s);
