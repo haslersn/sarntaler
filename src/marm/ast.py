@@ -199,13 +199,28 @@ class ContractcallExpr(Expr):
 
     def typecheck(self, errorhandler):
         self.fnname.typecheck(errorhandler)
-        errorhandler.registerWarning(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Warning: We currently do not check whether a contract call expression actually types.")
+        #errorhandler.registerWarning(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+        #                               "Warning: We currently do not check whether a contract call expression actually types.")
         for i in range(0, len(self.params)):
             param = self.params[i]
             param.typecheck(errorhandler)
         self.marm_type = None
         #TODO introduce unknown type
+
+    def code_gen(self):
+        """TODO create code for inter-contract call"""
+        code_methodid = self.fnname.code_gen()
+
+        code = []
+        for param in self.params:#[::-1]:
+            code+=param.code_gen()
+        code+=code_methodid
+        code.append(len(param))
+        code.append("OP_TRANSFER")
+        for param in self.params:#[::-1]:
+            code.append("OP_SWAP")
+            code.append("OP_POPVOID")
+        return code
 
 class LocalcallExpr(Expr):
     def __init__(self, fnname, params):
@@ -243,14 +258,13 @@ class LocalcallExpr(Expr):
                                        "Trying to call expression which is not a function.")
             return
     def code_gen(self):
-        """TODO create code for inter-contract call"""
         code_methodid = self.fnname.code_gen()
 
         code = []
         for param in self.params:#[::-1]:
             code+=param.code_gen()
         code+=code_methodid
-        code.append("OP_CALL // WARNING: We assume a call to be a contract-local call")
+        code.append("OP_CALL")
         for param in self.params:#[::-1]:
             code.append("OP_SWAP")
             code.append("OP_POPVOID")
