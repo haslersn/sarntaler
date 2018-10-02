@@ -153,8 +153,8 @@ class BinExpr(Expr):
         if str(self.op) == "=":
             if type(self.left) == LHS:
                 # create rhs code
-                code_right = self.right.code_gen()
-                left_setcode = self.left.code_gen_LHS()
+                code_right = self.right.code_gen(errorhandler)
+                left_setcode = self.left.code_gen_LHS(errorhandler)
 
                 code += code_right
                 code += left_setcode
@@ -162,8 +162,8 @@ class BinExpr(Expr):
                 # got an expression on the left side like a+b, which we don't want to allow
                 print("BinExpr.code_gen: got a binary expression like a+b = 5 which we don't want to allow")
         else:
-            code_left = self.left.code_gen()
-            code_right = self.right.code_gen()
+            code_left = self.left.code_gen(errorhandler)
+            code_right = self.right.code_gen(errorhandler)
             """Push code_left on stack, then code_right and afterwards the operator """
             code += code_left
             code += code_right
@@ -258,11 +258,11 @@ class LocalcallExpr(Expr):
                                        "Trying to call expression which is not a function.")
             return
     def code_gen(self, errorhandler):
-        code_methodid = self.fnname.code_gen()
+        code_methodid = self.fnname.code_gen(errorhandler)
 
         code = []
         for param in self.params:#[::-1]:
-            code+=param.code_gen()
+            code+=param.code_gen(errorhandler)
         code+=code_methodid
         code.append("OP_CALL")
         for param in self.params:#[::-1]:
@@ -412,7 +412,7 @@ class LHS(Node):
                                        "Use of undeclared identifier {}.".format(self.ident))
 
     def typecheck(self, errorhandler):
-        self.marm_type = self.definition.get_marm_type_for(self.ident)
+        self.marm_type = self.definition.get_marm_type_for(self.ident, errorhandler)
 
     def code_gen(self, errorhandler):
         """Pushes the address of the identifier from the symbol table on the stack"""
@@ -424,7 +424,8 @@ class LHS(Node):
             code.append('OP_GETSTOR')
             pass
         else:
-            code.append(str(self.definition.get_local_index_for(self.ident))+" // address of local "+self.ident)
+            code.append(str(self.definition.get_local_index_for(self.ident,errorhandler))
+                        +" // address of local "+self.ident)
             code.append('OP_PUSHR')
         return code
 
@@ -439,7 +440,8 @@ class LHS(Node):
             code.append('"' + self.definition.name +'" // store name')
             code.append('OP_SETSTOR')
         else:
-            code.append(str(self.definition.get_local_index_for(self.ident))+ " // address of local "+self.ident)
+            code.append(str(self.definition.get_local_index_for(self.ident, errorhandler))
+                        + " // address of local "+self.ident)
             code.append('OP_POPR')
         return code
 
@@ -535,7 +537,7 @@ class Translationunit(Node):
         code.append("disp_end:")
         code.append("OP_RET // end dispatcher")
         for procdecl in self.procs:
-            code_proc = procdecl.code_gen()
+            code_proc = procdecl.code_gen(errorhandler)
             code += code_proc
         return code
 
@@ -649,7 +651,7 @@ class Procdecl(Node):
         code = []
         code.append("%s: // start proc %s" %(self.name,self.name))
         for decl in self.body:
-            code += decl.code_gen()
+            code += decl.code_gen(errorhandler)
         return code
 
 
@@ -725,7 +727,7 @@ class StatementReturn(Statement):
 
     def code_gen(self, errorhandler):
         """Push the return value and do OP_RET"""
-        code = self.return_value.code_gen()
+        code = self.return_value.code_gen(errorhandler)
         code.append("OP_RET")
         return code
 
@@ -761,8 +763,8 @@ class StatementWhile(Statement):
         StatementWhile.label_id += 1
         label_start = "__label_loop_start" + str(StatementWhile.label_id)
         label_end = "__label_loop_end" + str(StatementWhile.label_id)
-        code_boolex = self.boolex.code_gen()
-        code_body = self.statement.code_gen()
+        code_boolex = self.boolex.code_gen(errorhandler)
+        code_body = self.statement.code_gen(errorhandler)
 
         # Start label
         code.append(label_start + ":")
@@ -815,8 +817,8 @@ class StatementIf(Statement):
         """First the else block because less code, jumping accordingly"""
         code = []
         StatementIf.loop_id += 1
-        code_boolex = self.boolex.code_gen()
-        code_true = self.statement.code_gen()
+        code_boolex = self.boolex.code_gen(errorhandler)
+        code_true = self.statement.code_gen(errorhandler)
 
         # Label of true block
         label_true = "__label_if_true" + str(StatementIf.loop_id)
@@ -829,7 +831,7 @@ class StatementIf(Statement):
         code.append("OP_JUMPC")
 
         if not (self.elseprod is None):
-            code_false = self.elseprod.code_gen()
+            code_false = self.elseprod.code_gen(errorhandler)
 
             # The false body
             code += code_false
@@ -862,7 +864,7 @@ class StatementExpression(Statement):
 
     def code_gen(self, errorhandler):
         """Just generate the code for the expr whatever that may be"""
-        code = self.expr.code_gen()
+        code = self.expr.code_gen(errorhandler)
         return code
 
 
@@ -890,7 +892,7 @@ class StatementBody(Statement):
         """Generate the code for all statements in the body"""
         code = []
         for stmnt in self.body:
-            code += stmnt.code_gen()
+            code += stmnt.code_gen(errorhandler)
         code+=["OP_POPVOID"]*self.local_depth # pop local variables after block
         return code
 
@@ -972,8 +974,8 @@ class BoolexCMP(Boolex):
     def code_gen(self, errorhandler):
         """Generate code for all types of comparison after executing both sides."""
         code = []
-        code += self.left.code_gen()
-        code += self.right.code_gen()
+        code += self.left.code_gen(errorhandler)
+        code += self.right.code_gen(errorhandler)
         if str(self.op) == "==":
             code.append("OP_EQU")
         elif str(self.op) == "!=":

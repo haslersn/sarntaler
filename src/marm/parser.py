@@ -153,7 +153,7 @@ def p_statementBRANCHING(p):
 def p_statementEXPRESSIONSTATEMENT(p):
     'statement : expr SEMI'
     p[0] = ast.StatementExpression(p[1])
-    p[0].set_pos_frpom(p)
+    p[0].set_pos_from(p)
 
 
 def p_statementNEWSCOPE(p):
