@@ -154,6 +154,7 @@ class TestParserMethods(unittest.TestCase):
             si.execute_script()
         except IndexError:
             print("Test is successful, but OP_RET does not work up until now")
+            print("Result should be {}.".format(expected_result))
             return
         self.assertEqual(expected_result, si.stack[0])
 
@@ -173,6 +174,27 @@ class TestParserMethods(unittest.TestCase):
             return fibs[n]
         n = 5
         self.generic_run_test("fibonacci_inefficient.marm", fib(n), "fib", [n])
+
+    def test_ackermann(self):
+        def phi(a,b,n):
+            if n==0:
+                return a+b
+            elif b==0:
+                return alpha(a,n-1)
+            else:
+                return phi(a, phi(a,b-1,n), n-1)
+        def alpha(a, n):
+            if n==0:
+                return 0
+            elif n==1:
+                return 1
+            else:
+                return a
+        a = 2
+        b = 2
+        n = 3
+        eres = phi(a,b,n)
+        self.generic_run_test("ackermann.marm", eres, "phi", [a,b,n])
 
 if __name__ == '__main__':
     unittest.main()
