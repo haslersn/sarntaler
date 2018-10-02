@@ -230,7 +230,6 @@ class LocalcallExpr(Expr):
             code.append("OP_SWAP")
             code.append("OP_POPVOID")
         return code
-    # TODO code_gen
 
 
 class CreateExpr(Expr):
@@ -476,7 +475,6 @@ class Translationunit(Node):
         code.append("disp_fail:")
         code.append("OP_RET // end dispatcher")
         for procdecl in self.procs:
-            # TODO do something with the address of the procedure
             code_proc = procdecl.code_gen()
             code += code_proc
         return code
@@ -510,9 +508,8 @@ class Paramdecl(Node):
         return (-2)-self.param_index # TODO: calling convention
 
     def code_gen(self):
-        """Insert the identifier in the symboltable(?) and or do nothing I guess"""
+        """do nothing"""
         code = []
-        # TODO decide if this method should do anything at all
         return code
 
 
@@ -569,7 +566,6 @@ class Procdecl(Node):
         """Insert the identifiers in the symboltable(?) and generate the code for the body"""
         code = []
         code.append("%s: // start proc %s" %(self.name,self.name))
-        # TODO decide what to do with the procedure and params addresses
         for decl in self.body:
             code += decl.code_gen()
         return code
