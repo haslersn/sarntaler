@@ -143,6 +143,7 @@ class TestParserMethods(unittest.TestCase):
         a = 12
         b = 26
         self.generic_test("gcd.marm", print_out=True)
+        call(["rm", os.path.join(self.testdir, "o.out")])
         call(["python3", "-m", "src.labvm.scriptlinker", os.path.join(self.testdir, "test.labvm"),
               "-o", os.path.join(self.testdir, "o.out")])
         with open(os.path.join(self.testdir, "o.out"), "r") as gcdfile:
@@ -152,7 +153,7 @@ class TestParserMethods(unittest.TestCase):
         si.stack.append(a)
         si.stack.append(b)
         si.stack.append("gcd")
-        si.stack.append(2)
+        si.stack.append(3)
         si.execute_script()
         print("Stack after gcd script:", si.stack)
         self.assertEqual(gcd(a, b), si.stack[0])
