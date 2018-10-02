@@ -71,6 +71,11 @@ class Expr(Node):
     """ Non terminal 13 """
     def __str__(self):
         return "[Expr]"
+    def code_gen_LHS(self,errorhandler=None):
+        errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                   "Expression {} is not valid as an LHS expression"%str(self))
+        return None
+
 
 
 class SpecialExpression(Expr):
@@ -164,20 +169,14 @@ class BinExpr(Expr):
     def code_gen(self, errorhandler=None):
         """Act differently for ASSIGN expressions and mathematical operations """
         code = []
+        code_right = self.right.code_gen(errorhandler)
         if str(self.op) == "=":
-            if type(self.left) == LHS:
-                # create rhs code
-                code_right = self.right.code_gen(errorhandler)
-                left_setcode = self.left.code_gen_LHS(errorhandler)
+            left_setcode = self.left.code_gen_LHS(errorhandler)
 
-                code += code_right
-                code += left_setcode
-            else:
-                # got an expression on the left side like a+b, which we don't want to allow
-                print("BinExpr.code_gen: got a binary expression like a+b = 5 which we don't want to allow")
+            code += code_right
+            code += left_setcode
         else:
             code_left = self.left.code_gen(errorhandler)
-            code_right = self.right.code_gen(errorhandler)
             """Push code_left on stack, then code_right and afterwards the operator """
             code += code_left
             code += code_right
@@ -189,9 +188,11 @@ class BinExpr(Expr):
                 code.append("OP_MUL")
             elif str(self.op) == "/":
                 code.append("OP_DIV")
+            elif str(self.op) == "%":
+                code.append("OP_MOD")
             else:
-                # we should not end up in this case
-                print("BinExpr.code_gen: got an operator that is not valid")
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Operation {} does not have an implementation yet".format(self.op))
         return code
 
 class ContractcallExpr(Expr):
@@ -393,8 +394,8 @@ class UnaryExpr(Expr):
             code += code_operand
             code.append("OP_NEG")
         else:
-            # we should not end up in this case
-            print("UnaryExpr.code_gen: got an operator that is not valid")
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Operation {} does not have an implementation yet".format(self.op))
         return code
 
 
@@ -1052,8 +1053,9 @@ class BoolexCMP(Boolex):
         elif str(self.op) == ">":
             code.append("OP_GT")
         else:
-            # we should not end up in this case
-            print("BoolexCMP.code_gen: got an operator that is not valid")
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Operation {} does not have an implementation yet".format(self.op))
+
         return code
 
 
@@ -1094,8 +1096,8 @@ class BoolexBinary(Boolex):
         elif str(self.op) == "&&":
             code.append("OP_AND")
         else:
-            # we should not end up in this case
-            print("BoolexBinary.code_gen: got an operator that is not valid")
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Operation {} does not have an implementation yet".format(self.op))
         return code
 
 
