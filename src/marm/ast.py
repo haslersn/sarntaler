@@ -718,13 +718,13 @@ class StatementWhile(Statement):
         code.append("OP_NOT")
 
         code.append(label_end)
-        code.append("OP_JUMPRC")
+        code.append("OP_JUMPC")
 
         # The loop body
         code += code_body
 
         code.append(label_start)
-        code.append("OP_JUMPR")
+        code.append("OP_JUMP")
 
         code.append(label_end + ":")
         return code
@@ -772,7 +772,7 @@ class StatementIf(Statement):
         code += code_boolex
 
         code.append(label_true)
-        code.append("OP_JUMPRC")
+        code.append("OP_JUMPC")
 
         if not (self.elseprod is None):
             code_false = self.elseprod.code_gen()
@@ -780,11 +780,11 @@ class StatementIf(Statement):
             # The false body
             code += code_false
 
-        code.append(label_true + ":")
-
         code.append(label_end)
         code.append("OP_JUMP")
+
         # The true body
+        code.append(label_true + ":")
         code += code_true
         code.append(label_end + ":")
 
@@ -921,9 +921,9 @@ class BoolexCMP(Boolex):
         code += self.left.code_gen()
         code += self.right.code_gen()
         if str(self.op) == "==":
-            code.append("OP_EQ")
+            code.append("OP_EQU")
         elif str(self.op) == "!=":
-            code.append("OP_EQ")
+            code.append("OP_EQU")
             code.append("OP_NOT")
         elif str(self.op) == "<=":
             code.append("OP_LE")
