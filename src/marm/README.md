@@ -58,7 +58,7 @@ parts of identifiers but not as sole words separated by whitespaces or tabs.
 |:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|
 | `if` | `while` | `break` | `continue` | `else` | 
 | `return` | `int` | `address` | `sarn` | `msg` |
-| | |`contract` | | |
+| | `transfer` | | `contract` | |
 
 ### <a name="comments"></a> Comments
 
@@ -325,9 +325,17 @@ elseprod  : ELSE statement
 ```
 
 ### <a name="functions"></a> Function calls
-There are two types of function calls: Account creation and calling procedures in a contract.
-The first type (account creation) is called by `create` and takes only one parameter, the amount of Sarns
-the account should initially have.
+There are two types of function calls: Transferring money to another account and calling procedures in a contract.
+The first type (transferring sarns) is called by `transfer` and takes two parameters, the address of the other account
+and the amount of Sarns the account should initially have. *Example:*
+```c 
+int a;
+address reciever;
+sarn amount;
+
+a = transfer(reciever, amount);
+```
+where `a` indicates if the transfer has been successful (`a` == 1) or not.
 
 The second type is called by entering the procedure name (which might include a `msg.` or an identifier
 in front of the procedure name)
