@@ -271,21 +271,25 @@ class LocalcallExpr(Expr):
         return code
 
 
-class CreateExpr(Expr):
-    def __init__(self, params):
-        super().__init__()
-        self.params = params
-
-    def __str__(self):
-        return "[CreateExpr: params={}]".format(self.liststr(self.params))
-
-    def analyse_scope(self, scope, errorhandler):
-        for param in self.params:
-            param.analyse_scope(scope, errorhandler)
-
-    # TODO typecheck
-
-    # TODO code_gen
+# class CreateExpr(Expr):
+#     def __init__(self, params):
+#         super().__init__()
+#         self.params = params
+#
+#     def __str__(self):
+#         return "[CreateExpr: params={}]".format(self.liststr(self.params))
+#
+#     def analyse_scope(self, scope, errorhandler):
+#         for param in self.params:
+#             param.analyse_scope(scope, errorhandler)
+#
+#     # TODO typecheck
+#     def typecheck(self, errorhandler):
+#
+#         pass
+#     # TODO code_gen
+#     def code_gen(self):
+#         pass
 
 
 class UnaryExpr(Expr):
@@ -379,6 +383,7 @@ class StructExpr(Expr):
     def code_gen(self):
         """TODO has not yet been decided what this should actually do"""
         code = []
+
         code.append("// code for struct access not implemented yet")
         return code
 
