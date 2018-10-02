@@ -80,8 +80,8 @@ class TransactionData(namedtuple("TransactionData", ["inputs", "outputs", "fee",
             raise ValueError("Fee can't be negative")
         if len(nonce) != 32:
             raise ValueError('Nonce has to be 32 bytes')
-        if len(inputs) <= 0 or len(outputs) <= 0:
-            raise ValueError("Must have at least one input and one output")
+        if len(outputs) <= 0:
+            raise ValueError("Must have at least one output")
 
         val_sum = 0
         for input in inputs:
@@ -153,6 +153,9 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signatures"])):
             raise ValueError('Keypair not entitled to sign this transaction/index')
         new_sig = sign(keypair, tx_data.hash)
         return Transaction(self, tx_data, signatures[0:index:] + (new_sig,) + signatures[index+1:])
+
+    def signed(self):
+        return all(map(is_signature, self.signatures))
 
     @property
     def hash(self):
