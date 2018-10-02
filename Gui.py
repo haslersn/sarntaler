@@ -1,19 +1,22 @@
-from tkinter import *
-from tkinter import filedialog
-from tkinter import SEPARATOR
-from docutils.utils import column_indices
-from src.config import *
-from src.crypto import Key
-from src.transaction import TransactionTarget
-from src.protocol import Protocol
-from src.blockchain import GENESIS_BLOCK
-from src.chainbuilder import ChainBuilder
-from src.mining import Miner
-from src.persistence import Persistence
-from src.rpc_server import rpc_server
-import src.wallet as wallet
 import json
 import os.path
+from tkinter import *
+from tkinter import SEPARATOR
+from tkinter import filedialog
+
+#from docutils.utils import column_indices
+
+#from src.blockchain import GENESIS_BLOCK
+#from src.chainbuilder import ChainBuilder
+#from src.config import *
+#from src.crypto import Key
+from src.gui_editor import SyntaxHiglighterMarm
+#from src.mining import Miner
+#from src.persistence import Persistence
+#from src.protocol import Protocol
+#from src.rpc_server import rpc_server
+#from src.transaction import TransactionTarget
+#import src.wallet as wallet
 
 
 class Gui(object):
@@ -48,9 +51,9 @@ class Gui(object):
             if filename == "":
                 self._walletId.config(text = "No wallet file specified!")
                 return
-            else:
-                self._wallet = wallet.Wallet(filename)
-            self._walletId.config(text=filename)
+            #else:
+            #    self._wallet = wallet.Wallet(filename)
+            #self._walletId.config(text=filename)
             
         self._walletId.config(command=selectPath)
         self._walletId.grid(row=0, column=1, pady=5, padx=self._padx)
@@ -66,6 +69,10 @@ class Gui(object):
         btnCreateTransaction = Button(self._window, text="new Transaction", width=self._lblWidth,
          command=newTransaction)
         btnCreateTransaction.grid(row=3, column=0, pady=10, padx=self._padx)
+        
+        btnCreateContract = Button(self._window, text="new Smart Contract", width=self._lblWidth,
+         command=self.initSmartContractView)
+        btnCreateContract.grid(row=3, column=1, pady=10, padx=self._padx)
 
         btnUpdateGui = Button(self._window, text="update", width=self._lblWidth,
          command = lambda: self.updateGui())
@@ -87,7 +94,7 @@ class Gui(object):
         fee = int(strFee) #use this variable to send (integer)
         #TODO insert many target keys and amounts
         amounts = amount
-        target_keys = Key.from_json_compatible(target_key)
+        '''  target_keys = Key.from_json_compatible(target_key)
 
         targets = [TransactionTarget(TransactionTarget.pay_to_pubkey(k), a) for k, a in
                    zip(target_keys, amounts)]
@@ -100,13 +107,12 @@ class Gui(object):
             message = "You need to specify a wallet first!"
         #TODO output message to the user
         popup.destroy()
-    
+        ''' 
     def initSmartContractView(self):
         popup = Tk()
         popup.title("New Smart Contract")
         
-        editor = Text(popup)
-        editor.insert(INSERT, "test")
+        editor = SyntaxHiglighterMarm(popup)
         editor.pack(fill=BOTH, expand=1)
         editor.grid(row=0, column=1, columnspan=2)
         
@@ -114,19 +120,6 @@ class Gui(object):
         btnOk.grid(row=3, column=1, pady=5)
         btnCancel = Button(popup, text="Cancel", width=10, command=popup.destroy)
         btnCancel.grid(row=3, column=2, pady=5)
-        
-        def validateKey(key):
-            if key.keysym in ("Tab"):
-                return "break"
-        def preparePaste(key):
-            try:
-                str = popup.clipboard_get()
-                popup.clipboard_clear()
-                popup.clipboard_append(str.replace("\t", " "))
-            except TclError:
-                return 
-        editor.bind("<Key>", validateKey)
-        editor.bind("<Control-v>", preparePaste)
         
     def initPopup(self):
         popup = Tk()
@@ -154,8 +147,7 @@ class Gui(object):
         lblHint = Label(popup, text = "", width = self._lblWidth)
         lblHint.grid(row = 3, column = 0, padx = self._padx, pady=5)
         
-        btnOk = Button(popup, text="OK", width=10,
-         command=lambda: self.sendTransaction(btnSelectKey, lblHint, tkVar.get(), entAmount.get(), entFee.get()))
+        btnOk = Button(popup, text="OK", width=10, command=lambda: self.sendTransaction(btnSelectKey, lblHint, tkVar.get(), entAmount.get(), entFee.get()))
         btnOk.grid(row=3, column=1, pady=5)
         btnCancel = Button(popup, text="Cancel", width=10, command=popup.destroy)
         btnCancel.grid(row=3, column=2, pady=5)
