@@ -93,6 +93,7 @@ class ScriptInterpreter:
         'OP_GETBAL',
         'OP_SETSTOR',
         'OP_GETSTOR',
+        'OP_TRANSFER',
 
         'OP_PACK',
         'OP_UNPACK'
@@ -545,6 +546,7 @@ class ScriptInterpreter:
         self.stack.append(len(popped))
         return True
 
+
     def _parse_numeric_item(self, item: str):
         try:
             if len(item) > 2:
@@ -556,6 +558,7 @@ class ScriptInterpreter:
                     return Signature(unhexlify(item[3:]))
             return int(item, 0)
         except ValueError:
+            logging.warning("could not parse " + item)
             return None
 
     def _parse_string_item(self, item: str):

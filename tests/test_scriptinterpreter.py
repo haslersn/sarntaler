@@ -3,6 +3,8 @@ from src.scriptinterpreter import ScriptInterpreter
 from src.blockchain.merkle_trie import MerkleTrie, MerkleTrieStorage
 from Crypto.PublicKey import RSA
 
+from src.blockchain.crypto import *
+
 empty_mt = MerkleTrie(MerkleTrieStorage()) # not relevant in this test yet, but needs to exist
 
 def get_dummy_account():
