@@ -106,19 +106,10 @@ class ScriptInterpreter:
     }
 
 
-    def __init__(self, state: MerkleTrie, params_script: str, acc: Account, tx_hash: bytes):
-        self.acc = acc
+    def __init__(self, state: MerkleTrie, params_script: str, acc: Account):
         self.state = state
         self.params_script = params_script
-        self.tx_hash = tx_hash
-
-        self.stack = []
-        self.program = []
-        self.retval = None
-
-        self.framepointer = -1
-        # self.pc = 0            # maybe initialize with -1
-
+        self.acc = acc
 
     def to_string(self):
         return " ".join(self.stack)
@@ -637,7 +628,7 @@ class ScriptInterpreter:
         item = item[1:-1]
         return item
 
-    def _parse_script(self, script: str, allow_opcodes = True, is_recursive_call = False):
+    def _parse_script(self, script: str, allow_opcodes = False, is_recursive_call = False):
         result = []
         script += '\n'  # tailing newline to not get errors at the end of file parsing
         while True:
@@ -731,11 +722,15 @@ class ScriptInterpreter:
                 self.stack.append(item)
             return True
 
-        def execute(script: str, param=False):
+        def execute(script: str):
             self.pc = 1
-            self.program = self._parse_script(script, not param)
+            self.stack = []
+            self.retval = None
+            self.framepointer = -1
+            self.program = self._parse_script(script, True)
+
             if self.program is None:
-                return True if param else False
+                return False
             while self.pc <= len(self.program):
                 item = self.program[self.pc - 1] # Fetch the next item (given by the program counter)
                 logging.info("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
@@ -743,15 +738,18 @@ class ScriptInterpreter:
                 if not execute_item(item):
                     return False
                 logging.warning("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
-            return True if param else False
+            return False
 
         if type(self.params_script) == list:
             self.stack = self.params_script
         else:
             self.stack = self._parse_script(self.params_script)
+
         if self.stack is None:
             return None
-        execute(self.acc.code, False)
+
+        execute(self.acc.code)
+
         return None if self.retval is None else (self.state, self.retval)
 
         ## exit_code = self.__pop_checked(int)
