@@ -589,7 +589,7 @@ class Translationunit(Node):
             code.append("OP_NOT")
             code.append("disp_fail")
             code.append("OP_JUMPC")
-            code.append("0")
+            #code.append("0")
             code.append(str(name))
             code.append("OP_CALL")
             code.append("disp_end")
