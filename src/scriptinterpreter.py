@@ -154,7 +154,7 @@ class ScriptInterpreter:
             logging.warning("OP_CHECKKEY: Stack is empty or top element not a key")
             return False
 
-        beforenc = cr.get_random_int(pubKey.rsa.n)
+        beforenc = cr.get_random_int(256)
         enctxt = pubKey.rsa.encrypt(beforenc, 1)[0]
         afterenc = privKey.rsa.decrypt(enctxt)
         if beforenc != afterenc:
@@ -607,7 +607,7 @@ class ScriptInterpreter:
                 item = script[:first+2]
                 result.append(self._parse_string_item(item))
                 if result[-1] is None:
-                    logging.warning("[!] Error: Invalid Tx: Could not parse item")
+                    logging.warning("[!] Error: Invalid Tx: Could not parse string item")
                     return None
                 script = script[first+2:]
                 continue
@@ -630,7 +630,7 @@ class ScriptInterpreter:
             else:
                 to_append = self._parse_numeric_item(item)
                 if to_append is None:
-                    logging.warning("[!] Error: Invalid Tx: Could not parse item")
+                    logging.warning("[!] Error: Invalid Tx: Could not parse numeric item")
                     return None
                 result.append(to_append)  # Don't include the whitespace
             if script[first] != ']':
