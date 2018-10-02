@@ -13,9 +13,9 @@ int test(int x){
 	s = 4711;
 	// create takes sarns from the balance and creates an account
 	//     whose address it returns
-	a = create(s); 
+	//a = create(s); 
 
-	s = contract.sar;
+	//s = contract.sar;
 	contract.globalx = x;
 
 	while(i < 1){
@@ -26,14 +26,14 @@ int test(int x){
 	msg.account; 
 	// a of type address
 	a.balance; 
-	// the address of contract c
-	c.account; 
+	// the address of this contract
+	contract; 
 
 	// s is sarn, a is address, a receives s sarns from contracts balance<
 	a.transfer(s);
 	// call contract a's method with name 'method', paying with s sarns 
 	//     from the this contracts and the params 1 and x
-	a.method(s,1,x);
+	a.method(s)(1,3);
 
 	return x;
 }
