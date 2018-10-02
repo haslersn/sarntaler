@@ -36,6 +36,7 @@ def transit(script_interpreter_cls: type, state : MerkleTrie, transaction : Tran
                 logging.warning("state transition: target account code execution failed")
                 return None
             state = result[0]
+        acc = Account.get_from_hash(state.get(output.address))
 
     if miner_address != bytes(32):
         # Miner gets his fee if the miner_address is not zero
