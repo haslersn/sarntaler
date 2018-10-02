@@ -54,7 +54,7 @@ class TestParserMethods(unittest.TestCase):
         self.generic_lex("sarn", 'SARN', 'sarn')
         self.generic_lex("msg", 'MSG', 'msg')
         self.generic_lex("contract", 'CONTRACT', 'contract')
-        self.generic_lex("create", 'CREATE', 'create')
+        self.generic_lex("transfer", 'TRANSFER', 'transfer')
         self.generic_lex("i", 'IDENT', 'i')
         self.generic_lex("{", 'BEGIN', '{')
         self.generic_lex("}", 'END', '}')
@@ -95,7 +95,7 @@ class TestParserMethods(unittest.TestCase):
         self.generic_lex(")", 'RPAR', ')')
 
     def test_tokens_not_empty(self):
-        self.assertFalse(lexer.tokens.__len__() == 0)
+        self.assertTrue(lexer.tokens.__len__() == 41)
 
     def test_parse_file_error(self):
         """Tests some quite complicated errors"""
