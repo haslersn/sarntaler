@@ -80,8 +80,8 @@ class TransactionData(namedtuple("TransactionData", ["inputs", "outputs", "fee",
             raise ValueError("Fee can't be negative")
         if len(nonce) != 32:
             raise ValueError('Nonce has to be 32 bytes')
-        if len(inputs) <= 0 or len(outputs) <= 0:
-            raise ValueError("Must have at least one input and one output")
+        if len(outputs) <= 0:
+            raise ValueError("Must have at least one output")
 
         val_sum = 0
         for input in inputs:
