@@ -22,11 +22,10 @@ class TestParserMethods(unittest.TestCase):
                 self.assertEqual(errorhandler.countErrors(), error_count)
                 self.assertEqual(errorhandler.countFatals(), fatals_count)
                 if print_out:
-                    output = open("test.labvm", "w")
-                    for line in result:
-                        output.write(str(line))
-                        output.write("\n")
-                    output.close()
+                    with open(os.path.join(self.testdir, "test.labvm"), "w") as output:
+                        for line in result:
+                            output.write(str(line))
+                            output.write("\n")
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
@@ -143,10 +142,10 @@ class TestParserMethods(unittest.TestCase):
         a = 12
         b = 26
         self.generic_test("gcd.marm", print_out=True)
-        call(["python3", "-m", "src.labvm.scriptlinker", ".\test.labvm", "-o", "o.out"])
-        gcdfile = open("./o.out", "r")
-        gcdstr = gcdfile.read()
-        gcdfile.close()
+        call(["python3", "-m", "src.labvm.scriptlinker", os.path.join(self.testdir, "test.labvm"),
+              "-o", os.path.join(self.testdir, "o.out")])
+        with open(os.path.join(self.testdir, "o.out"), "r") as gcdfile:
+            gcdstr = gcdfile.read()
 
         si = ScriptInterpreter(gcdstr, "", bytes(0))
         si.stack.append(a)
