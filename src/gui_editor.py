@@ -1,10 +1,10 @@
 from src.marm.lexer import marmlexer_minimal,keywords
-from tkinter import *
-import sys, os
+from tkinter.scrolledtext import ScrolledText
+from tkinter import TclError
 
-class SyntaxHiglighterMarm(Text):
+class SyntaxHiglighterMarm(ScrolledText):
     def __init__(self,base,**args):
-        Text.__init__(self,base,**args)
+        ScrolledText.__init__(self,base,**args)
         self.tag_configure("default",    foreground="black")
         self.tag_configure("INTCONST",  foreground="red")
         self.tag_configure("keywords",   foreground="blue")
@@ -21,7 +21,6 @@ class SyntaxHiglighterMarm(Text):
         self.tag_remove("COMMENT", "1.0", "end")
         self.tag_remove("keywords", "1.0", "end")
 
-        from src.marm.lexer import marmlexer_minimal
         mylexer = marmlexer_minimal()
         input=self.get(1.0,"end")
         mylexer.input(input)

@@ -1,24 +1,23 @@
 import json
 import os.path
 from tkinter import *
-from tkinter import SEPARATOR
-from tkinter import filedialog
+from tkinter.filedialog import asksaveasfile, askopenfilename
+from tkinter.scrolledtext import ScrolledText
+
+from src.gui_editor import SyntaxHiglighterMarm
+
 
 #from docutils.utils import column_indices
-
 #from src.blockchain import GENESIS_BLOCK
 #from src.chainbuilder import ChainBuilder
 #from src.config import *
 #from src.crypto import Key
-from src.gui_editor import SyntaxHiglighterMarm
 #from src.mining import Miner
 #from src.persistence import Persistence
 #from src.protocol import Protocol
 #from src.rpc_server import rpc_server
 #from src.transaction import TransactionTarget
 #import src.wallet as wallet
-
-
 class Gui(object):
 
     _lblWidth = 25
@@ -107,23 +106,54 @@ class Gui(object):
             message = "You need to specify a wallet first!"
         #TODO output message to the user
         popup.destroy()
-        ''' 
-    def initSmartContractView(self):
-        popup = Tk()
-        popup.title("New Smart Contract")
+        '''
         
+    def saveContract(self, text):
+        name=asksaveasfile(mode='w',defaultextension=".marm", filetypes = [("Marm", "*.marm")])
+        if(name is None):
+            return
+        text2save=text
+        name.write(text2save)
+        name.close
+     
+    def openContract(self, editor):
+        name = askopenfilename(filetypes = [("Marm", "*.marm")])
+        if(name is ""):
+            return
+        file = open(name)
+        editor.delete('1.0',END)
+        editor.insert(END, file.read())
+        
+    
+    def initSmartContractView(self):
+        popup = Toplevel(self._window)
+        popup.title("New Smart Contract")
+        popup.grab_set()
+                
         editor = SyntaxHiglighterMarm(popup)
-        editor.pack(fill=BOTH, expand=1)
-        editor.grid(row=0, column=1, columnspan=2)
+        editor.config(height=10)
+        editor.pack(fill=BOTH, expand=YES, side=TOP)
+        editor.bind("<Control-s>", lambda arg: self.saveContract(editor.get(1.0,"end")))
+        editor.bind("<Control-o>", lambda arg: self.openContract(editor))
+                
+        menubar = Menu(popup)
+        menubar.add_command(label = "Save", command = lambda: self.saveContract(editor.get(1.0,"end")))
+        menubar.add_command(label = "Open", command = lambda: self.openContract(editor))
+        popup.config(menu=menubar)
+        
+        console = ScrolledText(popup);
+        console.config(height=5, state=DISABLED)
+        console.pack(fill=BOTH, expand=NO, side=TOP)
         
         btnOk = Button(popup, text="Run", width=10, command=lambda: print(editor.get("1.0", END)))
-        btnOk.grid(row=3, column=1, pady=5)
-        btnCancel = Button(popup, text="Cancel", width=10, command=popup.destroy)
-        btnCancel.grid(row=3, column=2, pady=5)
+        btnOk.pack(side=RIGHT)
+        btnCancel = Button(popup, text="Check", width=10, command=lambda: print(editor.get("1.0", END)))
+        btnCancel.pack(side=RIGHT)
         
     def initPopup(self):
-        popup = Tk()
+        popup = Toplevel(self._window)
         popup.title("New Transaction")
+        popup.grab_set()
         
         lblSelectKey = Label(popup, text="Recipient", width=self._btnWidth)
         lblSelectKey.grid(row=0, column=0, padx=self._padx, pady=5)
@@ -153,8 +183,9 @@ class Gui(object):
         btnCancel.grid(row=3, column=2, pady=5)
     
     def initMiner(self, btn):
-        popup2 = Tk()
+        popup2 = Toplevel(self._window)
         popup2.title("Initialize Miner")
+        popup2.grab_set()
         
         def selectPubkey():
             pubkey = filedialog.askopenfilename(parent=popup2, title="Select your public key", filetypes=[("public key file", "*.pem")])
