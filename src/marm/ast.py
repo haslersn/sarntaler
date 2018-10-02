@@ -584,7 +584,7 @@ class Translationunit(Node):
         for (i, name, le_param) in procedures:
             code.append("disp_proc" + str(i) + ":")
             code.append("OP_POPVOID")
-            code.append(str(le_param) + 1)
+            code.append(str(le_param + 1))
             code.append("OP_EQU")
             code.append("OP_NOT")
             code.append("disp_fail")
