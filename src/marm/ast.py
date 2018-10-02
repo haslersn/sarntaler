@@ -449,7 +449,7 @@ class Translationunit(Node):
 
     def code_gen(self):
         """Calls codegen for every procedure and stores their addresses before"""
-        code = ["// start dispatcher", "dispatcher:", "OP_SWAP"]
+        code = ["dispatcher: // start dispatcher", "OP_SWAP"]
         procedures = []
         i = 0
         for proc in self.procs:
@@ -472,10 +472,9 @@ class Translationunit(Node):
             code.append("OP_JUMPC")
             code.append("0")
             code.append(str(name))
-            code.append("OP_JUMP")
+            code.append("OP_CALL")
         code.append("disp_fail:")
-        code.append("OP_RET")
-        code.append("// end dispatcher")
+        code.append("OP_RET // end dispatcher")
         for procdecl in self.procs:
             # TODO do something with the address of the procedure
             code_proc = procdecl.code_gen()
