@@ -154,9 +154,10 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
                 result = marmparser(filename, input, errorhandler)
             except ParserError as err:
                 print(err)
+                raise ErrorInStage('parse')
         elif stage == 'analyse_scope':
             depend_on_stage('parse')
-            result.analyse_scope([], errorhandler)
+            result.analyse_scope(None, errorhandler)
         elif stage == 'typecheck':
             depend_on_stage('parse')
             depend_on_stage('analyse_scope')
