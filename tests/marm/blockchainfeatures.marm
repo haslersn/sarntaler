@@ -23,7 +23,7 @@ int test(int x){
 		i = i + 1;
 	}
 	//messages come with an associated account
-	msg.account;
+	msg;
 	// a of type address
 	//a.balance; 
 	// the address of this contract

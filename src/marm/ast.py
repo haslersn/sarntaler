@@ -86,8 +86,21 @@ class SpecialExpression(Expr):
     def analyse_scope(self,scope, errorhandler=None): pass
 
     def typecheck(self, errorhandler=None): pass
+        
+    def code_gen(self,errorhandler=None):
+        code = []
+        if self.value=='contract':
+            code.append("// dummy for my own contract address index on the stack")
+            code.append("OP_PUSHABS")
+        elif self.value=='msg':
+            code.append("// dummy for my initiating transaction's address index on the stack")
+            code.append("OP_PUSHABS")
+        else:
+            errorhandler.registerFatal(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                          "No code scheme known for specialconstant {} yet!.".format(
+                           self.value))
+        return code
 
-    # TODO code_gen
 
 
 class ConstExpr(Expr):
@@ -879,6 +892,7 @@ class StatementExpression(Statement):
     def code_gen(self, errorhandler=None):
         """Just generate the code for the expr whatever that may be"""
         code = self.expr.code_gen(errorhandler)
+        code.append("OP_POPVOID")
         return code
 
 

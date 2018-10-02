@@ -189,12 +189,12 @@ def p_expr(p):
 
 def p_exprSPECIALCONSTANTS_MSG(p):
     'expr : MSG'
-    p[0] = ast.SpecialExpression(p[1], ast.Typename('msg'))
+    p[0] = ast.SpecialExpression(p[1], ast.Typename('address'))
     p[0].set_pos_from(p)
 
 def p_exprSPECIALCONSTANTS_CONTRACT(p):
     'expr : CONTRACT'
-    p[0] = ast.SpecialExpression(p[1], ast.Typename('contract'))
+    p[0] = ast.SpecialExpression(p[1], ast.Typename('address'))
     p[0].set_pos_from(p)
 
 def p_exprFUNCALL(p):
