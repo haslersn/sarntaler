@@ -1,30 +1,30 @@
 #! /usr/bin/env/python3
 import hashlib
 import logging
+from collections import namedtuple
+from binascii import hexlify, unhexlify
+from datetime import datetime
+from Crypto.PublicKey import RSA
 
 from src.blockchain.account import Account, StorageItem
 from src.blockchain.crypto import *
 from src.blockchain.merkle_trie import MerkleTrie
-from .crypto import *
-from binascii import hexlify, unhexlify
-from datetime import datetime
+from src.blockchain.new_transaction import TransactionInput, TransactionOutput, TransactionData, Transaction
+from src.blockchain.state_transition import transit
 import src.crypto as cr
-from Crypto.PublicKey import RSA
 
 
 # TODO: Put the following two classes into crypt.py
 
-class Hash:
-    def __init__(self, value: bytes):
-        self.value = value
+class Hash(namedtuple('Hash', [ 'value' ])):
+    pass
 
-class Signature:
-    def __init__(self, value: bytes):
-        self.value = value
+class Signature(namedtuple('Signature', [ 'value' ])):
+    pass
 
-class Key:
-    def __init__(self, value: bytes):
-        self.value = value
+class Key(namedtuple('Key', [ 'value' ])):
+    pass
+
 
 class ScriptInterpreter:
     """
@@ -598,7 +598,7 @@ class ScriptInterpreter:
             popped = popped.encode()
         if type(popped) in [Key, Hash, Signature]:
             popped = popped.value
-        self.stack.append(compute_hash(popped))
+        self.stack.append(Hash(compute_hash(popped)))
         return True
 
     def _parse_numeric_item(self, item: str):
