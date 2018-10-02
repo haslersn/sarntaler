@@ -1,6 +1,7 @@
 from src.blockchain.account import Account, StorageItem
 from src.scriptinterpreter import ScriptInterpreter
 from src.blockchain.merkle_trie import MerkleTrie, MerkleTrieStorage
+from Crypto.PublicKey import RSA
 
 empty_mt = MerkleTrie(MerkleTrieStorage()) # not relevant in this test yet, but needs to exist
 
@@ -291,3 +292,26 @@ def test_pack_different_types():
 def test_unpack_different_types():
     si = ScriptInterpreter(empty_mt,"h0xABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD 0 'abc' 3 OP_PACK 'def' OP_SWAP 2 OP_PACK OP_UNPACK OP_POPVOID OP_UNPACK OP_POPVOID 1", get_dummy_account(), None)
     assert si.execute_script()
+
+def test_checkkeypair_suc():
+    #succsess test
+    key = RSA.generate(1024)
+
+    privKey = key.exportKey('DER')
+    pubKey = key.publickey().exportKey('DER')
+    fstr = "K0x" + str(pubKey.hex()) + "\nK0x" + str(privKey.hex()) + "\nop_checkkeypair\n1"
+
+    si = ScriptInterpreter(fstr, "", None)
+    assert si.execute_script() == True
+
+def test_checkkeypair_fail():
+    #fail test
+    key1 = RSA.generate(1024)
+    key2 = RSA.generate(1024)
+
+    privKey = key1.exportKey('DER')
+    pubKey = key2.publickey().exportKey('DER')
+    fstr = "K0x" + str(pubKey.hex()) + "\nK0x" + str(privKey.hex()) + "\nop_checkkeypair\n1"
+
+    si = ScriptInterpreter(fstr, "", None)
+    assert si.execute_script() == False
