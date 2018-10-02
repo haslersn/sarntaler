@@ -199,27 +199,36 @@ class ContractcallExpr(Expr):
 
     def typecheck(self, errorhandler):
         self.fnname.typecheck(errorhandler)
-        #errorhandler.registerWarning(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-        #                               "Warning: We currently do not check whether a contract call expression actually types.")
+        errorhandler.registerWarning(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Warning: We currently do not check whether a contract call expression actually types.")
+        if len(self.fee)!=1:
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Error: Contract calls have only a single parameter for the fee part")
         for i in range(0, len(self.params)):
             param = self.params[i]
             param.typecheck(errorhandler)
-        self.marm_type = None
-        #TODO introduce unknown type
+        self.marm_type = Typename('generic')
 
     def code_gen(self, errorhandler):
         """TODO create code for inter-contract call"""
         code_methodid = self.fnname.code_gen()
 
         code = []
+        code.append("// start construction site for TRANSFER")
         for param in self.params:#[::-1]:
             code+=param.code_gen()
         code+=code_methodid
-        code.append(len(param))
+        code.append(len(self.params)+1)
+        code.append("OP_PACK // S3 == params")
+        code.append("// S2 == contract address")
+        for fe in self.fee:
+            code+=fe.code_gen()
+        code.append("// S1 == FEE")
         code.append("OP_TRANSFER")
         for param in self.params:#[::-1]:
             code.append("OP_SWAP")
             code.append("OP_POPVOID")
+        code.append("// end construction site for TRANSFER")
         return code
 
 class LocalcallExpr(Expr):
@@ -565,7 +574,7 @@ class Paramdecl(Node):
         return self.param_type
 
     def get_local_index_for(self, ident, errorhandler):
-        return (-2)-self.param_index # TODO: calling convention
+        return (-1)-self.param_index
 
     def code_gen(self, errorhandler):
         """do nothing"""
@@ -680,7 +689,7 @@ class StatementDecl(Statement):
         for decl in self.decllist:
             if scope.has_direct_definition(decl):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Variable {} declared twice".format(decl)) #TODO
+                                           "Variable {} declared twice".format(decl))
             scope.define(decl, self)
             self.local_var_indices[decl] = scope.get_next_var_index()
 
