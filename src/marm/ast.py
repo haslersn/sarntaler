@@ -549,7 +549,7 @@ class Paramdecl(Node):
     def analyse_scope(self, scope, errorhandler):
         if scope.has_direct_definition(self.name):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Multiple parameters have the name {}.".format(self.name)) #TODO
+                                       "Multiple parameters have the name {}.".format(self.name))
         scope.define(self.name, self)
 
     def typecheck(self, errorhandler): pass
@@ -559,7 +559,7 @@ class Paramdecl(Node):
         return self.param_type
 
     def get_local_index_for(self, ident):
-        return (-2)-self.param_index # TODO: calling convention
+        return (-1)-self.param_index
 
     def code_gen(self):
         """do nothing"""
@@ -674,7 +674,7 @@ class StatementDecl(Statement):
         for decl in self.decllist:
             if scope.has_direct_definition(decl):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Variable {} declared twice".format(decl)) #TODO
+                                           "Variable {} declared twice".format(decl))
             scope.define(decl, self)
             self.local_var_indices[decl] = scope.get_next_var_index()
 
