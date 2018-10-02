@@ -10,12 +10,14 @@ from Crypto.PublicKey import RSA
 from src.blockchain.crypto import *
 
 empty_mt = MerkleTrie(MerkleTrieStorage()) # not relevant in this test yet, but needs to exist
+example_keypair = generate_keypair()
+example_pubkey = pubkey_from_keypair(example_keypair)
 
 def get_dummy_account():
-    return Account(bytes(1), 0, "", 1, [])
+    return Account(example_pubkey, 0, "", 1, [])
 
 def get_account(mt : MerkleTrie, program : str):
-    acc = Account(bytes(1), 0, program, 1, [])
+    acc = Account(example_pubkey, 0, program, 1, [])
     nmt = mt.put(acc.address, acc.hash)
     return nmt, acc
 
@@ -71,7 +73,7 @@ def test_popFP():
     emptystack_test("OP_POPFP")
 
 def test_incfp():
-    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, "3 2 7 OP_INCFP", 1, []))
+    si = ScriptInterpreter(empty_mt, "", Account(example_pubkey, 0, "3 2 7 OP_INCFP", 1, []))
     si.execute_script()
     assert si.stack == [3, 2]
     assert si.framepointer == 6
@@ -143,7 +145,7 @@ def test_not():
     script_finalstack_test("3 1 OP_NOT 1 OP_RET", [3, 0])
     script_finalstack_test("3 0 OP_NOT 1 OP_RET", [3, 1])
     emptystack_noninteger_unaryop_test('OP_NOT')
-    si_notbool_stack = ScriptInterpreter(empty_mt, 'OP_NOT', Account(bytes(1), 0, "2 OP_NOT", 1, []))
+    si_notbool_stack = ScriptInterpreter(empty_mt, 'OP_NOT', Account(example_pubkey, 0, "2 OP_NOT", 1, []))
     assert not si_notbool_stack.execute_script()
 
 def test_neg():
@@ -226,7 +228,7 @@ def test_unpack():
 
 def emptystack_noninteger_binaryop_test(op: str):
     emptystack_test(op)
-    si_one_elem_stack = ScriptInterpreter(empty_mt, op, Account(bytes(1), 0, "1 " + op, 1, []))
+    si_one_elem_stack = ScriptInterpreter(empty_mt, op, Account(example_pubkey, 0, "1 " + op, 1, []))
     assert not si_one_elem_stack.execute_script()
     si_noninteger = ScriptInterpreter(empty_mt, "a b " + op + " 1", get_dummy_account())
     assert not si_noninteger.execute_script()
@@ -282,21 +284,21 @@ def test_factorial():
     si.execute_script()
 
 def test_getbal():
-    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 100, "OP_GETBAL 1 OP_RET", 1, []))
+    si = ScriptInterpreter(empty_mt, "", Account(example_pubkey, 100, "OP_GETBAL 1 OP_RET", 1, []))
     assert si.execute_script()
     assert si.stack == [100]
 
 def test_getstor():
-    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, '"myvar" OP_GETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 42)]))
+    si = ScriptInterpreter(empty_mt, "", Account(example_pubkey, 0, '"myvar" OP_GETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 42)]))
     assert si.execute_script()
     assert si.stack == [42]
 
 def test_getstor_invalid():
-    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, '"invalid" OP_GETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 42)]))
+    si = ScriptInterpreter(empty_mt, "", Account(example_pubkey, 0, '"invalid" OP_GETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 42)]))
     assert not si.execute_script()
 
 def test_setstor():
-    myacc = Account(bytes(27), 278, '42 "myvar" OP_SETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 0)])
+    myacc = Account(example_pubkey, 278, '42 "myvar" OP_SETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 0)])
     my_mt = empty_mt.put(myacc.address, myacc.hash)
     si = ScriptInterpreter(my_mt, "", myacc)
     new_state,_ = si.execute_script()
@@ -305,7 +307,7 @@ def test_setstor():
     assert new_acc.get_storage('myvar') == 42
 
 def test_setstor_invalid():
-    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, '42 "invalid" OP_SETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 42)]))
+    si = ScriptInterpreter(empty_mt, "", Account(example_pubkey, 0, '42 "invalid" OP_SETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 42)]))
     assert not si.execute_script()
 
 def test_create_contr():
@@ -313,7 +315,7 @@ def test_create_contr():
     init_key = crypto.pubkey_from_keypair(crypto.generate_keypair())
     init_sig = bytes([1] * 128)
     init_address = get_dummy_account().address
-    myacc = Account(bytes(27), 278, '[42 k0x' + hexlify(init_key).decode() + ' s0x' + hexlify(init_sig).decode() + ' h0x' + hexlify(init_address).decode() + '] ["myint" "mykey" "mysig" "myadd"] 1 "OP_RET" k0x' + hexlify(pubkey).decode() + ' OP_CREATECONTR 1 OP_RET', 1, [])
+    myacc = Account(example_pubkey, 278, '[42 k0x' + hexlify(init_key).decode() + ' s0x' + hexlify(init_sig).decode() + ' h0x' + hexlify(init_address).decode() + '] ["myint" "mykey" "mysig" "myadd"] 1 "OP_RET" k0x' + hexlify(pubkey).decode() + ' OP_CREATECONTR 1 OP_RET', 1, [])
     my_mt = empty_mt.put(myacc.address, myacc.hash)
     si = ScriptInterpreter(my_mt, "", myacc)
     new_state, ret_val = si.execute_script()
@@ -327,7 +329,7 @@ def test_create_contr():
 
 def test_create_contr_fail():
     pubkey = crypto.pubkey_from_keypair(crypto.generate_keypair())
-    myacc = Account(bytes(27), 278, '[] ["mykey"] 1 "OP_RET" k0x' + hexlify(pubkey).decode() + ' OP_CREATECONTR 1 OP_RET', 1, [])
+    myacc = Account(example_pubkey, 278, '[] ["mykey"] 1 "OP_RET" k0x' + hexlify(pubkey).decode() + ' OP_CREATECONTR 1 OP_RET', 1, [])
     my_mt = empty_mt.put(myacc.address, myacc.hash)
     si = ScriptInterpreter(my_mt, "", myacc)
     assert not si.execute_script()
@@ -344,13 +346,10 @@ def test_unpack_different_types():
 
 def test_checkkeypair_suc():
     #succsess test
-    key = RSA.generate(1024)
-
-    privKey = key.exportKey('DER')
-    pubKey = key.publickey().exportKey('DER')
-    fstr = "K0x" + str(pubKey.hex()) + "\nK0x" + str(privKey.hex()) + "\nop_checkkeypair\n1 OP_RET"
-    mt, acc = get_account(empty_mt, fstr)
-    si = ScriptInterpreter(mt, "", acc)
+    keypair = generate_keypair()
+    pubkey = pubkey_from_keypair(keypair)
+    code = "k0x" + hexlify(pubkey).decode() + " k0x" + hexlify(keypair.decode) + " OP_CHECKKEYPAIR 1 OP_RET"
+    si = ScriptInterpreter(empty_mt, "", Account(example_pubkey, 0, code, True, []))
     assert si.execute_script()
 
 def test_checkkeypair_fail():

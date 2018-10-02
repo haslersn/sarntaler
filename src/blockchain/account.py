@@ -1,6 +1,6 @@
 import json
 from binascii import hexlify, unhexlify
-from src.blockchain.crypto import is_hash
+from src.blockchain.crypto import *
 from typing import List
 import logging
 
@@ -81,11 +81,12 @@ class Account(namedtuple("Account", ["pub_key", "balance", "code", "owner_access
         else:
             return None
 
-    def __new__(cls, pub_key: bytes, balance: int, code: str, owner_access: bool, storage: List[StorageItem]):
+    def __new__(cls, pubkey: bytes, balance: int, code: str, owner_access: bool, storage: List[StorageItem]):
         if None in storage:
             logging.warning("storage can't contain None " + str(storage))
             return None
-        constructed = super().__new__(cls, pub_key, balance, code, owner_access, storage)
+        check_is_pubkey(pubkey)
+        constructed = super().__new__(cls, pubkey, balance, code, owner_access, storage)
         if constructed.hash in cls._dict:
             return cls._dict[constructed.hash]
         else:
