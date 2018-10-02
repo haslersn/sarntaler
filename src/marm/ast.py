@@ -456,9 +456,10 @@ class Typename(Node):
     def __eq__(self, other):
         if type(other) is Typename:
             return self.typee == other.typee
-        elif type(other) is str: # TODO: replace with better mechanism
+        elif type(other) is str: # replace with better mechanism
             return self.typee == other
-        else: return False
+        else:
+            return False
 
     def code_gen(self, errorhandler):
         """Should not be used at all, fails on call"""
