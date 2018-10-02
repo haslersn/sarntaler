@@ -24,16 +24,16 @@ int test(int x){
 	}
 	//messages come with an associated account
 	msg;
-	// a of type address
-	//a.balance; 
 	// the address of this contract
 	contract; 
-
 	contract.balance;
-	a.balance;
+	// a of type address
+	a.balance; 
+	
 
 	// s is sarn, a is address, a receives s sarns from contracts balance<
-	//a.transfer(s);
+	transfer(a,s);
+	
 	// call contract a's method with name 'method', paying with s sarns 
 	//     from the this contracts and the params 1 and x
 	a.method(s)(1,x);

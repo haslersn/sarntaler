@@ -245,6 +245,43 @@ class ContractcallExpr(Expr):
         code.append("OP_KILL")
         return code
 
+class TransferExpr(Expr):
+    def __init__(self, address, amount):
+        super().__init__()
+        self.address = address
+        self.amount = amount
+
+    def __str__(self):
+        return "[TransferExpr: address={}, amount={}]".format(self.address,self.amount)
+
+    def analyse_scope(self, scope, errorhandler=None):
+        self.address.analyse_scope(scope, errorhandler)
+        self.amount.analyse_scope(scope, errorhandler)
+    def typecheck(self, errorhandler=None):
+        self.address.typecheck(errorhandler)
+        self.amount.typecheck(errorhandler)
+        if self.address.marm_type != 'address':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Type Error: transferring is only valid to addresses")
+        if self.amount.marm_type != 'sarn':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Type Error: transferring is only valid for sarns")
+        self.marm_type = Typename('generic')
+
+    def code_gen(self, errorhandler=None):
+        code = []
+        code.append("0")
+        code.append("OP_PACK // S3 == empty param list")
+        code+=self.address.code_gen()
+        code.append("// S2 == target address")
+        code+=self.amount.code_gen()
+        code.append("// S1 == amount")
+        code.append("OP_TRANSFER")
+        code.append("1")
+        code.append("OP_JUMPRC // if successfull, continue")
+        code.append("OP_KILL")
+        return code
+
 class LocalcallExpr(Expr):
     def __init__(self, fnname, params):
         super().__init__()
@@ -396,7 +433,6 @@ class StructExpr(Expr):
 
     def typecheck(self, errorhandler=None):
         self.expr.typecheck(errorhandler)
-        print(self.expr)
         self.marm_type = self.expr.marm_type.attribute_type(self.ident, errorhandler)
         if self.marm_type is None:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
