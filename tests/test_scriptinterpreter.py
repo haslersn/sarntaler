@@ -7,16 +7,26 @@ empty_mt = MerkleTrie(MerkleTrieStorage()) # not relevant in this test yet, but 
 def get_dummy_account():
     return Account(bytes(1), 0, "", 1, [])
 
+def get_account(mt : MerkleTrie, program : str):
+    acc = Account(bytes(1), 0, program, 1, [])
+    nmt = mt.put(acc.address, acc.hash)
+    return nmt, acc
+
 
 def test_passWithOne():
-    si = ScriptInterpreter(empty_mt, "1", get_dummy_account(), None)
-    assert si.execute_script()
+    mt, acc = get_account(empty_mt, "1 OP_RET")
+    si = ScriptInterpreter(mt, "", acc, None)
+    ret = si.execute_script()
+    assert ret != None
+    _, retval = ret
+    assert retval == 1
 
 test_passWithOne()
 
 def test_failWithMoreThanOneStackElement():
-    si = ScriptInterpreter(empty_mt, "1 2 3", get_dummy_account(), None)
-    assert not si.execute_script()
+    mt, acc = get_account(empty_mt, "1 2 3")
+    si = ScriptInterpreter(mt, "", acc, None)
+    assert si.execute_script() == None
 
 test_failWithMoreThanOneStackElement()
 
@@ -36,29 +46,31 @@ def test_dup_emptystack():
     assert res == False
 
 def test_dup2():
-    script_finalstack_test("3 2 OP_DUP 1", [3, 2, 2])
+    script_finalstack_test("3 2 OP_DUP 1 OP_RET", [3, 2, 2])
 
 def test_swap():
-    script_finalstack_test("3 2 1 OP_SWAP 1", [3, 1, 2])
+    script_finalstack_test("3 2 1 OP_SWAP 1 OP_RET", [3, 1, 2])
 
 def test_swapWithOneElement():
-    si = ScriptInterpreter(empty_mt, "1 OP_SWAP 1", get_dummy_account(), None)
+    mt, acc = get_account(empty_mt, "1 OP_SWAP 1 OP_RET")
+    si = ScriptInterpreter(mt, "", acc, None)
     assert not si.execute_script()
 
 def test_pushFP():
-    si = ScriptInterpreter(empty_mt, "3 2 1 OP_PUSHFP 1", get_dummy_account(), None)
+    mt, acc = get_account(empty_mt, "3 2 1 OP_PUSHFP 1 OP_RET")
+    si = ScriptInterpreter(mt, "", acc, None)
     si.execute_script()
     assert si.stack == [3, 2, 1, -1]
 
 def test_popFP():
-    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, "3 2 42 OP_POPFP 1", 1, []), None)
+    mt, acc = get_account(empty_mt, "3 2 42 OP_POPFP")
+    si = ScriptInterpreter(mt, "", acc, None)
     si.execute_script()
-    assert si.stack == [3, 2]
     assert si.framepointer == 42
     emptystack_test("OP_POPFP")
 
 def test_incfp():
-    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, "3 2 7 OP_INCFP 1", 1, []), None)
+    si = ScriptInterpreter(empty_mt, "", Account(bytes(1), 0, "3 2 7 OP_INCFP 1 OP_RET", 1, []), None)
     si.framepointer = 1
     si.execute_script()
     assert si.stack == [3, 2]
@@ -66,12 +78,16 @@ def test_incfp():
     emptystack_test("OP_INCFP")
 
 
+
+## TEST UPDATED UNTIL HERE
+
+
 def test_popVoid():
-    script_finalstack_test("1 2 3 OP_POPVOID 1", [1, 2])
+    script_finalstack_test("1 2 3 OP_POPVOID 1 OP_RET", [1, 2])
     emptystack_test("OP_POPVOID")
 
 def test_pushabs_ok():
-    script_finalstack_test("5 6 7 8 1 OP_PUSHABS 1", [5, 6, 7, 8, 6])
+    script_finalstack_test("5 6 7 8 1 OP_PUSHABS 1 OP_RET", [5, 6, 7, 8, 6])
 
 
 def test_pushabs_notok():
@@ -82,91 +98,91 @@ def test_pushabs_notok():
 
 
 def test_add():
-    script_finalstack_test("3 2 42 OP_ADD 1", [3, 44])
+    script_finalstack_test("3 2 42 OP_ADD 1 OP_RET", [3, 44])
     emptystack_noninteger_binaryop_test('OP_ADD')
 
 
 def test_sub():
-    script_finalstack_test("3 5 1 OP_SUB 1", [3, 4])
+    script_finalstack_test("3 5 1 OP_SUB 1 OP_RET", [3, 4])
     emptystack_noninteger_binaryop_test('OP_SUB')
 
 
 def test_mul():
-    script_finalstack_test("3 5 2 OP_MUL 1", [3, 10])
+    script_finalstack_test("3 5 2 OP_MUL 1 OP_RET", [3, 10])
     emptystack_noninteger_binaryop_test('OP_MUL')
 
 
 def test_div():
-    script_finalstack_test("3 10 2 OP_DIV 1", [3, 5])
-    script_finalstack_test("3 5 2 OP_DIV 1", [3, 2])
+    script_finalstack_test("3 10 2 OP_DIV 1 OP_RET", [3, 5])
+    script_finalstack_test("3 5 2 OP_DIV 1 OP_RET", [3, 2])
     emptystack_noninteger_binaryop_test('OP_DIV')
 
 
 def test_mod():
-    script_finalstack_test("3 10 2 OP_MOD 1", [3, 0])
-    script_finalstack_test("3 5 2 OP_MOD 1", [3, 1])
+    script_finalstack_test("3 10 2 OP_MOD 1 OP_RET", [3, 0])
+    script_finalstack_test("3 5 2 OP_MOD 1 OP_RET", [3, 1])
     emptystack_noninteger_binaryop_test('OP_MOD')
 
 
 def test_and():
-    script_finalstack_test("3 5 2 OP_AND 1", [3, 0])
-    script_finalstack_test("3 3 2 OP_AND 1", [3, 2])
+    script_finalstack_test("3 5 2 OP_AND 1 OP_RET", [3, 0])
+    script_finalstack_test("3 3 2 OP_AND 1 OP_RET", [3, 2])
     emptystack_noninteger_binaryop_test('OP_AND')
 
 
 def test_or():
-    script_finalstack_test("3 5 1 OP_OR 1", [3, 5])
-    script_finalstack_test("3 5 3 OP_OR 1", [3, 7])
+    script_finalstack_test("3 5 1 OP_OR 1 OP_RET", [3, 5])
+    script_finalstack_test("3 5 3 OP_OR 1 OP_RET", [3, 7])
     emptystack_noninteger_binaryop_test('OP_OR')
 
 
 def test_xor():
-    script_finalstack_test("3 5 1 OP_XOR 1", [3, 4])
-    script_finalstack_test("3 5 3 OP_XOR 1", [3, 6])
+    script_finalstack_test("3 5 1 OP_XOR 1 OP_RET", [3, 4])
+    script_finalstack_test("3 5 3 OP_XOR 1 OP_RET", [3, 6])
     emptystack_noninteger_binaryop_test('OP_XOR')
 
 def test_not():
-    script_finalstack_test("3 1 OP_NOT 1", [3, 0])
-    script_finalstack_test("3 0 OP_NOT 1", [3, 1])
+    script_finalstack_test("3 1 OP_NOT 1 OP_RET", [3, 0])
+    script_finalstack_test("3 0 OP_NOT 1 OP_RET", [3, 1])
     emptystack_noninteger_unaryop_test('OP_NOT')
     si_notbool_stack = ScriptInterpreter(empty_mt, 'OP_NOT', Account(bytes(1), 0, "2 OP_NOT", 1, []), None)
     assert not si_notbool_stack.execute_script()
 
 def test_neg():
-    script_finalstack_test("3 4 OP_NEG 1", [3, -4])
+    script_finalstack_test("3 4 OP_NEG 1 OP_RET", [3, -4])
     emptystack_noninteger_unaryop_test('OP_NEG')
 
 def test_equ():
-    script_finalstack_test("3 4 5 OP_EQU 1", [3, 0])
-    script_finalstack_test("3 4 4 OP_EQU 1", [3, 1])
+    script_finalstack_test("3 4 5 OP_EQU 1 OP_RET", [3, 0])
+    script_finalstack_test("3 4 4 OP_EQU 1 OP_RET", [3, 1])
     emptystack_test('OP_EQU')
 
 
 def test_le():
-    script_finalstack_test("3 5 1 OP_LE 1", [3, 0])
-    script_finalstack_test("3 5 6 OP_LE 1", [3, 1])
-    script_finalstack_test("3 5 5 OP_LE 1", [3, 1])
+    script_finalstack_test("3 5 1 OP_LE 1 OP_RET", [3, 0])
+    script_finalstack_test("3 5 6 OP_LE 1 OP_RET", [3, 1])
+    script_finalstack_test("3 5 5 OP_LE 1 OP_RET", [3, 1])
     emptystack_noninteger_binaryop_test('OP_LE')
 
 
 def test_ge():
-    script_finalstack_test("3 5 1 OP_GE 1", [3, 1])
-    script_finalstack_test("3 5 6 OP_GE 1", [3, 0])
-    script_finalstack_test("3 5 5 OP_GE 1", [3, 1])
+    script_finalstack_test("3 5 1 OP_GE 1 OP_RET", [3, 1])
+    script_finalstack_test("3 5 6 OP_GE 1 OP_RET", [3, 0])
+    script_finalstack_test("3 5 5 OP_GE 1 OP_RET", [3, 1])
     emptystack_noninteger_binaryop_test('OP_GE')
 
 
 def test_lt():
-    script_finalstack_test("3 5 1 OP_LT 1", [3, 0])
-    script_finalstack_test("3 5 6 OP_LT 1", [3, 1])
-    script_finalstack_test("3 5 5 OP_LT 1", [3, 0])
+    script_finalstack_test("3 5 1 OP_LT 1 OP_RET", [3, 0])
+    script_finalstack_test("3 5 6 OP_LT 1 OP_RET", [3, 1])
+    script_finalstack_test("3 5 5 OP_LT 1 OP_RET", [3, 0])
     emptystack_noninteger_binaryop_test('OP_LT')
 
 
 def test_gt():
-    script_finalstack_test("3 5 1 OP_GT 1", [3, 1])
-    script_finalstack_test("3 5 6 OP_GT 1", [3, 0])
-    script_finalstack_test("3 5 5 OP_GT 1", [3, 0])
+    script_finalstack_test("3 5 1 OP_GT 1 OP_RET", [3, 1])
+    script_finalstack_test("3 5 6 OP_GT 1 OP_RET", [3, 0])
+    script_finalstack_test("3 5 5 OP_GT 1 OP_RET", [3, 0])
     emptystack_noninteger_binaryop_test('OP_GT')
 
 
@@ -190,7 +206,8 @@ def test_popr():
     emptystack_test('OP_POPR')
 
 def script_finalstack_test(script: str, finalstack: list):
-    si = ScriptInterpreter(empty_mt, script, get_dummy_account(), None)
+    mt, acc = get_account(empty_mt, script)
+    si = ScriptInterpreter(mt, "", acc, None)
     si.execute_script()
     assert si.stack == finalstack
 
@@ -199,12 +216,12 @@ def test_div_nonintegers():
     assert not si.execute_script()
 
 def test_pack():
-    script_finalstack_test('3 2 1 3 OP_PACK 1', [[3, 2, 1]])
-    script_finalstack_test('3 "Hello" -100 22 18 0 6 OP_PACK 1', [[3, "Hello", -100, 22, 18, 0]])
+    script_finalstack_test('3 2 1 3 OP_PACK 1 OP_RET', [[3, 2, 1]])
+    script_finalstack_test('3 "Hello" -100 22 18 0 6 OP_PACK 1 OP_RET', [[3, "Hello", -100, 22, 18, 0]])
 
 def test_unpack():
-    #script_finalstack_test('"3 2 1" OP_UNPACK 1', [3, 2, 1, 3])
-    script_finalstack_test('[3 \'Hello\' -100 22 18] OP_UNPACK 1', [3, "Hello", -100, 22, 18, 5])
+    #script_finalstack_test('"3 2 1" OP_UNPACK 1 OP_RET', [3, 2, 1, 3])
+    script_finalstack_test('[3 \'Hello\' -100 22 18] OP_UNPACK 1 OP_RET', [3, "Hello", -100, 22, 18, 5])
 
 #def emptystack_noninteger_test(op: str):
 

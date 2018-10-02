@@ -482,6 +482,9 @@ class ScriptInterpreter:
             logging.warning("OP_RET: Stack is empty")
             return False
 
+        if self.framepointer == -1:
+            logging.warning("OP_RET: Last Return, gonna exit program")
+            return "ret"
         result = self.stack.pop()
         self.pc = self.stack[self.framepointer + 1] # restore the program counter
         del self.stack[(self.framepointer+1):]          # reset the stack pointer
@@ -661,44 +664,45 @@ class ScriptInterpreter:
     def execute_script(self):
         """
             Run the script with the input and output scripts
+            Returns None, if script failed,
+            Returns (State, RetVal) if script succeeded
         """
 
-        def execute_item(item: str):
+        def execute_item(item: str, param=False):
             # Check if item is data or opcode
             if callable(item):
+                if param:
+                    return False
                 # Execute the operation
                 logging.warning(str(item) + " is an opcode")
-                if not item():
-                    return False
+                ret = item()
+                if ret in [False, "ret"]:
+                    return ret
             else:
                 # Push data onto the stack
                 logging.warning(str(item) + " is data")
                 self.stack.append(item)
             return True
 
-        def execute(script: str, bool param=False):
+        def execute(script: str, param=False):
             self.pc = 1
             self.framepointer = -1
             self.program = self._parse_script(script)
             if self.program is None:
-                return False
+                return None
             while self.pc <= len(self.program):
                 item = self.program[self.pc - 1] # Fetch the next item (given by the program counter)
                 logging.info("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
                 self.pc = self.pc + 1
-                if not execute_item(item):
-                    return False
+                ret = execute_item(item, param)
+                if ret in [False, "ret"]:
+                    return self.stack.pop() if ret == "ret" else None
                 logging.warning("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
-            return True
+            return None
 
         execute(self.params_script, True)
-        if retval == None:
-            return None
-        if not execute(self.params_script) or not execute(self.acc.code):
-            logging.error("Invalid Tx due to invalid code item")
-            return None
-
-        return None # Did not return via OP_RET
+        ret = execute(self.acc.code, False)
+        return None if not ret else (self.state, ret)
 
         ## exit_code = self.__pop_checked(int)
         ## if exit_code == 1:
