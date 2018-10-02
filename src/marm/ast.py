@@ -376,6 +376,10 @@ class LHS(Node):
     def code_gen(self):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
+        #print(self.definition.__class__)
+        #if isinstance(self.definition,Procdecl):
+        #    ident_addr = self.ident
+        #else:
         ident_addr = self.definition.get_local_index_for(self.ident)
         code.append(str(ident_addr) + " // address of local "+self.ident)
         code.append('OP_PUSHR')
@@ -384,8 +388,11 @@ class LHS(Node):
     def code_gen_LHS(self):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
-        ident_addr = self.definition.get_local_index_for(self.ident)
-        code.append(str(ident_addr) + " // address of local "+self.ident)
+        if isinstance(self.definition,Procdecl):
+            ident_addr = self.ident + " // function name"
+        else:
+            ident_addr = str(self.definition.get_local_index_for(self.ident))+ " // address of local "+self.ident
+        code.append(ident_addr)
         return code
 
 
