@@ -692,7 +692,7 @@ class ScriptInterpreter:
                 item = self.program[self.pc - 1] # Fetch the next item (given by the program counter)
                 logging.info("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
                 self.pc = self.pc + 1
-                ret = execute_item(item, param)
+                ret = execute_item(item)
                 if ret in [False, "ret"]:
                     return self.stack.pop() if ret == "ret" else None
                 logging.warning("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
