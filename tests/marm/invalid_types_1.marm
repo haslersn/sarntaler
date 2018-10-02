@@ -1,0 +1,6 @@
+int a(int x){
+  return #12;
+}
+int b(){
+  return 12+#12;
+}

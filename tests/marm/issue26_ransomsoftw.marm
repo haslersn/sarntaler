@@ -1,0 +1,14 @@
+/*
+ * Example implementation of
+ * the example contract of
+ * issue #26.
+ */
+ contract {
+    sarn balance;
+    sarn prize;
+    address owner;
+ }
+
+ int pay_for_unlock(sarn x, address con) {
+    return con.transfer(prize);
+ }

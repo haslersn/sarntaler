@@ -2,7 +2,16 @@ __pycache__
 .venv
 /doc/_autosummary/
 /doc/_build/
+/src/marm/parser.out
+/src/marm/parsetab.py
 .cache
+.pytest_cache
 *.wallet
 *.pem
 *.json.gz
+
+# vim files
+*~
+*.swp
+*.
+tags

@@ -1,0 +1,9 @@
+int a(int x, int x){
+  int x;
+}
+
+int b(){
+  int y;
+  int y;
+  return z;
+}

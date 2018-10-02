@@ -26,6 +26,7 @@ let
     };
 
   in [
+    ply
     alabaster
     Babel
     click
@@ -50,6 +51,7 @@ let
     treelib
     urwid
     werkzeug
+    colorama
   ];
 
 in buildEnv {

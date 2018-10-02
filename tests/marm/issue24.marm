@@ -1,0 +1,17 @@
+/*
+ * Example implementation of
+ * the example contract of
+ * issue #24.
+ * PROBLEM: CANNOT BE IMPLEMENTED AS ORIGINALLY THOUGHT
+ */
+contract {
+    sarn balance;
+    sarn price;
+    address owner;
+}
+
+int buy(sarn x) {
+    contract.owner.transfer(prize); // At the moment any faults in the implementation are actively ignored!
+    //If the owner wants to check which people have paid
+    //they will need to check the whole blockchain
+}
