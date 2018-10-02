@@ -160,7 +160,7 @@ prefix notation and there is only one explicit operand.
 
 Until now the unary expressions are only represented by an operator to negate the value of the operand.
 You could as such easily negate an integer value as it was done in the example for integer types.
-The binary expressions contain the addition, subtraction, multiplication and division as well as assignments 
+The binary expressions contain the addition, subtraction, multiplication, division and modulo as well as assignments 
 to variables. Therefore the following code snippets are valid expressions:
 ```bnf
 int a,b,c,d;
@@ -170,6 +170,7 @@ c = b - d
 d = a * (c / d)
 a = -20
 c = -d
+b = a % c // calculates a mod c
 ```
 The grammar is defined by
 ```bnf
