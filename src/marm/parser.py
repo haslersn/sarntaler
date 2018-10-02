@@ -26,13 +26,18 @@ def p_contractclause(p):
     else:
         p[0]=[]
 def p_contractlist(p):
-    ''' contractlist : paramdecl SEMI contractlist
+    ''' contractlist : contractmemberdecl SEMI contractlist
                      | '''
     if len(p)==4:
         p[3].append(p[1])
         p[0]=p[3]
     else: 
         p[0] = []
+
+def p_contractmemberdecl(p):
+    'contractmemberdecl : type IDENT'
+    p[0] = ast.ContractMemberDecl(p[1], p[2])
+    p[0].set_pos_from(p)
 
 
 def p_procdecllist(p):

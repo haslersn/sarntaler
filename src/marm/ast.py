@@ -512,6 +512,24 @@ class Paramdecl(Node):
         code = []
         return code
 
+class ContractMemberDecl(Node):
+    def __init__(self, member_type, name):
+        super().__init__()
+        self.member_type = member_type
+        self.marm_type = member_type
+        self.name = name
+
+    def __str__(self):
+        return "[ContractMemberDecl: member_type={}, name={}]".format(self.member_type, self.name)
+
+    def analyse_scope(self, scope, errorhandler):
+        if scope.has_direct_definition(self.name):
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Multiple contract members have the name {}.".format(self.name))
+        scope.define(self.name, self)
+
+    def typecheck(self, errorhandler): pass
+
 
 class Proctype:
     def __init__(self, return_type, param_types):
