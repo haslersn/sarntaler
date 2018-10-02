@@ -154,11 +154,10 @@ class BinExpr(Expr):
             if type(self.left) == LHS:
                 # create rhs code
                 code_right = self.right.code_gen()
-                left_stackaddress = self.left.code_gen_LHS()
+                left_setcode = self.left.code_gen_LHS()
 
                 code += code_right
-                code += left_stackaddress
-                code.append("OP_POPABS")
+                code += left_setcode
             else:
                 # got an expression on the left side like a+b, which we don't want to allow
                 print("BinExpr.code_gen: got a binary expression like a+b = 5 which we don't want to allow")
@@ -219,7 +218,7 @@ class LocalcallExpr(Expr):
             return
     def code_gen(self):
         """TODO create code for inter-contract call"""
-        code_methodid = self.fnname.code_gen_LHS()
+        code_methodid = self.fnname.code_gen()
 
         code = []
         for param in self.params:#[::-1]:
@@ -374,23 +373,25 @@ class LHS(Node):
     def code_gen(self):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
-        #print(self.definition.__class__)
-        #if isinstance(self.definition,Procdecl):
-        #    ident_addr = self.ident
-        #else:
-        ident_addr = self.definition.get_local_index_for(self.ident)
-        code.append(str(ident_addr) + " // address of local "+self.ident)
-        code.append('OP_PUSHR')
+        if isinstance(self.definition, Procdecl):
+            code.append(self.ident + " // function name")
+        elif isinstance(self.definition, ContractMemberDecl):
+            pass # TODO
+        else:
+            code.append(str(self.definition.get_local_index_for(self.ident))+" // address of local "+self.ident)
+            code.append('OP_PUSHR')
         return code
 
     def code_gen_LHS(self):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
         if isinstance(self.definition,Procdecl):
-            ident_addr = self.ident + " // function name"
+            raise RuntimeError("Tried to assign procedure name") # TODO errorhandler
+        elif isinstance(self.definition, ContractMemberDecl):
+            pass # TODO
         else:
-            ident_addr = str(self.definition.get_local_index_for(self.ident))+ " // address of local "+self.ident
-        code.append(ident_addr)
+            code.append(str(self.definition.get_local_index_for(self.ident))+ " // address of local "+self.ident)
+            code.append('OP_POPR')
         return code
 
 
@@ -439,6 +440,8 @@ class Translationunit(Node):
             local_scope.define(proc.name, proc)
         for proc in self.procs:
             proc.analyse_scope(local_scope, errorhandler)
+        for contractdata_el in self.contractdata:
+            contractdata_el.analyse_scope(local_scope, errorhandler)
 
     def typecheck(self, errorhandler):
         for proc in self.procs:
