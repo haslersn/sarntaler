@@ -745,9 +745,13 @@ class ScriptInterpreter:
                 logging.warning("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
             return True if param else False
 
-        if not execute(self.params_script, True):
+        if type(self.params_script) == list:
+            self.stack = self.params_script
+        else:
+            self.stack = self._parse_script(self.params_script)
+        if self.stack is None:
             return None
-        ret = execute(self.acc.code, False)
+        execute(self.acc.code, False)
         return None if self.retval is None else (self.state, self.retval)
 
         ## exit_code = self.__pop_checked(int)
