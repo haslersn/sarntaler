@@ -555,8 +555,11 @@ class ScriptInterpreter:
             logging.warning("OP_CREATECONTR: storage lists are not of equal length")
             return False
         storage = list()
-        for name, initval in zip(storage_var_names, storage_initial_values):  # TODO typename correct?
-            item = StorageItem(name, type(initval).__name__, initval)
+        for name, initval in zip(storage_var_names, storage_initial_values):
+            typ = type(initval).__name__
+            if type(initval) in [Key, Hash, Signature]:
+                initval = initval.value
+            item = StorageItem(name, typ, initval)
             if item is None:
                 logging.warning("OP_CREATECONTR: error parsing storage lists")
                 return False

@@ -310,14 +310,27 @@ def test_setstor_invalid():
 
 def test_create_contr():
     pubkey = crypto.pubkey_from_keypair(crypto.generate_keypair())
-    myacc = Account(bytes(27), 278, '[42] ["myint"] 1 "OP_RET" k0x' + hexlify(pubkey).decode() + ' OP_CREATECONTR 1 OP_RET', 1, [])
+    init_key = crypto.pubkey_from_keypair(crypto.generate_keypair())
+    init_sig = bytes([1] * 128)
+    init_address = get_dummy_account().address
+    myacc = Account(bytes(27), 278, '[42 k0x' + hexlify(init_key).decode() + ' s0x' + hexlify(init_sig).decode() + ' h0x' + hexlify(init_address).decode() + '] ["myint" "mykey" "mysig" "myadd"] 1 "OP_RET" k0x' + hexlify(pubkey).decode() + ' OP_CREATECONTR 1 OP_RET', 1, [])
     my_mt = empty_mt.put(myacc.address, myacc.hash)
     si = ScriptInterpreter(my_mt, "", myacc, None)
     new_state, ret_val = si.execute_script()
     assert new_state
     new_acc = Account.get_from_hash(new_state.get(crypto.compute_hash(pubkey)))
     assert new_acc.get_storage('myint') == 42
+    assert new_acc.get_storage('mykey') == init_key
+    assert new_acc.get_storage('mysig') == init_sig
+    assert new_acc.get_storage('myadd') == init_address
 
+
+def test_create_contr_fail():
+    pubkey = crypto.pubkey_from_keypair(crypto.generate_keypair())
+    myacc = Account(bytes(27), 278, '[] ["mykey"] 1 "OP_RET" k0x' + hexlify(pubkey).decode() + ' OP_CREATECONTR 1 OP_RET', 1, [])
+    my_mt = empty_mt.put(myacc.address, myacc.hash)
+    si = ScriptInterpreter(my_mt, "", myacc, None)
+    assert not si.execute_script()
 
 def test_pack_different_types():
     mt, acc = get_account(empty_mt, "h0xABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD 0 'abc' 3 OP_PACK 'def' OP_SWAP 2 OP_PACK 1 OP_RET")

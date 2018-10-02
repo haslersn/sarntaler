@@ -4,7 +4,7 @@ from src.blockchain.crypto import is_hash
 from typing import List
 import logging
 
-from src.blockchain.crypto import compute_hash
+from src.blockchain.crypto import *
 from collections import namedtuple
 
 
@@ -25,11 +25,11 @@ def check_address_type(value: bytes):
 
 
 def check_signature_type(value: bytes):  # TODO length
-    return type(value) == bytes
+    return is_signature(value)
 
 
 def check_key_type(value: bytes):  # TODO length
-    return type(value) == bytes
+    return is_pubkey(value)
 
 
 class StorageItem(namedtuple("StorageItem", ["s_name", "s_type", "s_value"])):
@@ -38,6 +38,7 @@ class StorageItem(namedtuple("StorageItem", ["s_name", "s_type", "s_value"])):
                         'key': check_key_type}
 
     def __new__(cls, s_name: str, s_type: str, s_value: object):
+        s_type = s_type.lower()
         if s_type not in cls._supported_types or not cls._supported_types[s_type](s_value):
             logging.warning("invalid storage item for " + s_name)
             return None
@@ -48,12 +49,19 @@ class StorageItem(namedtuple("StorageItem", ["s_name", "s_type", "s_value"])):
         val = {}
         val["s_name"] = self.s_name
         val["s_type"] = self.s_type
-        val["s_value"] = self.s_value
+        if (self.s_type in ['key', 'signature', 'address', 'hash']):
+            val["s_value"] = hexlify(self.s_value).decode()
+        else:
+            val["s_value"] = self.s_value
         return val
 
     @classmethod
     def from_json_compatible(cls, val):
         """ Create a new StorageItem from its JSON-serializable representation. """
+        if (val['s_type'] in ['key', 'signature', 'address', 'hash']):
+            s_value = unhexlify(val['s_value'])
+        else:
+            s_value = val['s_value']
         return cls(val["s_name"], val['s_type'], val["s_value"])
 
     def set_value(self, var_name: str, var_value: object):
