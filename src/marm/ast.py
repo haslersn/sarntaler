@@ -493,7 +493,7 @@ class LHS(Node):
 
     def code_gen_LHS(self, errorhandler=None):
         """Pushes the address of the identifier from the symbol table on the stack"""
-        code = []
+        code = ["OP_DUP"]
         if isinstance(self.definition,Procdecl):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Tried to assign to procedure name {}".format(self.ident))
