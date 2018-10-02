@@ -31,18 +31,19 @@ def transit(script_interpreter_cls: type, state : MerkleTrie, transaction : Tran
         state = state.put(output.address, acc.hash)
         if acc.code is not None:
             vm = script_interpreter_cls(state, output.params, acc)
-            state = vm.execute_script()
-            if state is None:
+            result = vm.execute_script()
+            if result is None:
                 logging.warning("state transition: target account code execution failed")
                 return None
+            state = result[0]
 
-        if miner_address != bytes(32):
-            # Miner gets his fee if the miner_address is not zero
-            if not state.contains(miner_address):
-                #no miner address
-                return None
-            acc = Account.get_from_hash(state.get(miner_address))
-            acc = acc.add_to_balance(transaction.tx_data.fee)
-            state = state.put(miner_address, acc.hash)
+    if miner_address != bytes(32):
+        # Miner gets his fee if the miner_address is not zero
+        if not state.contains(miner_address):
+            #no miner address
+            return None
+        acc = Account.get_from_hash(state.get(miner_address))
+        acc = acc.add_to_balance(transaction.tx_data.fee)
+        state = state.put(miner_address, acc.hash)
 
-        return state
+    return state

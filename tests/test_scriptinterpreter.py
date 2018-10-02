@@ -388,4 +388,4 @@ def test_transfer():
     print("trie:" + str(trie.get(contract_acc.address)))
     contract_acc = Account.get_from_hash(trie.get(contract_acc.address))
     assert contract_acc.balance is 90
-    #assert trie.get(0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB) is 10
+    assert target_acc.balance is 10
