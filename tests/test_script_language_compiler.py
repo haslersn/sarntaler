@@ -135,7 +135,7 @@ class TestParserMethods(unittest.TestCase):
     def test_gcd(self):
         self.generic_test("gcd.marm")
 
-    @unittest.skipIf(True, "no crypto module")
+    @unittest.skipIf(False, "no crypto module")
     def test_gcd_script(self):
         from src.scriptinterpreter import ScriptInterpreter
         from math import gcd
@@ -149,7 +149,7 @@ class TestParserMethods(unittest.TestCase):
         si.stack.append(a)
         si.stack.append(b)
         si.stack.append("gcd")
-        si.stack.append(3)
+        si.stack.append(2)
         si.execute_script()
         print("Stack after gcd script:", si.stack)
         self.assertEqual(gcd(a, b), si.stack[0])
