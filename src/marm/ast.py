@@ -432,7 +432,9 @@ class LHS(Node):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
         if isinstance(self.definition,Procdecl):
-            raise RuntimeError("Tried to assign procedure name") # TODO errorhandler
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Tried to assign to procedure name {}".format(self.ident))
+            # raise RuntimeError("Tried to assign procedure name")
         elif isinstance(self.definition, ContractMemberDecl):
             code.append('"' + self.definition.name +'" // store name')
             code.append('OP_SETSTOR')
