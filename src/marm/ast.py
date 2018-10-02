@@ -973,9 +973,9 @@ class BoolexCMP(Boolex):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Trying to compare values of types {} and {}.".format(
                                            self.left.marm_type, self.right.marm_type))
-        if self.left.marm_type not in ['int']: #TODO
-            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Trying to compare two values of type {}.".format(self.left.marm_type))
+        #if self.left.marm_type not in ['int']:
+        #    errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+        #                               "Trying to compare two values of type {}.".format(self.left.marm_type))
         self.marm_type = Typename('bool')
 
     def code_gen(self, errorhandler):
