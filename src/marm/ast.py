@@ -537,6 +537,7 @@ class Procdecl(Node):
     def code_gen(self):
         """Insert the identifiers in the symboltable(?) and generate the code for the body"""
         code = ["// start proc %s"%self.name]
+        code.append("%s:"%self.name)
         # TODO decide what to do with the procedure and params addresses
         for decl in self.body:
             code += decl.code_gen()
