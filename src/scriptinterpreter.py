@@ -3,6 +3,7 @@ import hashlib
 import logging
 
 from src.blockchain.account import Account, StorageItem
+from src.blockchain.crypto import compute_hash
 from src.blockchain.merkle_trie import MerkleTrie
 from src.blockchain.new_transaction import TransactionInput, TransactionOutput, TransactionData, Transaction
 from src.blockchain.state_transition import transit
@@ -105,7 +106,8 @@ class ScriptInterpreter:
         'OP_PACK',
         'OP_UNPACK',
 
-        'OP_CREATECONTR'
+        'OP_CREATECONTR',
+        'OP_HASH'
     }
 
 
@@ -610,6 +612,20 @@ class ScriptInterpreter:
         if self.state is None:
             logging.warning("OP_TRANSFER: Empty state returned")
             return False
+        return True
+
+    def op_hash(self):
+        if not self.stack:
+            logging.warning("OP_HASH: Stack is empty")
+            return False
+        popped = self.stack.pop()
+        if type(popped) == int:
+            popped = str(popped)
+        if type(popped) == str:
+            popped = popped.encode()
+        if type(popped) in [Key, Hash, Signature]:
+            popped = popped.value
+        self.stack.append(compute_hash(popped))
         return True
 
     def _parse_numeric_item(self, item: str):
