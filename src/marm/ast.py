@@ -467,6 +467,7 @@ class Translationunit(Node):
             code.append("OP_POPVOID")
             code.append(str(le_param))
             code.append("OP_EQU")
+            code.append("OP_NOT")
             code.append("disp_fail")
             code.append("OP_JUMPC")
             code.append("0")
