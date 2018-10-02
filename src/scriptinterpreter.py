@@ -669,7 +669,7 @@ class ScriptInterpreter:
                 self.stack.append(typed_item)
             return True
 
-        def execute(script: str):
+        def execute(script: str, bool param=False):
             self.pc = 1
             self.framepointer = -1
             self.program = self._split_script(script)
@@ -682,15 +682,20 @@ class ScriptInterpreter:
                 logging.warning("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
             return True
 
+        execute(self.params_script, True)
+        if retval == None:
+            return None
         if not execute(self.params_script) or not execute(self.acc.code):
             logging.error("Invalid Tx due to invalid code item")
             return None
 
-        exit_code = self.__pop_checked(int)
-        if exit_code == 1:
-            return self.state
-        elif exit_code is None:
-            logging.error("Invalid Tx due to missing exit code")
-        else:
-            logging.error("Invalid Tx due to exit code {}".format(exit_code))
-        return None
+        return None # Did not return via OP_RET
+
+        ## exit_code = self.__pop_checked(int)
+        ## if exit_code == 1:
+        ## return self.state, exit_code
+        ##  elif exit_code is None:
+        ##      logging.error("Invalid Tx due to missing exit code")
+        ##  else:
+        ##      logging.error("Invalid Tx due to exit code {}".format(exit_code))
+        ##  return None
