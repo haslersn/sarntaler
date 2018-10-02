@@ -200,8 +200,8 @@ class LocalcallExpr(Expr):
             code+=param.code_gen()
         code+=code_methodid
         code.append("OP_CALL")
-        #TODO extract result from stack
         for param in self.params:#[::-1]:
+            code.append("OP_SWAP")
             code.append("OP_POPVOID")
         code.append("// WARNING: We assume a call to be a contract-local call")
         return code
@@ -506,7 +506,7 @@ class Procdecl(Node):
 
     def code_gen(self):
         """Insert the identifiers in the symboltable(?) and generate the code for the body"""
-        code = []
+        code = ["// start proc %s"%self.name]
         # TODO decide what to do with the procedure and params addresses
         for decl in self.body:
             code += decl.code_gen()
@@ -555,7 +555,7 @@ class StatementDecl(Statement):
         code = []
         for decl in self.decllist:
             if isinstance(decl, str):
-                code.append("decl " + decl)
+                code.append("0 // Pushing a dummy value for reserving space on the stack for "+ decl)
                 pass  # Normally there should not happen anything I guess
             else:
                 code += decl.code_gen()
