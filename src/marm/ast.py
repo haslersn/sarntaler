@@ -63,7 +63,7 @@ class Node:
                 return obj.__dict__
         return json.dumps(self, default=json_default, sort_keys=True, indent=4)
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         return []
 
 
@@ -83,9 +83,9 @@ class SpecialExpression(Expr):
     def __str__(self):
         return "[SpecialExpr: value="+str(self.value)+"]"
 
-    def analyse_scope(self,scope, errorhandler): pass
+    def analyse_scope(self,scope, errorhandler=None): pass
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
 
     # TODO code_gen
 
@@ -100,11 +100,11 @@ class ConstExpr(Expr):
     def __str__(self):
         return "[ConstExpr: value=" + str(self.value) + "]"
 
-    def analyse_scope(self, scope, errorhandler): pass
+    def analyse_scope(self, scope, errorhandler=None): pass
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandle=None):
         if self.marm_type is 'string':
             return ['"'+self.value+'" // const string']
         else:
@@ -122,11 +122,11 @@ class BinExpr(Expr):
     def __str__(self):
         return "[BinExpr: op=" + str(self.op) + ", left=" + str(self.left) + ", right=" + str(self.right) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.left.analyse_scope(scope, errorhandler)
         self.right.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.left.typecheck(errorhandler)
         self.right.typecheck(errorhandler)
         if self.op == '=':
@@ -147,7 +147,7 @@ class BinExpr(Expr):
                                                self.op, self.right.marm_type))
             self.marm_type = Typename('int')
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Act differently for ASSIGN expressions and mathematical operations """
         code = []
         if str(self.op) == "=":
@@ -190,14 +190,14 @@ class ContractcallExpr(Expr):
     def __str__(self):
         return "[ContractcallExpr: fnname={}, fee={}, params={}]".format(self.fnname,self.fee,self.liststr(self.params))
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.fnname.analyse_scope(scope, errorhandler)
         for fees in self.fee:
             fees.analyse_scope(scope, errorhandler)
         for param in self.params:
             param.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.fnname.typecheck(errorhandler)
         errorhandler.registerWarning(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Warning: We currently do not check whether a contract call expression actually types.")
@@ -209,7 +209,7 @@ class ContractcallExpr(Expr):
             param.typecheck(errorhandler)
         self.marm_type = Typename('generic')
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """TODO create code for inter-contract call"""
         code_methodid = self.fnname.code_gen()
 
@@ -239,12 +239,12 @@ class LocalcallExpr(Expr):
     def __str__(self):
         return "[LocalcallExpr: fnname={}, params={}]".format(self.fnname,self.liststr(self.params))
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.fnname.analyse_scope(scope, errorhandler)
         for param in self.params:
             param.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.fnname.typecheck(errorhandler)
         if type(self.fnname.marm_type) is Proctype:
             if len(self.params) != len(self.fnname.marm_type.param_types):
@@ -265,7 +265,7 @@ class LocalcallExpr(Expr):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Trying to call expression which is not a function.")
             return
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         code_methodid = self.fnname.code_gen(errorhandler)
 
         code = []
@@ -308,10 +308,10 @@ class UnaryExpr(Expr):
     def __str__(self):
         return "[UnaryExpr: op=" + str(self.op) + ", operand=" + str(self.operand) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.operand.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.operand.typecheck(errorhandler)
         if self.op == '#':
             if self.operand.marm_type != 'string':
@@ -328,7 +328,7 @@ class UnaryExpr(Expr):
             errorhandler.registerFatal(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Typechecking failed on unknown operator {}".format(self.op))
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Act differently on hash and negation, although hash is not yet implemented"""
         code = []
         if str(self.op) == "HASH":
@@ -373,11 +373,11 @@ class StructExpr(Expr):
     def __str__(self):
         return "[StructExpr: expr=" + str(self.expr) + ", ident=" + str(self.ident) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.expr.analyse_scope(scope,errorhandler)
         # TODO: Attributes?
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.expr.typecheck(errorhandler)
         print(self.expr)
         self.marm_type = self.expr.marm_type.attribute_type(self.ident)
@@ -386,14 +386,14 @@ class StructExpr(Expr):
                                        "Value of type {} has not attribute named {}".format(
                                            self.expr.marm_type, self.ident))
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """TODO has not yet been decided what this should actually do"""
         code = []
 
         code.append("// code for struct access not implemented yet")
         return code
 
-    def code_gen_LHS(self, errorhandler):
+    def code_gen_LHS(self, errorhandler=None):
         """TODO do stuff"""
         code = []
         code.append("// codeLHS for struct access not implemented yet")
@@ -413,16 +413,16 @@ class LHS(Node):
     def __str__(self):
         return "[LHS: ident=" + str(self.ident) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.definition = scope.lookup(self.ident)
         if self.definition is None:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Use of undeclared identifier {}.".format(self.ident))
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.marm_type = self.definition.get_marm_type_for(self.ident, errorhandler)
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
         if isinstance(self.definition, Procdecl):
@@ -437,7 +437,7 @@ class LHS(Node):
             code.append('OP_PUSHR')
         return code
 
-    def code_gen_LHS(self, errorhandler):
+    def code_gen_LHS(self, errorhandler=None):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
         if isinstance(self.definition,Procdecl):
@@ -471,13 +471,13 @@ class Typename(Node):
         else:
             return False
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Should not be used at all, fails on call"""
         raise NotImplementedError
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
 
-    def attribute_type(self, ident, errorhandler): # TODO: Add **all+* attributes we have available
+    def attribute_type(self, ident, errorhandler=None): # TODO: Add **all+* attributes we have available
         if self.typee == 'msg':
             if ident == 'account':
                 return Typename('address')
@@ -505,13 +505,13 @@ class Translationunit(Node):
         for proc in self.procs:
             proc.analyse_scope(local_scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         for proc in self.procs:
             proc.set_global_definition_types(errorhandler)
         for proc in self.procs:
             proc.typecheck(errorhandler)
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Calls codegen for every procedure and stores their addresses before"""
         code = ["dispatcher: // start dispatcher", "OP_SWAP"]
         procedures = []
@@ -562,22 +562,22 @@ class Paramdecl(Node):
     def __str__(self):
         return "[Paramdecl: param_type=" + str(self.param_type) + ", name=" + str(self.name) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         if scope.has_direct_definition(self.name):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Multiple parameters have the name {}.".format(self.name))
         scope.define(self.name, self)
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
 
-    def get_marm_type_for(self, ident, errorhandler):
+    def get_marm_type_for(self, ident, errorhandler=None):
         assert(ident == self.name)
         return self.param_type
 
-    def get_local_index_for(self, ident, errorhandler):
+    def get_local_index_for(self, ident, errorhandler=None):
         return (-1)-self.param_index
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """do nothing"""
         code = []
         return code
@@ -592,15 +592,15 @@ class ContractMemberDecl(Node):
     def __str__(self):
         return "[ContractMemberDecl: member_type={}, name={}]".format(self.member_type, self.name)
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         if scope.has_direct_definition(self.name):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Multiple contract members have the name {}.".format(self.name))
         scope.define(self.name, self)
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
 
-    def get_marm_type_for(self, ident, errorhandler):
+    def get_marm_type_for(self, ident, errorhandler=None):
         assert(ident == self.name)
         return self.marm_type
 
@@ -610,7 +610,7 @@ class Proctype:
         self.return_type = return_type
         self.param_types = param_types
 
-    def attribute_type(self, ident):
+    def attribute_type(self, ident, errorhandler=None):
         return None
 
 class Procdecl(Node):
@@ -627,7 +627,7 @@ class Procdecl(Node):
         return "[Procdecl: return_type=" + str(self.return_type) + ", name=" + str(self.name) + ", params=" +\
                self.liststr(self.params) + ", body=" + self.liststr(self.body) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         local_scope = Scope(scope)
         local_scope.define("#current_function", self)
         i=0
@@ -639,22 +639,22 @@ class Procdecl(Node):
             statement.analyse_scope(local_scope, errorhandler)
         self.local_depth = local_scope.next_var_index_delta
 
-    def get_marm_type_for(self, ident, errorhandler):
+    def get_marm_type_for(self, ident, errorhandler=None):
         assert(self.name == ident)
         return self.marm_type
 
-    def set_global_definition_types(self, errorhandler):
+    def set_global_definition_types(self, errorhandler=None):
         param_types = []
         for param in self.params:
             param.typecheck(errorhandler)
             param_types.append(param.marm_type)
         self.marm_type = Proctype(self.return_type, param_types)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         for statement in self.body:
             statement.typecheck(errorhandler)
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Insert the identifiers in the symboltable(?) and generate the code for the body"""
         code = []
         code.append("%s: // start proc %s" %(self.name,self.name))
@@ -685,7 +685,7 @@ class StatementDecl(Statement):
     def __str__(self):
         return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + self.liststr(self.decllist) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.local_var_indices = {}
         for decl in self.decllist:
             if scope.has_direct_definition(decl):
@@ -694,14 +694,14 @@ class StatementDecl(Statement):
             scope.define(decl, self)
             self.local_var_indices[decl] = scope.get_next_var_index()
 
-    def get_marm_type_for(self, ident, errorhandler):
+    def get_marm_type_for(self, ident, errorhandler=None):
         return self.typee
-    def get_local_index_for(self, ident, errorhandler):
+    def get_local_index_for(self, ident, errorhandler=None):
         return 2 + self.local_var_indices[ident]
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Ignore the type and call code_gen on all declarations, whatever they may do"""
         code = []
         for i in range(0, len(self.decllist)):
@@ -722,18 +722,18 @@ class StatementReturn(Statement):
     def __str__(self):
         return "[StatementReturn: return_value=" + str(self.return_value) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.function = weakref.proxy(scope.lookup("#current_function"))
         self.return_value.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.return_value.typecheck(errorhandler)
         if self.return_value.marm_type != self.function.marm_type.return_type:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Can't return value of type {} from function with return type {}".format(
                                            self.return_value.marm_type, self.function.marm_type.return_type))
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Push the return value and do OP_RET"""
         code = self.return_value.code_gen(errorhandler)
         code.append("OP_RET")
@@ -753,11 +753,11 @@ class StatementWhile(Statement):
     def __str__(self):
         return "[StatementWhile: boolex=" + str(self.boolex) + ", statement=" + str(self.statement) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.boolex.analyse_scope(scope, errorhandler)
         self.statement.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.boolex.typecheck(errorhandler)
         if self.boolex.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
@@ -765,7 +765,7 @@ class StatementWhile(Statement):
                                            self.boolex.marm_type))
         self.statement.typecheck(errorhandler)
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """First gets the bool, then negates it and jumps to end if loop is done. If not it does the body code."""
         code = []
         StatementWhile.label_id += 1
@@ -808,20 +808,20 @@ class StatementIf(Statement):
     def __str__(self):
         return "[StatementIf: boolex={}, statement={}, elseprod={}]".format(self.boolex,self.statement,self.elseprod)
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.boolex.analyse_scope(scope, errorhandler)
         self.statement.analyse_scope(scope, errorhandler)
         if not (self.elseprod is None):
             self.elseprod.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.boolex.typecheck(errorhandler)
         if self.boolex.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Condition in an if statement must be of type bool.")
         self.statement.typecheck(errorhandler)
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """First the else block because less code, jumping accordingly"""
         code = []
         StatementIf.loop_id += 1
@@ -864,13 +864,13 @@ class StatementExpression(Statement):
     def __str__(self):
         return "[StatementExpression: expr={}]".format(self.expr)
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.expr.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.expr.typecheck(errorhandler)
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Just generate the code for the expr whatever that may be"""
         code = self.expr.code_gen(errorhandler)
         return code
@@ -886,17 +886,17 @@ class StatementBody(Statement):
     def __str__(self):
         return "[StatementBody: body={}]".format(self.liststr(self.body))
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         local_scope = Scope(scope)
         for statement in self.body:
             statement.analyse_scope(local_scope, errorhandler)
         self.local_depth = local_scope.next_var_index_delta
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         for statement in self.body:
             statement.typecheck(errorhandler)
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Generate the code for all statements in the body"""
         code = []
         for stmnt in self.body:
@@ -914,11 +914,11 @@ class StatementBreak(Statement):
     def __str__(self):
         return "[StatementBreak]"
 
-    def analyse_scope(self, scope, errorhandler): pass
+    def analyse_scope(self, scope, errorhandler=None): pass
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Push labelname and jump there"""
         code = ["__label_loop_end" + str(StatementWhile.label_id), "OP_JUMP"]
         return code
@@ -933,11 +933,11 @@ class StatementContinue(Statement):
     def __str__(self):
         return "[StatementContinue]"
 
-    def analyse_scope(self, scope, errorhandler): pass
+    def analyse_scope(self, scope, errorhandler=None): pass
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Push labelname and jump there"""
         code = ["__label_loop_start" + str(StatementWhile.label_id), "OP_JUMP"]
         return code
@@ -963,11 +963,11 @@ class BoolexCMP(Boolex):
     def __str__(self):
         return "[BoolexCMP: op={}, left={}, right={}]".format(self.op, self.left, self.right)
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.left.analyse_scope(scope, errorhandler)
         self.right.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.left.typecheck(errorhandler)
         self.right.typecheck(errorhandler)
         if self.left.marm_type != self.right.marm_type:
@@ -979,7 +979,7 @@ class BoolexCMP(Boolex):
         #                               "Trying to compare two values of type {}.".format(self.left.marm_type))
         self.marm_type = Typename('bool')
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Generate code for all types of comparison after executing both sides."""
         code = []
         code += self.left.code_gen(errorhandler)
@@ -1013,11 +1013,11 @@ class BoolexBinary(Boolex):
     def __str__(self):
         return "[BoolexBinary: op={}, left={}, right={}]".format(self.op,self.left,self.right)
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.left.analyse_scope(scope, errorhandler)
         self.right.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.left.typecheck(errorhandler)
         if self.left.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
@@ -1030,7 +1030,7 @@ class BoolexBinary(Boolex):
                                            self.op))
         self.marm_type = Typename('bool')
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Push both sides and consume them."""
         code = []
         code += self.left.code_gen()
@@ -1054,17 +1054,17 @@ class BoolexNot(Boolex):
     def __str__(self):
         return "[BoolexNot: operand={}]".format(str(self.operand))
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.operand.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.operand.typecheck(errorhandler)
         if self.operand.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Operand of '!' needs to be of type bool.")
         self.marm_type = Typename('bool')
 
-    def code_gen(self, errorhandler):
+    def code_gen(self, errorhandler=None):
         """Negate the result of the operand code."""
         code = []
         code += self.operand.code_gen()
