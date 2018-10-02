@@ -1,10 +1,9 @@
 import typing
-from src.blockchain.new_transaction.py import *
+from src.blockchain.new_transaction import *
 from src.blockchain.merkle_trie import MerkleTrie
 from src.blockchain.account import Account
-from src.scriptinterpreter import ScriptInterpreter
 
-def transit(state : MerkleTrie, transaction : Transaction, miner_address : bytes):
+def transit(script_interpreter_cls: type, state : MerkleTrie, transaction : Transaction, miner_address : bytes):
     tx_inputs =  transaction.tx_data.inputs
     tx_outputs = transaction.tx_data.outputs
 
@@ -27,7 +26,7 @@ def transit(state : MerkleTrie, transaction : Transaction, miner_address : bytes
         acc = acc.add_to_balance(output.value)
         state = state.put(output.address, acc.hash)
         if acc.code is not None:
-            vm = ScriptInterpreter(state, output.params, acc, transaction.hash)
+            vm = script_interpreter_cls(state, output.params, acc, transaction.hash)
             state = vm.execute_script()
 
     if miner_address != bytes(32):
