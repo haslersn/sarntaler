@@ -16,18 +16,17 @@ def is_keypair(keypair: bytes) -> bool:
         RSA.importKey(keypair)
     except ValueError:
         return False
-    
-    return type(keypair) == bytes and len(keypair) == 886 and keypair != bytes(886)
+    return type(keypair) == bytes and len(keypair) == 886
 
 def is_pubkey(pubkey: bytes) -> bool:
     try:
         RSA.importKey(pubkey)
     except ValueError:
         return False
-    return type(pubkey) == bytes and len(pubkey) == 271 and pubkey != bytes(271)
+    return type(pubkey) == bytes and len(pubkey) == 271
 
 def is_signature(sig: bytes):
-    return type(sig) == bytes and len(sig) == 128 and sig != bytes(128)
+    return type(sig) == bytes and len(sig) == 128
 
 def check_is_hash(hash: bytes):
     if not is_hash(hash):
