@@ -404,21 +404,18 @@ class StructExpr(Expr):
                                            self.expr.marm_type, self.ident))
 
     def code_gen(self, errorhandler=None):
-        """TODO has not yet been decided what this should actually do"""
         code = []
-        code.append("// start constructionsite for struct access ")
         code+= self.expr.code_gen()
-        code.append("\"%s\""% self.ident)
-        code.append("// end constructionsite for struct access ")
+        if self.ident=='balance':
+            code.append("OP_BALANCE")
+        else:
+            code.append("\"%s\""% self.ident)
         return code
 
     def code_gen_LHS(self, errorhandler=None):
-        """TODO do stuff"""
+        errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                    "There is no valid struct access LHS of an assignment yet")
         code = []
-        code.append("// codeLHS for struct access not implemented yet")
-        code += self.expr.code_gen()
-        if self.ident == "balance":
-            code.append("OP_GETBAL")
         return code
 
 

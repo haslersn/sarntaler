@@ -29,6 +29,9 @@ int test(int x){
 	// the address of this contract
 	contract; 
 
+	contract.balance;
+	a.balance;
+
 	// s is sarn, a is address, a receives s sarns from contracts balance<
 	//a.transfer(s);
 	// call contract a's method with name 'method', paying with s sarns 
