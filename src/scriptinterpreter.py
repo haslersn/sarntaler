@@ -604,7 +604,7 @@ class ScriptInterpreter:
                 item = script[:first+2]
                 result.append(self._parse_string_item(item))
                 if result[-1] is None:
-                    logging.warning("[!] Error: Invalid Tx: Could not parse item")
+                    logging.warning("[!] Error: Invalid Tx: Could not parse string item")
                     return None
                 script = script[first+2:]
                 continue
@@ -627,7 +627,7 @@ class ScriptInterpreter:
             else:
                 to_append = self._parse_numeric_item(item)
                 if to_append is None:
-                    logging.warning("[!] Error: Invalid Tx: Could not parse item")
+                    logging.warning("[!] Error: Invalid Tx: Could not parse numeric item")
                     return None
                 result.append(to_append)  # Don't include the whitespace
             if script[first] != ']':
