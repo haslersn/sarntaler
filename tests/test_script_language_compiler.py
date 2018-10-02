@@ -164,6 +164,15 @@ class TestParserMethods(unittest.TestCase):
         for (a,b) in [(12,26)]:
             self.generic_run_test("gcd.marm", gcd(a,b), "gcd", [a, b])
 
+    def test_fibonacci_inefficient(self):
+        fibs = [0,1]
+        def fib(n):
+            nonlocal fibs
+            for i in range(len(fibs),n+1):
+                fibs.append(fibs[i-1] + fibs[i-2])
+            return fibs[n]
+        n = 5
+        self.generic_run_test("fibonacci_inefficient.marm", fib(n), "fib", [n])
 
 if __name__ == '__main__':
     unittest.main()
