@@ -380,7 +380,7 @@ class StructExpr(Expr):
     def typecheck(self, errorhandler=None):
         self.expr.typecheck(errorhandler)
         print(self.expr)
-        self.marm_type = self.expr.marm_type.attribute_type(self.ident)
+        self.marm_type = self.expr.marm_type.attribute_type(self.ident, errorhandler)
         if self.marm_type is None:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Value of type {} has not attribute named {}".format(
