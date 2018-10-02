@@ -154,7 +154,7 @@ class ScriptInterpreter:
             logging.warning("OP_CHECKKEY: Stack is empty or top element not a key")
             return False
 
-        beforenc = cr.get_random_int(pubKey.rsa.n)
+        beforenc = cr.get_random_int(256)
         enctxt = pubKey.rsa.encrypt(beforenc, 1)[0]
         afterenc = privKey.rsa.decrypt(enctxt)
         if beforenc != afterenc:
