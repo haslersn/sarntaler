@@ -465,6 +465,8 @@ class Typename(Node):
         if self.typee == 'msg':
             if ident == 'account':
                 return Typename('address')
+        if self.typee == 'address':
+            return Typename('generic')
         return None # TODO
 
 
