@@ -226,7 +226,7 @@ class ContractcallExpr(Expr):
         code.append("// S1 == FEE")
         code.append("OP_TRANSFER")
         code.append("OP_POPVOID // S1==success?")
-        code.append("OP_POPVOID // S2==retval")
+        code.append("//OP_POPVOID // S2==retval")
         code.append("// end construction site for TRANSFER")
         return code
 
