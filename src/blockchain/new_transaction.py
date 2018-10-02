@@ -8,7 +8,7 @@ from src.blockchain.crypto import *
 class TransactionInput(namedtuple("TransactionInput", ["address", "value"])):
 
     def __new__(cls, address: bytes, value: int):
-        check_is_hash(address)
+        (address == bytes(32) and value == 0) or check_is_hash(address)
         if value < 0:
             raise ValueError('transaction value mustn\'t be negative')
         return super().__new__(cls, address, value)
@@ -33,7 +33,7 @@ class TransactionOutput(namedtuple("TransactionOutput", ["address", "value", "pa
     """
 
     def __new__(self, address: bytes, value: int, params: str = None):
-        check_is_hash(address)
+        address == bytes(32) or check_is_hash(address)
         if value < 0:
             raise ValueError('transaction value mustn\'t be negative')
         return super().__new__(self, address, value, params)
@@ -135,17 +135,24 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signatures"])):
 
     """
 
-    def __new__(self, tx_data: TransactionData, signatures: Tuple[bytes]=None):
+    def __new__(cls, tx_data: TransactionData, signatures: Tuple[bytes]=None):
         if signatures is None:
             signatures = (bytes(32),) * len(tx_data.inputs)
-        return super().__new__(self, tx_data, signatures)
+        elif len(signatures) != len(tx_data.inputs):
+            raise ValueError('Number of inputs and signatures does not match')
+        return super().__new__(cls, tx_data, signatures)
 
-    def sign(self, index, private_key):
+    def sign(self, index, keypair: bytes):
         """ Signs the transaction input at the given index using the given key """
         if index < 0 or index >= len(self.signatures):
-            raise InputError("Invalid input index: " + index + ". Either negative or too large")
-        new_sig = signing_key.sign(tx_data.hash)
-        return Transaction(self, tx_data, signatures[0:index:] + (new_sig,) + signatures[index +1:len(signatures):])
+            raise ValueError("Invalid input index: " + index + ". Either negative or too large")
+        check_is_keypair(keypair)
+        signer_pubkey = pubkey_from_keypair(keypair)
+        signer_address = self.tx_data.inputs[index].address
+        if signer_address != compute_hash(signer_pubkey):
+            raise ValueError('Keypair not entitled to sign this transaction/index')
+        new_sig = sign(keypair, tx_data.hash)
+        return Transaction(self, tx_data, signatures[0:index:] + (new_sig,) + signatures[index+1:])
 
     @property
     def hash(self):
