@@ -201,6 +201,9 @@ class ContractcallExpr(Expr):
         self.fnname.typecheck(errorhandler)
         errorhandler.registerWarning(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Warning: We currently do not check whether a contract call expression actually types.")
+        if not isinstance(self.fnname,StructExpr):
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Error: Contract calls need to be called on a structured expression")
         if len(self.fee)!=1:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                         "Error: Contract calls have only a single parameter for the fee part")
@@ -210,24 +213,23 @@ class ContractcallExpr(Expr):
         self.marm_type = Typename('generic')
 
     def code_gen(self, errorhandler=None):
-        """TODO create code for inter-contract call"""
-        code_methodid = self.fnname.code_gen()
-
+        structexpr = self.fnname
         code = []
-        code.append("// start construction site for TRANSFER")
         for param in self.params:#[::-1]:
             code+=param.code_gen()
+        code.append("\""+structexpr.ident+"\"")
         code.append(len(self.params)+1)
         code.append("OP_PACK // S3 == params")
-        code+=code_methodid+"// S2 == contract address"
+        code+=structexpr.expr.code_gen()
+        code.append("// S2 == contract address")
         for fe in self.fee:
             code+=fe.code_gen()
             break
         code.append("// S1 == FEE")
         code.append("OP_TRANSFER")
-        code.append("OP_POPVOID // S1==success?")
-        code.append("//OP_POPVOID // S2==retval")
-        code.append("// end construction site for TRANSFER")
+        code.append("1")
+        code.append("OP_JUMPRC // if successfull, continue")
+        code.append("OP_KILL")
         return code
 
 class LocalcallExpr(Expr):
@@ -391,8 +393,10 @@ class StructExpr(Expr):
     def code_gen(self, errorhandler=None):
         """TODO has not yet been decided what this should actually do"""
         code = []
-
-        code.append("// code for struct access not implemented yet")
+        code.append("// start constructionsite for struct access ")
+        code+= self.expr.code_gen()
+        code.append("\"%s\""% self.ident)
+        code.append("// end constructionsite for struct access ")
         return code
 
     def code_gen_LHS(self, errorhandler=None):
