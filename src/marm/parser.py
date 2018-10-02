@@ -198,12 +198,16 @@ def p_exprSPECIALCONSTANTS_CONTRACT(p):
     p[0].set_pos_from(p)
 
 def p_exprFUNCALL(p):
-    '''expr : lhsexpression LPAR exprlist_opt RPAR
+    '''expr : lhsexpression LPAR exprlist_opt RPAR LPAR exprlist_opt RPAR
+            | lhsexpression LPAR exprlist_opt RPAR
             | CREATE LPAR exprlist_opt RPAR'''
     if p[1]=='create':
         p[0] = ast.CreateExpr(p[3])
     else:
-        p[0] = ast.LocalcallExpr(p[1],p[3])
+        if len(p)==5:
+            p[0] = ast.LocalcallExpr(p[1],p[3])
+        else:
+            p[0] = ast.ContractcallExpr(p[1],p[3],p[6])
     p[0].set_pos_from(p)
 
 def p_exprlistOPT(p):

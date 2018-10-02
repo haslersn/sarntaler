@@ -180,6 +180,32 @@ class BinExpr(Expr):
                 print("BinExpr.code_gen: got an operator that is not valid")
         return code
 
+class ContractcallExpr(Expr):
+    def __init__(self, fnname, fee, params):
+        super().__init__()
+        self.fnname = fnname
+        self.params = params
+        self.fee = fee
+
+    def __str__(self):
+        return "[ContractcallExpr: fnname={}, fee={}, params={}]".format(self.fnname,self.fee,self.liststr(self.params))
+
+    def analyse_scope(self, scope, errorhandler):
+        self.fnname.analyse_scope(scope, errorhandler)
+        for fees in self.fee:
+            fees.analyse_scope(scope, errorhandler)
+        for param in self.params:
+            param.analyse_scope(scope, errorhandler)
+
+    def typecheck(self, errorhandler):
+        self.fnname.typecheck(errorhandler)
+        errorhandler.registerWarning(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Warning: We currently do not check whether a contract call expression actually types.")
+        for i in range(0, len(self.params)):
+            param = self.params[i]
+            param.typecheck(errorhandler)
+        self.marm_type = None
+        #TODO introduce unknown type
 
 class LocalcallExpr(Expr):
     def __init__(self, fnname, params):
@@ -329,6 +355,7 @@ class StructExpr(Expr):
 
     def typecheck(self, errorhandler):
         self.expr.typecheck(errorhandler)
+        print(self.expr)
         self.marm_type = self.expr.marm_type.attribute_type(self.ident)
         if self.marm_type is None:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
