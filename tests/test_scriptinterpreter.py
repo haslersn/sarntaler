@@ -7,18 +7,13 @@ empty_mt = MerkleTrie(MerkleTrieStorage()) # not relevant in this test yet, but 
 def get_dummy_account():
     return Account(bytes(1), 0, "", 1, [])
 
-
 def test_passWithOne():
     si = ScriptInterpreter(empty_mt, "1", get_dummy_account(), None)
     assert si.execute_script()
 
-test_passWithOne()
-
 def test_failWithMoreThanOneStackElement():
     si = ScriptInterpreter(empty_mt, "1 2 3", get_dummy_account(), None)
     assert not si.execute_script()
-
-test_failWithMoreThanOneStackElement()
 
 def test_dup():
     si = ScriptInterpreter(empty_mt, None, get_dummy_account(), None)
@@ -26,8 +21,6 @@ def test_dup():
     res = si.op_dup()
     assert si.stack == ['3', '2', '2']
     assert res == True
-
-test_dup()
 
 def test_dup_emptystack():
     si = ScriptInterpreter(empty_mt, None, get_dummy_account(), None)
@@ -291,18 +284,10 @@ def test_create_contr():
     si = ScriptInterpreter(empty_mt, '0 1 2 3 4 "storethis" 2 OP_POPR 1', get_dummy_account(), None)
     si.execute_script()
 
+def test_pack_different_types():
+    si = ScriptInterpreter(empty_mt, "h0xABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD 0 'abc' 3 OP_PACK 'def' OP_SWAP 2 OP_PACK 1", get_dummy_account(), None)
+    assert si.execute_script()
 
-
-
-test_dup2()
-test_swap()
-test_swapWithOneElement()
-test_pushFP()
-test_popFP()
-test_dup_emptystack()
-test_div_nonintegers()
-test_getstor_invalid()
-test_getstor()
-test_setstor()
-test_setstor_invalid()
-test_unpack()
+def test_unpack_different_types():
+    si = ScriptInterpreter(empty_mt,"h0xABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD 0 'abc' 3 OP_PACK 'def' OP_SWAP 2 OP_PACK OP_UNPACK OP_POPVOID OP_UNPACK OP_POPVOID 1", get_dummy_account(), None)
+    assert si.execute_script()
