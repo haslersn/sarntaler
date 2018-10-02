@@ -217,7 +217,20 @@ class LocalcallExpr(Expr):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Trying to call expression which is not a function.")
             return
+    def code_gen(self):
+        """TODO create code for inter-contract call"""
+        code_methodid = self.fnname.code_gen_LHS()
 
+        code = []
+        for param in self.params:#[::-1]:
+            code+=param.code_gen()
+        code+=code_methodid
+        code.append("OP_CALL")
+        for param in self.params:#[::-1]:
+            code.append("OP_SWAP")
+            code.append("OP_POPVOID")
+        code.append("// WARNING: We assume a call to be a contract-local call")
+        return code
     # TODO code_gen
 
 
@@ -330,10 +343,14 @@ class StructExpr(Expr):
         code = []
         code.append("// code for struct access not implemented yet")
         return code
+
     def code_gen_LHS(self):
-        """Pushes the address of the identifier from the symbol table on the stack"""
+        """TODO do stuff"""
         code = []
         code.append("// codeLHS for struct access not implemented yet")
+        code += self.expr.code_gen()
+        if self.ident == "balance":
+            code.append("OP_GETBAL")
         return code
 
 
@@ -519,8 +536,8 @@ class Procdecl(Node):
 
     def code_gen(self):
         """Insert the identifiers in the symboltable(?) and generate the code for the body"""
+        code = ["// start proc %s"%self.name]
         # TODO decide what to do with the procedure and params addresses
-        code = []
         for decl in self.body:
             code += decl.code_gen()
         return code
