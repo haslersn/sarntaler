@@ -1,4 +1,5 @@
 from binascii import hexlify
+import logging
 
 from src.blockchain import crypto
 from src.blockchain.account import Account, StorageItem
