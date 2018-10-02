@@ -9,21 +9,21 @@ def compute_hash(to_hash: bytes) -> bytes:
     return m.digest()
 
 def is_hash(hash: bytes) -> bool:
-    return len(hash) == 32 and hash != bytes(32) # mustn't be zero
+    return type(hash) == bytes and len(hash) == 32 and hash != bytes(32) # mustn't be zero
 
 def is_keypair(keypair: bytes) -> bool:
     try:
         RSA.importKey(keypair)
     except ValueError:
         return False
-    return len(keypair) == 886 and keypair != bytes(886)
+    return type(keypair) == bytes and len(keypair) == 886 and keypair != bytes(886)
 
 def is_pubkey(pubkey: bytes) -> bool:
     try:
         RSA.importKey(pubkey)
     except ValueError:
         return False
-    return len(pubkey) == 271 and pubkey != bytes(271)
+    return type(pubkey) == bytes and len(pubkey) == 271 and pubkey != bytes(271)
 
 def check_is_hash(hash: bytes):
     if not is_hash(hash):
