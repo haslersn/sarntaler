@@ -88,6 +88,7 @@ class SpecialExpression(Expr):
     def typecheck(self, errorhandler=None): pass
         
     def code_gen(self,errorhandler=None):
+        #TODO replace dummy comments with actual well known indices from the VM Team
         code = []
         if self.value=='contract':
             code.append("// dummy for my own contract address index on the stack")
