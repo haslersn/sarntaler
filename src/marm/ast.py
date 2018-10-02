@@ -225,9 +225,8 @@ class ContractcallExpr(Expr):
             break
         code.append("// S1 == FEE")
         code.append("OP_TRANSFER")
-        for param in self.params:#[::-1]:
-            code.append("OP_SWAP")
-            code.append("OP_POPVOID")
+        code.append("OP_POPVOID // S1==success?")
+        code.append("OP_POPVOID // S2==retval")
         code.append("// end construction site for TRANSFER")
         return code
 
