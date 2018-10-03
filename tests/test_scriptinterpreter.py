@@ -351,7 +351,7 @@ def test_setstor():
     assert new_acc.get_storage('myvar') == 42
 
 def test_setstor_hash():
-    myacc = Account(example_pubkey, 278, 'h0x{} "myvar" OP_SETSTOR 1 OP_RET'.format(hexlify(example_hash).decode()), 1, [StorageItem("myvar", "hash", Hash(example_hash2))])
+    myacc = Account(example_pubkey, 278, 'h0x{} "myvar" OP_SETSTOR 1 OP_RET'.format(hexlify(example_hash).decode()), 1, [StorageItem("myvar", "hash", example_hash2)])
     my_mt = empty_mt.put(myacc.address, myacc.hash)
     si = ScriptInterpreter(my_mt, "", myacc, [example_hash], 0)
     new_state,_ = si.execute_script()
@@ -496,5 +496,3 @@ def test_getcode():
     vm = ScriptInterpreter(state, '', calling_acc, [example_hash], 0)
     state = vm.execute_script()
     assert vm.stack[5:] == [code]
-
-test_setstor_hash()
