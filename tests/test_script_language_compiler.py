@@ -224,7 +224,7 @@ class TestParserMethods(unittest.TestCase):
         self.generic_run_test("test_loop.marm", 1, "collatz_step", [2352, 11]) # TODO: 2nd param
 
     def test_new(self):
-        self.generic_run_test("test_new.marm", 1, "copy_out", 21)
+        self.generic_run_test("test_new.marm", 1, "copy_out", [21])
 
     def test_sarn_ok(self):
         self.generic_run_test("test_sarn_ok.marm", 12, "test_sarn", [11])
