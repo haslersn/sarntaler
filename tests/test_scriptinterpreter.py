@@ -460,11 +460,19 @@ def test_transfer():
     assert target_acc.balance is 10
 
 def test_genpubkey():
-    random.seed(12345)
     def rand(n) -> bytes:
         return bytes(random.getrandbits(8) for _ in range(n))
-    keypair = generate_keypair(rand)
-    script_finalstack_test("12345 OP_GENPUBKEY 12345 OP_GENPUBKEY 1 OP_RET", [Pubkey(pubkey_from_keypair(keypair)), Pubkey(pubkey_from_keypair(keypair))])
+
+    state = MerkleTrie(MerkleTrieStorage())
+    state, acc = get_account(state, "OP_GENPUBKEY OP_GENPUBKEY 1 OP_RET")
+    random.seed(state.hash)
+    keypair1 = generate_keypair(rand)
+    keypair2 = generate_keypair(rand)
+
+    si = ScriptInterpreter(state, '', acc, [example_hash], 0)
+    state, _ = si.execute_script()
+    assert si.stack[5:] == [Pubkey(pubkey_from_keypair(keypair1)), Pubkey(pubkey_from_keypair(keypair2))]
+    #script_finalstack_test(, [Pubkey(pubkey_from_keypair(keypair)), Pubkey(pubkey_from_keypair(keypair))])
 
 def test_getcode():
     state = MerkleTrie(MerkleTrieStorage())

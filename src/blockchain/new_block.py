@@ -164,6 +164,10 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
         return self._accumulated_difficulty
 
     @property
+    def miner_address(self):
+        return self._miner_address
+
+    @property
     def state_trie(self):
         return self._state_trie
 
@@ -185,6 +189,7 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
         var['timestamp'] = self.timestamp
         var['height'] = self.height
         var['difficulty'] = self.difficulty
+        var['miner_address'] = hexlify(self.miner_address).decode()
         var['state_root'] = hexlify(self.state_trie.hash).decode()
         var['tx_root'] = hexlify(self.tx_trie.hash).decode()
         return var
@@ -200,7 +205,7 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
             if prev_block is None:
                 raise ValueError('Previous block does not exist')
 
-        miner_address = var['miner_address']
+        miner_address = unhexlify(var['miner_address'])
         timestamp = var['timestamp']
 
         skeleton = BlockSkeleton(prev_block, transactions, miner_address, timestamp)
