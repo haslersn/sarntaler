@@ -8,19 +8,6 @@ from src.gui_editor import SyntaxHiglighterMarm
 from src.marm import *
 from src.wallet_n import Wallet_New
 
-# from docutils.utils import column_indices
-# from src.wallet_n import *
-
-
-# from src.chainbuilder import ChainBuilder
-# from src.config import *
-# from src.crypto import Key
-# from src.mining import Miner
-# from src.persistence import Persistence
-# from src.protocol import Protocol
-# from src.rpc_server import rpc_server
-# from src.transaction import TransactionTarget
-# import src.wallet as wallet
 class Gui(object):
 
     __lblWidth = 25
@@ -30,9 +17,10 @@ class Gui(object):
     __btnWalletId = Button(__window, text="Please select the path to your key.", width=__btnWidth)
     __listBtns = []
     
+    # TODO: neccessary?
     _mining_pubkey: str = None
-    _padx = 5
-    _wallet = Wallet_New
+    __padx = 5
+    _wallet = None
     _minerRunning = FALSE
     _known_addresses = None
 
@@ -61,13 +49,13 @@ class Gui(object):
         # If no filename specified, report it to the user
         if filename == "":
             self.__btnWalletId.config(text="Please select the path to your key.")
-            self.enableButtons(False)
+            self.__enableButtons(False)
             return
         
-        # self.__wallet = Wallet_New(filename)
+        self.__wallet = Wallet_New(filename)
         self.__btnWalletId.config(text=filename)
         self.updateGui()
-        self.enableButtons(True)
+        self.__enableButtons(True)
     
     def initializeGui(self):
         self.__window.title("Sarntaler Wallet")
@@ -76,10 +64,10 @@ class Gui(object):
         # label and dropdown for wallet
         lblWallet = Label(self.__window, text="Owner", width=self.__lblWidth)
         lblWallet.grid(row=0, column=0, padx=self.__padx)      
-        self.__btnWalletId.config(command=self.selectPath)
+        self.__btnWalletId.config(command=self.__selectPath)
         self.__btnWalletId.grid(row=row, column=1, pady=5, padx=self.__padx)
         row += 1
-        btnNewWallet = Button(self.__window, text="Generate new account", command=lambda:self.selectPath(True))
+        btnNewWallet = Button(self.__window, text="Generate new account", command=lambda:self.__selectPath(True))
         btnNewWallet.grid(row=row, column=1, padx=self.__padx)
         
         # balance components
@@ -95,7 +83,7 @@ class Gui(object):
         self.__listBtns.append(btnCreateTransaction)
         btnCreateContract = Button(self.__window, text="new Smart Contract", width=self.__lblWidth, command=self.initSmartContractView)
         btnCreateContract.grid(row=row, column=1, pady=10, padx=self.__padx)
-        self.__listBtns.append(btnCreateContract)
+        #self.__listBtns.append(btnCreateContract)
         
         row += 1
         # update button
@@ -110,7 +98,7 @@ class Gui(object):
         btnStartMiner.config(state=DISABLED)
         # self.__listBtns.append(btnStartMiner)
         
-        # TODO self.enableButtons(False)
+        self.__enableButtons(False)
     
     def sendTransaction(self, popup, lblHint, my_key, target_key, strAmount, strFee):
         if not strAmount.isdigit():
@@ -156,9 +144,17 @@ class Gui(object):
         editor.delete('1.0', END)
         editor.insert(END, file.read())
         
-    def __sendSmartContract(self, code):
+    def __sendSmartContract(self, narmCode, console):
         errorhandler = marmcompiler.ErrorHandler()
-        result = marmcompiler.marmcompiler("*editor*", code, errorhandler=errorhandler)
+        result = marmcompiler.marmcompiler("*editor*", narmCode, errorhandler=errorhandler)
+        if errorhandler.cleanCode():
+            self._wallet.build_new_smart_contract(result[4], result[3], False, '\n'.join(result[1]))
+        else:
+            console.config(state=NORMAL)
+            console.delete('1.0', END)
+            console.insert(END, errorhandler.tostring("red"))  # TODO
+            console.config(state=DISABLED)
+        
     
     def __checkSmartContract(self, code, console):
         errorhandler = marmcompiler.ErrorHandler()
@@ -181,16 +177,16 @@ class Gui(object):
         editor.bind("<Control-o>", lambda arg: self.__openContract(editor))
                 
         menubar = Menu(popup)
-        menubar.add_command(label="Save", command=lambda: self.saveContract(editor.get(1.0, "end")))
-        menubar.add_command(label="Open", command=lambda: self.openContract(editor))
+        menubar.add_command(label="Save", command=lambda: self.__saveContract(editor.get(1.0, "end")))
+        menubar.add_command(label="Open", command=lambda: self.__openContract(editor))
         popup.config(menu=menubar)
         
         console = ScrolledText(popup, height=5, state=DISABLED)
         console.pack(fill=BOTH, expand=NO, side=TOP)
         
-        btnOk = Button(popup, text="Run", width=10, command=lambda: self.runSmartContract(editor.get("1.0", END), console))
+        btnOk = Button(popup, text="Run", width=10, command=lambda: self.__sendSmartContract(editor.get("1.0", END), console))
         btnOk.pack(side=RIGHT)
-        btnCancel = Button(popup, text="Check", width=10, command=lambda: self.checkSmartContract(editor.get("1.0", END)))
+        btnCancel = Button(popup, text="Check", width=10, command=lambda: self.__checkSmartContract(editor.get("1.0", END), console))
         btnCancel.pack(side=RIGHT)
         
     def initPopup(self):
@@ -208,7 +204,7 @@ class Gui(object):
         btnSelectKey.grid(row=0, column=1, padx=self._padx, pady=5, columnspan=2, sticky="ew")
         
         tkVar = StringVar(popup)
-        choices = [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1 ]  # self.__known_addresses  # TODO replace choices with self._known_addresses
+        choices = self.__known_addresses  # TODO replace choices with self._known_addresses
         # my address has to exist => length>1
         tkVar.set(choices[0])
         btnSelectKey = OptionMenu(popup, tkVar, *choices)
@@ -329,11 +325,16 @@ class Gui(object):
         ", bootstrap-peer:", bootstrap_peer, ", rpc-port:", rpc_port, ", persist path:", persist_path, ".")
     
     def updateGui(self):
-        _balance = 0  # TODO
+        balance = 0  # TODO
         if self.__wallet is None:
             self.__known_addresses = None
         else:
-            self.__known_addresses = list(json.loads(self.__wallet.get_addresses()))
-
+            self.__known_addresses = list(json.loads(self.__wallet.get_addresses())) #TODO
+            self.__wallet.update_status()
+            #TODO sum up balance
+            for adr in self._wallet.status.keys():
+                balance += self._wallet.status[adr].balance
+            self.__balance.config(text=balance)
+        
      
 Gui()
