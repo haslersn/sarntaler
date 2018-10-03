@@ -311,7 +311,7 @@ class NewExpr(Expr):
         code.append(len(self.params)+1)
         code.append("OP_PACK // list of paramvalues")
         for data in self.cd:
-            code.append(str(data[0]))
+            code.append('"'+str(data[0])+'"')
         code.append(len(self.cd)+1)
         code.append("OP_PACK // list of paramnames")
         code.append("0 // ownerflag")
