@@ -1,33 +1,30 @@
 #! /usr/bin/env/python3
 import hashlib
 import logging
+from collections import namedtuple
+from binascii import hexlify, unhexlify
+from datetime import datetime
+from Crypto.PublicKey import RSA
 
 from src.blockchain.account import Account, StorageItem
-from src.blockchain.crypto import compute_hash
+from src.blockchain.crypto import *
 from src.blockchain.merkle_trie import MerkleTrie
 from src.blockchain.new_transaction import TransactionInput, TransactionOutput, TransactionData, Transaction
 from src.blockchain.state_transition import transit
-
-from .crypto import *
-from binascii import hexlify, unhexlify
-from datetime import datetime
 import src.crypto as cr
-from Crypto.PublicKey import RSA
 
 
 # TODO: Put the following two classes into crypt.py
 
-class Hash:
-    def __init__(self, value: bytes):
-        self.value = value
+class Hash(namedtuple('Hash', [ 'value' ])):
+    pass
 
-class Signature:
-    def __init__(self, value: bytes):
-        self.value = value
+class Signature(namedtuple('Signature', [ 'value' ])):
+    pass
 
-class Key:
-    def __init__(self, value: bytes):
-        self.value = value
+class Key(namedtuple('Key', [ 'value' ])):
+    pass
+
 
 class ScriptInterpreter:
     """
@@ -561,8 +558,13 @@ class ScriptInterpreter:
                 return False
             storage.append(item)
 
+        if self.state.contains(compute_hash(pub_key.value)):
+            logging.warning("OP_CREATECONTR: Address already exists")
+            self.stack.append(0)
+            return True
         new_acc = Account(pub_key.value, 0, code, owner_access_flag, storage)
         self.state = self.state.put(new_acc.address, new_acc.hash)
+        self.stack.append(1)
         return True
 
 
@@ -625,7 +627,56 @@ class ScriptInterpreter:
             popped = popped.encode()
         if type(popped) in [Key, Hash, Signature]:
             popped = popped.value
-        self.stack.append(compute_hash(popped))
+        self.stack.append(Hash(compute_hash(popped)))
+        return True
+
+    def op_transfer(self):
+        logging.info("OP_TRANSFER called")
+        amount = self.__pop_checked(int)
+        target_address = self.__pop_checked(Hash)
+        params = self.__pop_checked(list)
+        if amount is None:
+            logging.warning("OP_TRANSFER: Amount must be int")
+            return False
+        if target_address is None:
+            logging.warning("OP_TRANSFER: Target must be Hash")
+            return False
+        if params is None:
+            logging.warning("OP_TRANSFER: Params must be Array")
+            return False
+        target_address = target_address.value # now bytes
+
+        if not self.state.contains(target_address):
+            logging.warning("state transition: output address does not exist")
+            return None
+
+        assert self.state.contains(self.acc.address)
+
+        # deduct amount
+        self.acc = self.acc.add_to_balance(- amount)
+        if self.acc is None:
+            # couldn't spend value
+            logging.warning("OP_TRANSFER: couldn't deduct value from input account")
+            self.stack.append(0)
+            return True
+        self.state = self.state.put(self.acc.address, self.acc.hash)
+
+        # add amount
+        target_acc = Account.get_from_hash(self.state.get(target_address))
+        target_acc = target_acc.add_to_balance(amount)
+        self.state = self.state.put(target_address, target_acc.hash)
+
+        if target_acc.code is not None:
+            vm = ScriptInterpreter(self.state, params, target_acc)
+            result = vm.execute_script()
+            if result is None:
+                logging.warning("OP_TRANSFER: target account code execution failed")
+                self.stack.append(0)
+                return True
+            self.state = result[0]
+
+        assert self.state is not None
+        self.stack.append(1)
         return True
 
     def _parse_numeric_item(self, item: str):
@@ -770,7 +821,6 @@ class ScriptInterpreter:
 
         def execute(script: str):
             self.pc = 1
-            self.stack = []
             self.retval = None
             self.framepointer = -1
             self.program = self._parse_script(script, True)

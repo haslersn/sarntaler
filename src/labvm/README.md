@@ -107,7 +107,7 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_PACK | s_1 integer, at least s_1 +1 stack elements | Packs the number of stack elements given in s_1 into a single string separated by spaces, starting from s_2 and consuming them all. The topmost stack element will be the last element in the string. Pushes the resulting String onto the stack. The resulting string can be used e.g. to pass parameters to OP_TRANSFER. Reverse operation: OP_UNPACK
 | OP_UNPACK | s_1 string | Splits the string at s_1 by spaces and pushes the parts onto the stack in the order they appear in the string (i.e. the first element of the string will be furthest down on the stack). Also leaves the number of elements that were pushed in s_1 (excluding s_1 itself). Reverse operation: OP_PACK
 |_**Blockchain**_|
-| OP_GETBAL | - | Leaves the current smart contract account balance to the stack |
+| OP_GETBAL | s_1 hash | Puts the account balance of the account at address s_1 (which is the hash of the public key) on the stack. If no account is at address s_1, then **-1** is put on the stack.|
 | OP_GETSTOR | s_1 string | Consumes s_1 and leaves the value of the storage cell referenced by s_1 on the stack. |
 | OP_SETSTOR | s_2 string | Consumes s_1 and s_2 and stores the value of s_2 in the storage cell referenced by s_1. |
 | OP_TRANSFER | s_1 integer, s_2 hash, s_3 list[string] | Consumes s_1 to s_3 and calls the contract at address s_2 (which is a hash of the public key) with the parameters stored in s_3, sending the amount of money specified in s_1. Leaves a success code at s_1 and return value at s_2. The amount of money may be zero but not negative and the parameters may be empty. |

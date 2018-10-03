@@ -83,8 +83,7 @@ class Account(namedtuple("Account", ["pub_key", "balance", "code", "owner_access
 
     def __new__(cls, pubkey: bytes, balance: int, code: str, owner_access: bool, storage: List[StorageItem]):
         if None in storage:
-            logging.warning("storage can't contain None " + str(storage))
-            return None
+            raise ValueError("storage can't contain None " + str(storage))
         check_is_pubkey(pubkey)
         constructed = super().__new__(cls, pubkey, balance, code, owner_access, storage)
         if constructed.hash in cls._dict:

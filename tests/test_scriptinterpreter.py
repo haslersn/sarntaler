@@ -4,7 +4,7 @@ import logging
 from src.blockchain import crypto
 from src.blockchain.account import Account, StorageItem
 from src.crypto import Key
-from src.scriptinterpreter import ScriptInterpreter
+from src.scriptinterpreter import ScriptInterpreter, Hash
 from src.blockchain.merkle_trie import MerkleTrie, MerkleTrieStorage
 from Crypto.PublicKey import RSA
 
@@ -392,8 +392,33 @@ def test_transfer():
     assert target_acc.balance is 10
 
 def test_op_hash():
-    script_finalstack_test('"hashthis" OP_HASH 1 OP_RET', [compute_hash('hashthis'.encode())])
-    script_finalstack_test('42 OP_HASH 1 OP_RET', [compute_hash(str(42).encode())])
+    script_finalstack_test('"hashthis" OP_HASH 1 OP_RET', [Hash(compute_hash('hashthis'.encode()))])
+    script_finalstack_test('42 OP_HASH 1 OP_RET', [Hash(compute_hash(str(42).encode()))])
     dummy = get_dummy_account()
-    script_finalstack_test('h0x' + hexlify(dummy.pub_key).decode() + ' OP_HASH 1 OP_RET', [dummy.address])
-    
+    #script_finalstack_test('h0x' + hexlify(dummy.pub_key).decode() + ' OP_HASH 1 OP_RET', [dummy.address])
+    script_finalstack_test('k0x' + hexlify(dummy.pub_key).decode() + ' OP_HASH 1 OP_RET', [Hash(dummy.address)])
+
+def test_transfer():
+    trie = MerkleTrie(MerkleTrieStorage())
+    key1 = generate_keypair()
+    key2 = generate_keypair()
+
+    target_acc = Account(pubkey_from_keypair(key2), 0, '1 OP_RET', True, {})
+    contract_acc = Account(pubkey_from_keypair(key1), 100, "[] h0x" + hexlify(target_acc.address).decode() +" 10 OP_TRANSFER 1 OP_RET", False, {})
+
+    trie = trie.put(contract_acc.address, contract_acc.hash)
+    assert Account.get_from_hash(trie.get(contract_acc.address))
+    trie = trie.put(target_acc.address, target_acc.hash)
+    assert Account.get_from_hash(trie.get(target_acc.address))
+
+    print(type(trie))
+    si = ScriptInterpreter(trie, '', contract_acc)
+    trie, _ = si.execute_script()
+    print(type(trie))
+
+    assert trie
+    print("trie:" + str(trie.get(contract_acc.address)))
+    contract_acc = Account.get_from_hash(trie.get(contract_acc.address))
+    target_acc = Account.get_from_hash(trie.get(target_acc.address))
+    assert contract_acc.balance is 90
+    assert target_acc.balance is 10
