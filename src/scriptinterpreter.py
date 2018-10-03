@@ -700,6 +700,7 @@ class ScriptInterpreter:
             logging.warning("OP_GETCODE: invalid account address")
             return False
         self.stack.append(acc.code)
+        return True
 
     def _parse_numeric_item(self, item: str):
         try:
