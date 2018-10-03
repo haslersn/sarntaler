@@ -150,14 +150,7 @@ class TestParserMethods(unittest.TestCase):
 
         mt, acc = get_account(empty_mt, bytecode)
         si = ScriptInterpreter(mt, params[::-1]+[fnname, len(params)+1], acc, [bytes(17)], 0)
-        retval = None
-        try:
-            retval = si.execute_script()
-        except IndexError:
-            #print("Test is successful, but OP_RET does not work up until now")
-            from sys import stderr
-            print("Result should be {}.".format(expected_result), file=stderr)
-            return
+        retval = si.execute_script()
         self.assertTrue(retval is not None)
         (ignore, retval) = retval
         self.assertEqual(expected_result, retval)
