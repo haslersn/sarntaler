@@ -10,17 +10,17 @@ contract {
     sarn p;     // prize for mating
 }
 
-int buy(sarn x) {
+int buy(sarn x, address sender) {
     if (x > s) {
         a.transfer(s);
-        a = msg;
+        a = sender;
         s = x;
     }
     return 1;
 }
 
-address reproduce(sarn x, address m2) {
-    if(msg == a) {
+address reproduce(sarn x, address m2, address sender) {
+    if(sender == a) {
         int new_dna;
         address new_marmot;
 
