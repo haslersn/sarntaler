@@ -463,7 +463,7 @@ def test_genpubkey():
     def rand(n) -> bytes:
         return bytes(random.getrandbits(8) for _ in range(n))
     keypair = generate_keypair(rand)
-    script_finalstack_test("12345 OP_GENPUBKEY 1 OP_RET", [Pubkey(pubkey_from_keypair(keypair))])
+    script_finalstack_test("12345 OP_GENPUBKEY 12345 OP_GENPUBKEY 1 OP_RET", [Pubkey(pubkey_from_keypair(keypair)), Pubkey(pubkey_from_keypair(keypair))])
 
 def test_getcode():
     state = MerkleTrie(MerkleTrieStorage())

@@ -712,6 +712,7 @@ class ScriptInterpreter:
         random.seed(seed)
         keypair = generate_keypair(rand)
         self.stack.append(Pubkey(pubkey_from_keypair(keypair)))
+        return True
     
     def op_getcode(self):
         addr = self.__pop_checked(Hash)
