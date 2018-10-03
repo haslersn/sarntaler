@@ -367,9 +367,9 @@ class TransferExpr(Expr):
         code = []
         code.append("0")
         code.append("OP_PACK // S3 == empty param list")
-        code+=self.address.code_gen()
+        code+=self.address.code_gen(errorhandler)
         code.append("// S2 == target address")
-        code+=self.amount.code_gen()
+        code+=self.amount.code_gen(errorhandler)
         code.append("// S1 == amount")
         code.append("OP_TRANSFER")
         code.append("1")
@@ -529,12 +529,17 @@ class LHS(Node):
 
     def analyse_scope(self, scope, errorhandler=None):
         self.definition = scope.lookup(self.ident)
-        if self.definition is None:
+        if self.ident=='balance':
+            pass
+        elif self.definition is None:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Decl-Use Error: Use of undeclared identifier {}.".format(self.ident))
 
     def typecheck(self, errorhandler=None):
-        self.marm_type = self.definition.get_marm_type_for(self.ident, errorhandler)
+        if self.ident=='balance':
+            self.marm_type = Typename('sarn')
+        else:
+            self.marm_type = self.definition.get_marm_type_for(self.ident, errorhandler)
 
     def code_gen(self, errorhandler=None):
         """Pushes the address of the identifier from the symbol table on the stack"""
@@ -545,6 +550,8 @@ class LHS(Node):
             code.append('"' + self.definition.name + '" // store name')
             code.append('OP_GETSTOR')
             pass
+        elif self.ident=='balance':
+            code.append('OP_GETOWNBAL')
         else:
             code.append(str(self.definition.get_local_index_for(self.ident,errorhandler))
                         +" // address of local "+self.ident)
