@@ -286,14 +286,18 @@ class NewExpr(Expr):
 
         if self.balance.marm_type != 'sarn':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                        "Type Error: balance should be from type sarn")
+                                        "Type Error: balance should be of type sarn, got {}.".format(
+                                            self.balance.marm_type))
 
         lastidx = 0
-        for idx, param in enumerate(self.params[::-1]):
+        for idx, param in enumerate(self.params):
             lastidx = idx
-            if (self.cd[::-1])[idx].marm_type != param.marm_type:
+            if self.cd[idx].marm_type != param.marm_type:
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Type Error: {}. parameter should be from type {}".format(str(len(self.params) - idx), str(self.cd[idx].marm_type)))
+                                           "Type Error: {}. parameter should be of type {}, got {}.".format(
+                                               str(len(self.params) - idx),
+                                               str(self.cd[idx].marm_type),
+                                               str(param.marm_type)))
 
         if lastidx != (len(self.cd) - 1):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
