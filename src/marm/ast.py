@@ -1002,13 +1002,13 @@ class StatementIf(Statement):
     def code_gen(self, errorhandler=None):
         """First the else block because less code, jumping accordingly"""
         code = []
-        StatementIf.loop_id += 1
-        code_boolex = self.boolex.code_gen(errorhandler)
-        code_true = self.statement.code_gen(errorhandler)
-
         # Label of true block
+        StatementIf.loop_id += 1
         label_true = "__label_if_true" + str(StatementIf.loop_id)
         label_end = "__label_if_end" + str(StatementIf.loop_id)
+
+        code_boolex = self.boolex.code_gen(errorhandler)
+        code_true = self.statement.code_gen(errorhandler)
 
         # Get the bool
         code += code_boolex
@@ -1022,8 +1022,8 @@ class StatementIf(Statement):
             # The false body
             code += code_false
 
-        code.append(label_end)
-        code.append("OP_JUMP")
+            code.append(label_end)
+            code.append("OP_JUMP")
 
         # The true body
         code.append(label_true + ":")
