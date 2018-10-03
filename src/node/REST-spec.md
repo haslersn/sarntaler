@@ -11,7 +11,8 @@ The node stores and verifies the blockchain and offers and interface for the min
 
 ### Account
 - (get balance of specific address)
-- get account by address (i.e. public key, balance, code, state)
+- get account by address (i.e. public key, balance, owner access, code, state)
+- (check key for account)
 
 ### Blockchain
 - (get last block)
