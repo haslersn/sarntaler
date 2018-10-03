@@ -1022,8 +1022,8 @@ class StatementIf(Statement):
             # The false body
             code += code_false
 
-            code.append(label_end)
-            code.append("OP_JUMP")
+        code.append(label_end)
+        code.append("OP_JUMP")
 
         # The true body
         code.append(label_true + ":")
