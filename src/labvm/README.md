@@ -123,6 +123,7 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_PACK | s_1 integer, at least s_1 +1 stack elements | Packs the number of stack elements given in s_1 into a single string separated by spaces, starting from s_2 and consuming them all. The topmost stack element will be the last element in the string. Pushes the resulting String onto the stack. The resulting string can be used e.g. to pass parameters to OP_TRANSFER. Reverse operation: OP_UNPACK
 | OP_UNPACK | s_1 string | Splits the string at s_1 by spaces and pushes the parts onto the stack in the order they appear in the string (i.e. the first element of the string will be furthest down on the stack). Also leaves the number of elements that were pushed in s_1 (excluding s_1 itself). Reverse operation: OP_PACK
 |_**Blockchain**_|
+| OP_HASH | s_1 | Consumes s_1 and puts its hash value on the stack. Works with int, str and the byte-types Hash, Signature, Pubkey and Keypair|
 | OP_GETBAL | s_1 hash | Puts the account balance of the account at address s_1 (which is the hash of the public key) on the stack. If no account is at address s_1, then **-1** is put on the stack.|
 | OP_GETOWNBAL | - | Puts the account balance of the own account on the stack.|
 | OP_GETSTOR | s_1 string | Consumes s_1 and leaves the value of the storage cell referenced by s_1 on the stack. |
