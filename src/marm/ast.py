@@ -325,7 +325,7 @@ class NewExpr(Expr):
         code.append("OP_GENPUBKEY")
         code.append("OP_CREATECONTR")
         code.append("1")
-        code.append("OP_EQ")
+        code.append("OP_EQU")
         code.append("1")
         code.append("OP_JUMPRC")
         code.append("OP_KILL")
