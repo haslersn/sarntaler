@@ -6,12 +6,12 @@
  */
 contract {
     sarn balance;
-    sarn price;
+    sarn prize;
     address owner;
 }
 
 int buy(sarn x) {
-    contract.owner.transfer(prize); // At the moment any faults in the implementation are actively ignored!
+    transfer(owner,prize); // At the moment any faults in the implementation are actively ignored!
     //If the owner wants to check which people have paid
     //they will need to check the whole blockchain
 }
