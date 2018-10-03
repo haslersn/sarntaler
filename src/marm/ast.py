@@ -268,22 +268,24 @@ class NewExpr(Expr):
 
     def typecheck(self, errorhandler=None):
         self.balance.typecheck(errorhandler)
-        self.params.typecheck(errorhandler)
-        if self.balance.marm_type != 'sarn':
+        for param in self.params:
+            param.typecheck(errorhandler)
+        if self.balance.marm_type != 'sarn' and self.balance.marm_type != 'int':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                         "Type Error: transferring is only valid to addresses")
-        if self.paramlist.marm_type != 'sarn':
-            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                        "Type Error: transferring is only valid for sarns")
-        self.marm_type = Typename('generic')
+        #if self.params.marm_type != 'sarn':
+         #   errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+          #                              "Type Error: transferring is only valid for sarns")
+        self.marm_type = Typename('address')
 
     def code_gen(self, errorhandler=None):
         code = []
         code.append("0")
         code.append("OP_PACK // S3 == empty param list")
-        code+=self.address.code_gen()
+        for param in self.params:
+            code += param.code_gen()
         code.append("// S2 == target address")
-        code+=self.amount.code_gen()
+        code += self.balance.code_gen()
         code.append("// S1 == amount")
         code.append("OP_TRANSFER")
         code.append("1")
