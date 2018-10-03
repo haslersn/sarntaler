@@ -33,7 +33,7 @@ def test_mining_blocks():
 
 def test_create_account():
     tx_output = TransactionOutput(compute_hash(BlockSkeleton.genesis_pubkey), 0, """
-        [] [] 1 '' k0x{}
+        [] [] 1 '1 OP_RET' k0x{}
     """.format(hexlify(example_pubkey).decode()))
     print(tx_output)
     tx_data = TransactionData([], [tx_output], 0, bytes(32))

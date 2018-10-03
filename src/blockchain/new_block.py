@@ -110,6 +110,9 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
                     OP_SWAP
                     OP_GETOWNBAL
                     OP_TRANSFER
+                    2
+                    OP_JUMPRC
+                    OP_KILL
                     1
                     OP_RET
                 """,
