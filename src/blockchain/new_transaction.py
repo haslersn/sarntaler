@@ -137,7 +137,7 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signatures"])):
 
     def __new__(cls, tx_data: TransactionData, signatures: Tuple[bytes]=None):
         if signatures is None:
-            signatures = (bytes(32),) * len(tx_data.inputs)
+            signatures = (bytes(271),) * len(tx_data.inputs)
         elif len(signatures) != len(tx_data.inputs):
             raise ValueError('Number of inputs and signatures does not match')
         return super().__new__(cls, tx_data, signatures)
