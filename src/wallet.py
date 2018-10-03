@@ -34,11 +34,8 @@ class Wallet:
         """
         sets up RPCClient, 
         """
-        if os.path.isfile(wallet_path):
-            self._wallet_path = wallet_path
-        else:
-            raise FileNotFoundError  # TODO create new File ? but how to handle incorrect file ending
-
+        # if file is not existing, it will be created on write access
+        self._wallet_path = wallet_path
         self.rpc = RPCClient(ip_address, miner_port)
 
     def get_wallet_path(self):
