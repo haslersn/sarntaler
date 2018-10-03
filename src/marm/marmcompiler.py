@@ -235,8 +235,8 @@ if __name__ == "__main__":
     myinput = None
     try:
         myinput = args.input.read()
-    except:
-        print("Can't read file {}: error during read.".format(args.input.name))
+    except Exception as e:
+        print("Can't read file {}: error during read: {}".format(args.input.name, e))
         exit(1)
 
     result = marmcompiler(args.input.name, myinput, None, args.stages)
