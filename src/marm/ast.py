@@ -247,6 +247,45 @@ class ContractcallExpr(Expr):
         code.append("OP_KILL")
         return code
 
+class NewExpr(Expr):
+    def __init__(self, balance, params):
+        super().__init__()
+        self.balance = balance
+        self.params = params
+
+    def __str__(self):
+        return "[NewExpr: balance={}, paramlist={}]".format(self.balance, self.liststr(self.params))
+
+    def analyse_scope(self, scope, errorhandler=None):
+        self.balance.analyse_scope(scope, errorhandler)
+        for param in self.params:
+            param.analyse_scope(scope, errorhandler)
+
+    def typecheck(self, errorhandler=None):
+        self.balance.typecheck(errorhandler)
+        self.params.typecheck(errorhandler)
+        if self.balance.marm_type != 'sarn':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Type Error: transferring is only valid to addresses")
+        if self.paramlist.marm_type != 'sarn':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Type Error: transferring is only valid for sarns")
+        self.marm_type = Typename('generic')
+
+    def code_gen(self, errorhandler=None):
+        code = []
+        code.append("0")
+        code.append("OP_PACK // S3 == empty param list")
+        code+=self.address.code_gen()
+        code.append("// S2 == target address")
+        code+=self.amount.code_gen()
+        code.append("// S1 == amount")
+        code.append("OP_TRANSFER")
+        code.append("1")
+        code.append("OP_JUMPRC // if successfull, continue")
+        code.append("OP_KILL")
+        return code
+
 class TransferExpr(Expr):
     def __init__(self, address, amount):
         super().__init__()

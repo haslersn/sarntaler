@@ -383,7 +383,7 @@ call.
 
 ```c
 ...
-adr_new = new(balance, contract_attributevalues...);
+adr_new = new(balance)(contract_attributevalues...);
 ...
 ```
 
