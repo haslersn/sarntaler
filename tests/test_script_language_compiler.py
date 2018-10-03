@@ -11,8 +11,7 @@ class TestParserMethods(unittest.TestCase):
 
         self.testdir = os.path.join(os.path.dirname(__file__), "marm")
 
-    def generic_test(self, filename, cleanCode=True, roughlyOk=True, error_count=0, fatals_count=0, stages=None,
-                     print_out=False):
+    def generic_test(self, filename, cleanCode=True, roughlyOk=True, error_count=0, fatals_count=0, stages=None):
         errorhandler = marmcompiler.ErrorHandler()
         try:
             with open(os.path.join(self.testdir, filename), mode='r') as testfile:
@@ -22,11 +21,7 @@ class TestParserMethods(unittest.TestCase):
                 self.assertEqual(errorhandler.cleanCode(), cleanCode)
                 self.assertEqual(errorhandler.countErrors(), error_count)
                 self.assertEqual(errorhandler.countFatals(), fatals_count)
-                if print_out:
-                    with open(os.path.join(self.testdir, "test.labvm"), "w") as output:
-                        for line in result[1]:
-                            output.write(str(line))
-                            output.write("\n")
+                return result
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
@@ -137,12 +132,25 @@ class TestParserMethods(unittest.TestCase):
         self.generic_test("gcd.marm")
 
     @unittest.skipIf(os.name == 'nt', "no crypto module on windows")
-    def generic_run_test(self, filename, expected_result, fnname, params=[], stores=[]):
+    def generic_run_test(self, filename, expected_result, fnname, params=[]):
         from subprocess import call
-        from src.blockchain.account import Account
+        from src.blockchain.account import Account, StorageItem
         from tests.test_scriptinterpreter import empty_mt, example_pubkey
         from src.scriptinterpreter import ScriptInterpreter
-        self.generic_test(filename, print_out=True)
+        code = self.generic_test(filename)
+
+        with open(os.path.join(self.testdir, "test.labvm"), 'w') as testfile:
+            for el in code[1]:
+                print(el, file=testfile)
+
+        stores = []
+        i = 0
+        while i<len(code[3]):
+            name = code[3][i]
+            val = code[4][i]
+            stores.append(StorageItem(name, 'int', 0)) # TODO: addresses
+            i+=1
+
         call(["rm", os.path.join(self.testdir, "o.out")])
         call(["python3", "-m", "src.labvm.scriptlinker", os.path.join(self.testdir, "test.labvm"),
               "-o", os.path.join(self.testdir, "o.out")])
@@ -215,10 +223,8 @@ class TestParserMethods(unittest.TestCase):
 
     def test_contract_global_valid(self):
         from src.blockchain.account import StorageItem
-        stores = [StorageItem("myint", 'int', 0),
-                  StorageItem("mysarn", 'int', 0)]
-        self.generic_run_test("test_contract_global_valid.marm", 1234, "setmysarn", [1234], stores)
-        self.generic_run_test("test_contract_global_valid.marm", -1085, "setmyint", [-1085], stores)
+        self.generic_run_test("test_contract_global_valid.marm", 1234, "setmysarn", [1234])
+        self.generic_run_test("test_contract_global_valid.marm", -1085, "setmyint", [-1085])
 
     def test_loop(self):
         self.generic_run_test("test_loop.marm", 1, "collatz_step", [2352, 11]) # TODO: 2nd param
