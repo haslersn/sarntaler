@@ -96,6 +96,7 @@ class ScriptInterpreter:
         'OP_GT',
 
         'OP_GETBAL',
+        'OP_GETOWNBAL',
         'OP_SETSTOR',
         'OP_GETSTOR',
         'OP_TRANSFER',
@@ -498,8 +499,21 @@ class ScriptInterpreter:
         return True
 
     def op_getbal(self):
+        address = self.__pop_checked(Hash)
+        if address is None:
+            logging.warning("OP_GETBAL: Stack is empty")
+            return False
+        acc_to_get_bal_from = Account.get_from_hash(self.state.get(address.value))
+        if acc_to_get_bal_from is None:
+            self.stack.append(-1)
+        else:
+            self.stack.append(acc_to_get_bal_from.balance)
+        return True
+
+    def op_getownbal(self):
         self.stack.append(self.acc.balance)
         return True
+
 
     def op_getstor(self):
         if not self.stack:
@@ -590,6 +604,30 @@ class ScriptInterpreter:
         for item in popped:
             self.stack.append(item)
         self.stack.append(len(popped))
+        return True
+
+    def op_transfer(self):
+        logging.info("OP_TRANSFER called")
+        amount = self.__pop_checked(int)
+        target_addr = self.__pop_checked(Hash)
+        params = self.__pop_checked(list)
+        if amount is None:
+            logging.warning("OP_TRANSFER: Amount must be int")
+        if target_addr is None:
+            logging.warning("OP_TRANSFER: Target must be Hash")
+        if params is None:
+            logging.warning("OP_TRANSFER: Params must be Array")
+        target_addr = target_addr.value # now bytes
+        #print(self.state.get(self.acc.address)
+
+        input = TransactionInput(self.acc.address, amount)
+        output = TransactionOutput(target_addr, amount, params)
+        tx_data = TransactionData([input], [output], 0, (int(datetime.now().timestamp() * 1000)).to_bytes(32, 'big'))
+
+        self.state = transit(ScriptInterpreter, self.state, Transaction(tx_data, [bytes(32)]), bytes(32))
+        if self.state is None:
+            logging.warning("OP_TRANSFER: Empty state returned")
+            return False
         return True
 
     def op_hash(self):
