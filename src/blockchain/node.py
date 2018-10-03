@@ -21,6 +21,7 @@ from src.crypto import Key
 app = flask.Flask(__name__)
 cb = None
 pers = None
+unusedtrans = []
 
 def rpc_server(port: int, chainbuilder: ChainBuilder, persist: Persistence):
     #ToDo: right parameters
@@ -51,3 +52,13 @@ def send_transaction():
     """
     trans = Transaction.from_json_compatible(flask.request.json)
     #todo: transacton to blockchain
+    unusedtrans.index(trans)
+    return
+
+def get_unusedtrans():
+    """Returns locally saved Transaction, which are not validated yet
+    to a miner/network which takes care of the Transactions."""
+    tmptr = unusedtrans.copy()
+    unusedtrans.clear()
+    return tmptr
+
