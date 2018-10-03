@@ -154,7 +154,8 @@ class TestParserMethods(unittest.TestCase):
             si.execute_script()
         except IndexError:
             print("Test is successful, but OP_RET does not work up until now")
-            print("Result should be {}.".format(expected_result))
+            from sys import stderr
+            print("Result should be {}.".format(expected_result), file=stderr)
             return
         self.assertEqual(expected_result, si.stack[0])
 
