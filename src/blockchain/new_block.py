@@ -98,7 +98,7 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
                     OP_HASH
                     []
                     OP_SWAP
-                    OP_GETBAL
+                    OP_GETOWNBAL
                     OP_TRANSFER
                     1
                     OP_RET

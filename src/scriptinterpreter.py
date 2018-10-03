@@ -96,6 +96,7 @@ class ScriptInterpreter:
         'OP_GT',
 
         'OP_GETBAL',
+        'OP_GETOWNBAL',
         'OP_SETSTOR',
         'OP_GETSTOR',
         'OP_TRANSFER',
@@ -498,8 +499,21 @@ class ScriptInterpreter:
         return True
 
     def op_getbal(self):
+        address = self.__pop_checked(Hash)
+        if address is None:
+            logging.warning("OP_GETBAL: Stack is empty")
+            return False
+        acc_to_get_bal_from = Account.get_from_hash(self.state.get(address.value))
+        if acc_to_get_bal_from is None:
+            self.stack.append(-1)
+        else:
+            self.stack.append(acc_to_get_bal_from.balance)
+        return True
+
+    def op_getownbal(self):
         self.stack.append(self.acc.balance)
         return True
+
 
     def op_getstor(self):
         if not self.stack:

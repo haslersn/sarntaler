@@ -285,9 +285,37 @@ def test_factorial():
     si.execute_script()
 
 def test_getbal():
-    si = ScriptInterpreter(empty_mt, "", Account(example_pubkey, 100, "OP_GETBAL 1 OP_RET", 1, []))
+    my_acc = Account(example_pubkey, 100, "h0x" + hexlify(compute_hash(example_pubkey)).decode() + " OP_GETBAL 1 OP_RET", 1, [])
+    my_mt = empty_mt.put(my_acc.address, my_acc.hash)
+    si = ScriptInterpreter(my_mt, "", my_acc)
     assert si.execute_script()
-    assert si.stack == [100]
+    assert si.stack == [my_acc.balance]
+
+def test_getbal_from_other():
+    other_pubkey = pubkey_from_keypair(generate_keypair())
+    other_acc = Account(other_pubkey, 555, "1 OP_RET", 1, [])
+    my_acc = Account(example_pubkey, 100, "h0x" + hexlify(other_acc.address).decode() + " OP_GETBAL 1 OP_RET", 1, [])
+    my_mt = empty_mt.put(my_acc.address, my_acc.hash)
+    my_mt = my_mt.put(other_acc.address, other_acc.hash)
+    si = ScriptInterpreter(my_mt, "", my_acc)
+    assert si.execute_script()
+    assert si.stack == [other_acc.balance]
+
+def test_getbal_from_non_existent():
+    other_pubkey = pubkey_from_keypair(generate_keypair())
+    other_acc = Account(other_pubkey, 555, "1 OP_RET", 1, [])
+    my_acc = Account(example_pubkey, 100, "h0x" + hexlify(other_acc.address).decode() + " OP_GETBAL 1 OP_RET", 1, [])
+    my_mt = empty_mt.put(my_acc.address, my_acc.hash)
+    si = ScriptInterpreter(my_mt, "", my_acc)
+    assert si.execute_script()
+    assert si.stack == [-1]
+
+def test_getownbal():
+    my_acc = Account(example_pubkey, 100, "OP_GETOWNBAL 1 OP_RET", 1, [])
+    my_mt = empty_mt.put(my_acc.address, my_acc.hash)
+    si = ScriptInterpreter(my_mt, "", my_acc)
+    assert si.execute_script()
+    assert si.stack == [my_acc.balance]
 
 def test_getstor():
     si = ScriptInterpreter(empty_mt, "", Account(example_pubkey, 0, '"myvar" OP_GETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 42)]))
