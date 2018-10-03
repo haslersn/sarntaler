@@ -1,0 +1,16 @@
+contract{
+  int myint;
+  sarn mysarn;
+}
+int getmyint(){
+  return myint;
+}
+sarn getmysarn(){
+  return mysarn;
+}
+int setmyint(int v){
+  return myint = v;
+}
+sarn setmysarn(sarn v){
+  return mysarn = v;
+}

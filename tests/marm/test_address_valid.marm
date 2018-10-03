@@ -1,0 +1,5 @@
+address test_address(address x){
+  address d;
+  d = contract;
+  return x;
+}
