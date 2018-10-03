@@ -238,8 +238,8 @@ class TestParserMethods(unittest.TestCase):
 
     @unittest.skipIf(True, "DOS test, takes approximately 10m, do not test if you don't want this")
     def test_DOS(self):
-        self.generic_test("chaos.marm")
-        # self.generic_run_test("chaos.marm", 2, "test", [0])
+        self.generic_test("denialofservice_compiler.marm")
+        # self.generic_run_test("denialofservice_compiler.marm", 2, "test", [0])
 
 
 if __name__ == '__main__':
