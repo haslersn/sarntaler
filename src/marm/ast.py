@@ -78,7 +78,7 @@ class Expr(Node):
         return "[Expr]"
     def code_gen_LHS(self,errorhandler=None):
         errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                   "Expression {} is not valid as an LHS expression"%str(self))
+                                   "Semantic error:Expression {} is not valid as an LHS expression"%str(self))
         return None
 
 
@@ -167,18 +167,18 @@ class BinExpr(Expr):
         if self.op == '=':
             if not Typename.is_assignable(self.left.marm_type,self.right.marm_type):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Tried to assign value of type {} to variable of type {}.".format(
+                                           "Type error: Tried to assign value of type {} to variable of type {}.".format(
                                                self.right.marm_type, self.left.marm_type))
             else:
                 self.marm_type=self.left.marm_type
         elif self.op in ['+', '-', '*', '/', '%']:
             if not Typename.is_assignable("int",self.left.marm_type):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Left operand of {} exspects value of type int, got {}".format(
+                                           "Type error: Left operand of {} needs to be assignable to int, got {}".format(
                                                self.op, self.left.marm_type))
             if not Typename.is_assignable("int",self.right.marm_type):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Right operand of {} exspects value of type int, got {}".format(
+                                           "Type error: Right operand of {} needs to be assignable to int, got {}".format(
                                                self.op, self.right.marm_type))
             self.marm_type = Typename.more_general_type(self.right.marm_type,self.left.marm_type)
             #self.marm_type = Typename('int')
@@ -303,7 +303,7 @@ class NewExpr(Expr):
 
         if lastidx != (len(self.cd) - 1):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Error: Too few arguments. Exprected {}, given {}".format(str(len(self.cd)), str(len(self.params))))
+                                       "Type Error: Too few arguments. Exprected {}, given {}".format(str(len(self.cd)), str(len(self.params))))
 
 
         self.marm_type = Typename('address')
@@ -396,7 +396,7 @@ class LocalcallExpr(Expr):
         if type(self.fnname.marm_type) is Proctype:
             if len(self.params) != len(self.fnname.marm_type.param_types):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Function {} expects {} parameters but gets {}.".format(
+                                           "Type Error: Function {} expects {} parameters but gets {}.".format(
                                                self.fnname, len(self.fnname.marm_type.param_types), len(self.params)))
                 return
             for i in range(0, len(self.params)):
@@ -405,12 +405,12 @@ class LocalcallExpr(Expr):
                 param.typecheck(errorhandler)
                 if not Typename.is_assignable(dparam_type,param.marm_type):# != dparam_type:
                     errorhandler.registerError(param.pos_filename, param.pos_begin_line, param.pos_begin_col,
-                                               "Parameter {} of function must be of type {}, got {}.".format(
+                                               "Type Error: Parameter {}  needs to be assignable to {}, got {}.".format(
                                                    i, dparam_type, param.marm_type))
             self.marm_type = self.fnname.marm_type.return_type
         else:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Trying to call expression which is not a function.")
+                                       "Type Error: Trying to call expression which is not a function.")
             return
     def code_gen(self, errorhandler=None):
         code_methodid = self.fnname.code_gen(errorhandler)
@@ -444,12 +444,12 @@ class UnaryExpr(Expr):
         if self.op == '#':
             if self.operand.marm_type != 'string':
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Operator '#' expects one argument of type string")
+                                           "Type Error: Operator '#' expects one argument of type string")
             self.marm_type = Typename('int')
         elif self.op == '-':
             if not Typename.is_assignable('int',self.operand.marm_type):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Operator '-' expects one argument of type int or sarn.")
+                                           "Type Error: Operator '-' expects one argument of type int or sarn.")
             else:
                 self.marm_type = Typename('int')
         else:
@@ -493,12 +493,12 @@ class StructExpr(Expr):
         if self.ident=='balance':
             if self.expr.marm_type!='address':
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "balance is only valid for addresses ")
+                                       "Type Error: balance is only valid for addresses ")
             self.marm_type='sarn'
 
         if self.marm_type is None:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Value of type {} has no attribute named {}".format(
+                                       "Type Error: Value of type {} has no attribute named {}".format(
                                            self.expr.marm_type, self.ident))
 
     def code_gen(self, errorhandler=None):
@@ -512,7 +512,7 @@ class StructExpr(Expr):
 
     def code_gen_LHS(self, errorhandler=None):
         errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                    "There is no valid struct access LHS of an assignment yet")
+                                    "Type Error: struct access is not a valid LHS of an assignment")
         code = []
         return code
 
@@ -531,7 +531,7 @@ class LHS(Node):
         self.definition = scope.lookup(self.ident)
         if self.definition is None:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Use of undeclared identifier {}.".format(self.ident))
+                                       "Decl-Use Error: Use of undeclared identifier {}.".format(self.ident))
 
     def typecheck(self, errorhandler=None):
         self.marm_type = self.definition.get_marm_type_for(self.ident, errorhandler)
@@ -556,7 +556,7 @@ class LHS(Node):
         code = ["OP_DUP"]
         if isinstance(self.definition,Procdecl):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Tried to assign to procedure name {}".format(self.ident))
+                                       "Type Error: Procedure {} is not valid as LHS of an assignment".format(self.ident))
             # raise RuntimeError("Tried to assign procedure name")
         elif isinstance(self.definition, ContractMemberDecl):
             code.append('"' + self.definition.name +'" // store name')
@@ -730,7 +730,7 @@ class Paramdecl(Node):
     def analyse_scope(self, scope, errorhandler=None):
         if scope.has_direct_definition(self.name):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Multiple parameters have the name {}.".format(self.name))
+                                       "Decl-Use Error: Multiple parameters have the name {}.".format(self.name))
         scope.define(self.name, self)
 
     def typecheck(self, errorhandler=None): pass
@@ -758,9 +758,12 @@ class ContractMemberDecl(Node):
         return "[ContractMemberDecl: member_type={}, name={}]".format(self.member_type, self.name)
 
     def analyse_scope(self, scope, errorhandler=None):
+        if self.name=='balance':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Decl-Use Error: balance is not a valid contract member name.".format(self.name))
         if scope.has_direct_definition(self.name):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Multiple contract members have the name {}.".format(self.name))
+                                       "Decl-Use Error: Multiple contract members have the name {}.".format(self.name))
         scope.define(self.name, self)
 
     def typecheck(self, errorhandler=None): pass
@@ -855,7 +858,7 @@ class StatementDecl(Statement):
         for decl in self.decllist:
             if scope.has_direct_definition(decl):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Variable {} declared twice".format(decl))
+                                           "Decl-Use Error: Variable {} declared twice".format(decl))
             scope.define(decl, self)
             self.local_var_indices[decl] = scope.get_next_var_index()
 
@@ -895,7 +898,7 @@ class StatementReturn(Statement):
         self.return_value.typecheck(errorhandler)
         if not Typename.is_assignable(self.function.marm_type.return_type,self.return_value.marm_type):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Can't return value of type {} from function with return type {}".format(
+                                       "Type Error: Can't return value of type {} from function with return type {}".format(
                                            self.return_value.marm_type, self.function.marm_type.return_type))
 
     def code_gen(self, errorhandler=None):
@@ -926,7 +929,7 @@ class StatementWhile(Statement):
         self.boolex.typecheck(errorhandler)
         if self.boolex.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Condition in while statement must be of type bool, got {}.".format(
+                                       "Type Error: Condition in while statement must be of type bool, got {}.".format(
                                            self.boolex.marm_type))
         self.statement.typecheck(errorhandler)
 
@@ -983,7 +986,7 @@ class StatementIf(Statement):
         self.boolex.typecheck(errorhandler)
         if self.boolex.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Condition in an if statement must be of type bool.")
+                                       "Type Error: Condition in an if statement must be of type bool.")
         self.statement.typecheck(errorhandler)
 
     def code_gen(self, errorhandler=None):
@@ -1139,7 +1142,7 @@ class BoolexCMP(Boolex):
         if self.left.marm_type != self.right.marm_type:
             if not ((Typename.is_assignable(self.left.marm_type,self.right.marm_type)) or (Typename.is_assignable(self.right.marm_type,self.left.marm_type))): 
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Trying to compare values of types {} and {}.".format(
+                                       "Type Error: Trying to compare values of types {} and {}.".format(
                                            self.left.marm_type, self.right.marm_type))
         #if self.left.marm_type not in ['int']:
         #    errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
@@ -1189,12 +1192,12 @@ class BoolexBinary(Boolex):
         self.left.typecheck(errorhandler)
         if self.left.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Left operand of {} must be of type bool.".format(
+                                       "Type Error: Left operand of {} must be of type bool.".format(
                                            self.op))
         self.right.typecheck(errorhandler)
         if self.right.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Right operand of {} must be of type bool.".format(
+                                       "Type Error: Right operand of {} must be of type bool.".format(
                                            self.op))
         self.marm_type = Typename('bool')
 
@@ -1229,7 +1232,7 @@ class BoolexNot(Boolex):
         self.operand.typecheck(errorhandler)
         if self.operand.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Operand of '!' needs to be of type bool.")
+                                       "Type Error: Operand of '!' needs to be of type bool.")
         self.marm_type = Typename('bool')
 
     def code_gen(self, errorhandler=None):
