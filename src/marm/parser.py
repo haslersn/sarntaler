@@ -6,7 +6,9 @@ precedence = (
      ('right', 'ASSIGN'),
      ('right', 'HASH', 'NOT'),
      ('right', 'IF_WITHOUT_ELSE'),
-     ('right', 'ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP','MODOP', 'MULOP', 'SUBOP'),
+     ('right', 'ELSE', 'AND', 'OR'),
+     ('right', 'ADDOP', 'SUBOP'),
+     ('right', 'DIVOP','MODOP', 'MULOP'),
 )
 
 
