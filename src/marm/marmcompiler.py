@@ -150,10 +150,10 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
                 from src.marm.lexer import marmlexer
                 result = marmlexer(filename, input, errorhandler)
             elif stage == 'parse':
-                from src.marm.parser import marmparser, ParserError
+                from src.marm.parser import marmparser
                 try:
                     result = marmparser(filename, input, errorhandler)
-                except ParserError as err:
+                except Exception as err:
                     errorhandler.registerFatal(filename,-1,-1, "During parse: "+str(err))
             elif stage == 'analyse_scope':
                 depend_on_stage('parse')
