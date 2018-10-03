@@ -232,7 +232,12 @@ if __name__ == "__main__":
                         help="Compiler stages to be run, in order. Defaults to codegen. Dependencies are run automatically")
     args = parser.parse_args()
 
-    myinput = args.input.read()
+    myinput = None
+    try:
+        myinput = args.input.read()
+    except:
+        print("Can't read file {}: error during read.".format(args.input.name))
+        exit(1)
 
     result = marmcompiler(args.input.name, myinput, None, args.stages)
 
