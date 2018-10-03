@@ -22,19 +22,18 @@ class Block:
 
     def __new__(cls, skeleton: 'BlockSkeleton', nonce: bytes):
         target = (2**256 // skeleton._difficulty).to_bytes(32, 'big')
-        to_hash = skeleton.hash + nonce
-        hash = compute_hash(to_hash)
-        if hash > target:
-            raise ValueError("Tried to create block, that doesn't fulfill the difficulty")
-
-        if hash in cls._dict:
-            return cls._dict[hash]
-
         constructed = super().__new__(cls)
         constructed._skeleton = skeleton
         constructed._nonce = nonce
-        constructed._hash = hash
         cls._dict[hash] = constructed
+        constructed._hash = compute_hash(json.dumps(constructed.to_json_compatible()).encode())
+
+        if constructed._hash > target:
+            raise ValueError("Tried to create block, that doesn't fulfill the difficulty")
+
+        if constructed._hash in cls._dict:
+            return cls._dict[hash]
+
         return constructed
 
     @property
@@ -138,6 +137,7 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
         constructed._miner_address = miner_address
         constructed._state_trie = state_trie
         constructed._tx_trie = tx_trie
+        constructed._transactions = transactions
         return constructed
 
     @property
@@ -167,6 +167,10 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
     @property
     def tx_trie(self):
         return self._tx_trie
+
+    @property
+    def transactions(self):
+        return self._transactions
 
     @property
     def hash(self):
