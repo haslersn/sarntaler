@@ -115,6 +115,8 @@ class SpecialExpression(Expr):
             code.append("1")
             code.append("OP_JUMPRC")
             code.append("OP_KILL")
+            errorhandler.registerWarning(self.pos_filename,self.pos_begin_line,self.pos_begin_col,
+                           "The use of msg for determining an execution triggering transition's owner is discouraged and may kill the execution, if there is no particular single owner of the transaction ")
         else:
             errorhandler.registerFatal(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                           "No code scheme known for specialconstant {} yet!.".format(
