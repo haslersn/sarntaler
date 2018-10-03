@@ -137,6 +137,7 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
         constructed._miner_address = miner_address
         constructed._state_trie = state_trie
         constructed._tx_trie = tx_trie
+        constructed._transactions = transactions
         return constructed
 
     @property
@@ -166,6 +167,10 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
     @property
     def tx_trie(self):
         return self._tx_trie
+
+    @property
+    def transactions(self):
+        return self._transactions
 
     @property
     def hash(self):
