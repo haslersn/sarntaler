@@ -1,10 +1,11 @@
 from binascii import hexlify
 import logging
+import random
 
 from src.blockchain import crypto
 from src.blockchain.account import Account, StorageItem
 from src.crypto import Key
-from src.scriptinterpreter import ScriptInterpreter, Hash
+from src.scriptinterpreter import ScriptInterpreter, Hash, Pubkey
 from src.blockchain.merkle_trie import MerkleTrie, MerkleTrieStorage
 from Crypto.PublicKey import RSA
 
@@ -446,3 +447,10 @@ def test_transfer():
     target_acc = Account.get_from_hash(trie.get(target_acc.address))
     assert contract_acc.balance is 90
     assert target_acc.balance is 10
+
+def test_genpubkey():
+    random.seed(12345)
+    def rand(n) -> bytes:
+        return bytes(random.getrandbits(8) for _ in range(n))
+    keypair = generate_keypair(rand)
+    script_finalstack_test("12345 OP_GENPUBKEY 1 OP_RET", [Pubkey(pubkey_from_keypair(keypair))])

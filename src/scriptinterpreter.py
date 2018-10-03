@@ -1,6 +1,7 @@
 #! /usr/bin/env/python3
 import hashlib
 import logging
+import random
 from collections import namedtuple
 from binascii import hexlify, unhexlify
 from datetime import datetime
@@ -115,7 +116,8 @@ class ScriptInterpreter:
         'OP_UNPACK',
 
         'OP_CREATECONTR',
-        'OP_HASH'
+        'OP_HASH',
+        'OP_GENPUBKEY'
     }
 
 
@@ -685,6 +687,18 @@ class ScriptInterpreter:
         assert self.state is not None
         self.stack.append(1)
         return True
+    
+    def op_genpubkey(self):
+
+        def rand(n) -> bytes:
+            return bytes(random.getrandbits(8) for _ in range(n))
+
+        seed = self.__pop_checked(int)
+        if seed is None:
+            logging.warning("OP_GETPUBKEY: seed must exist and be int")
+        random.seed(seed)
+        keypair = generate_keypair(rand)
+        self.stack.append(Pubkey(pubkey_from_keypair(keypair)))
 
     def _parse_numeric_item(self, item: str):
         try:
