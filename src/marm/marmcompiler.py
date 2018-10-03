@@ -145,28 +145,32 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
             run_stage(stage)
     def run_stage(stage):
         nonlocal completed_stages, result, errorhandler
-        if stage == 'lex':
-            from src.marm.lexer import marmlexer
-            result = marmlexer(filename, input, errorhandler)
-        elif stage == 'parse':
-            from src.marm.parser import marmparser, ParserError
-            try:
-                result = marmparser(filename, input, errorhandler)
-            except ParserError as err:
-                print(err)
-                raise ErrorInStage('parse')
-        elif stage == 'analyse_scope':
-            depend_on_stage('parse')
-            result.analyse_scope(None, errorhandler)
-        elif stage == 'typecheck':
-            depend_on_stage('parse')
-            depend_on_stage('analyse_scope')
-            result.typecheck(errorhandler)
-        elif stage == 'codegen':
-            depend_on_stage('parse')
-            depend_on_stage('analyse_scope')
-            depend_on_stage('typecheck')
-            result = result.code_gen(errorhandler)
+        try:
+            if stage == 'lex':
+                from src.marm.lexer import marmlexer
+                result = marmlexer(filename, input, errorhandler)
+            elif stage == 'parse':
+                from src.marm.parser import marmparser, ParserError
+                try:
+                    result = marmparser(filename, input, errorhandler)
+                except ParserError as err:
+                    errorhandler.registerFatal(filename,-1,-1, "During parse: "+str(err))
+            elif stage == 'analyse_scope':
+                depend_on_stage('parse')
+                result.analyse_scope(None, errorhandler)
+            elif stage == 'typecheck':
+                depend_on_stage('parse')
+                depend_on_stage('analyse_scope')
+                result.typecheck(errorhandler)
+            elif stage == 'codegen':
+                depend_on_stage('parse')
+                depend_on_stage('analyse_scope')
+                depend_on_stage('typecheck')
+                result = result.code_gen(errorhandler)
+        except ErrorInStage as e:
+            raise e
+        except:
+            errorhandler.registerFatal(filename,-1,-1, "An error occured during stage {}.".format(stage))
         if not errorhandler.roughlyOk():
             raise ErrorInStage(stage)
 
