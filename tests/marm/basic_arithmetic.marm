@@ -1,0 +1,10 @@
+int test_basic_arithmetic(){
+  int res;
+  res = 1;
+  if(143+3134 != 3277){ res = 0; }
+  if(23552-53452 != -29900){ res = 0; }
+  if(7*3 != 21){ res = 0; }
+  if(12/4 != 3){ res = 0; }
+  if(21%6 != 3){ res = 0; }
+  return res;
+}

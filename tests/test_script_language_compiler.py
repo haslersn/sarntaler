@@ -196,5 +196,8 @@ class TestParserMethods(unittest.TestCase):
         eres = phi(a,b,n)
         self.generic_run_test("ackermann.marm", eres, "phi", [a,b,n])
 
+    def test_basic_arithmetic(self):
+        self.generic_run_test("basic_arithmetic.marm", 1, "test_basic_arithmetic", [])
+
 if __name__ == '__main__':
     unittest.main()
