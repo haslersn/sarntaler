@@ -5,7 +5,7 @@ from tkinter.filedialog import asksaveasfile, askopenfilename
 from tkinter.scrolledtext import ScrolledText
 
 from src.gui_editor import SyntaxHiglighterMarm
-
+from src.marm import *
 
 #from docutils.utils import column_indices
 #from src.blockchain import GENESIS_BLOCK
@@ -124,6 +124,19 @@ class Gui(object):
         editor.delete('1.0',END)
         editor.insert(END, file.read())
         
+    def _runSmartContract(self, text):
+        print("run code")
+        print("code")
+        #TODO
+    
+    def _checkSmartContract(self, code, console):
+        errorhandler = marmcompiler.ErrorHandler()
+        
+        marmcompiler.marmcompiler("*editor*", code, errorhandler=errorhandler)
+        console.config(state = NORMAL)
+        console.delete('1.0', END)
+        console.insert(END, errorhandler.tostring("red")) #TODO
+        console.config(state = DISABLED)
     
     def initSmartContractView(self):
         popup = Toplevel(self._window)
@@ -145,9 +158,9 @@ class Gui(object):
         console.config(height=5, state=DISABLED)
         console.pack(fill=BOTH, expand=NO, side=TOP)
         
-        btnOk = Button(popup, text="Run", width=10, command=lambda: print(editor.get("1.0", END)))
+        btnOk = Button(popup, text="Run", width=10, command=lambda: self._runSmartContract(editor.get("1.0", END), console))
         btnOk.pack(side=RIGHT)
-        btnCancel = Button(popup, text="Check", width=10, command=lambda: print(editor.get("1.0", END)))
+        btnCancel = Button(popup, text="Check", width=10, command=lambda: self._checkSmartContract(editor.get("1.0", END)))
         btnCancel.pack(side=RIGHT)
         
     def initPopup(self):
