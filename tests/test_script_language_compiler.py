@@ -135,6 +135,7 @@ class TestParserMethods(unittest.TestCase):
     def test_gcd(self):
         self.generic_test("gcd.marm")
 
+    @unittest.skipIf(os.name == 'nt', "no crypto module on windows")
     def generic_run_test(self, filename, expected_result, fnname, params=[]):
         from subprocess import call
         from src.scriptinterpreter import ScriptInterpreter
@@ -159,8 +160,6 @@ class TestParserMethods(unittest.TestCase):
             return
         self.assertEqual(expected_result, si.stack[0])
 
-
-    @unittest.skipIf(os.name == 'nt', "no crypto module on windows")
     def test_gcd_script(self):
         from math import gcd
         for (a,b) in [(12,26)]:
