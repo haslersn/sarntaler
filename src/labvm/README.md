@@ -26,8 +26,6 @@ If you want to use special characters like a new line, use the usual escape sequ
 
 For Instructions, just write the name of the instruction. The interpreter is case-insensitive. For a list of all instructions see Section XX.
 
-**A valid program should end its execution with a OP_RET and a framepointer of -1(default value)**
-
 Comments can be added with leading //. They work inline and as an extra line but if they are on an extra line they don't get counted to the codelines you need to specify jumps. So inline comments should be preferred.
 
 For inline comments there has to be whitespace before the comment!
