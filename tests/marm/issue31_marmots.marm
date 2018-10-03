@@ -1,0 +1,36 @@
+/*
+ * Example implementation of
+ * the example contract of
+ * issue #31.
+ */
+contract {
+    int dna;
+    sarn s;     // current balance
+    address a;
+    sarn p;     // prize for mating
+}
+
+int buy(sarn x, address sender) {
+    if (x > s) {
+        a.transfer(s);
+        a = sender;
+        s = x;
+    }
+    return 1;
+}
+
+address reproduce(sarn x, address m2, address sender) {
+    if(sender == a) {
+        int new_dna;
+        address new_marmot;
+
+        if (x > m2.p + 2) {
+            m2.a.transfer(p);
+            m2.p = x-2;
+        }
+        new_dna = dna + 13 * m2.dna;
+        new_marmot = new(2)(new_dna, 1, msg, 1);
+        return new_marmot;
+    }
+    return a
+}

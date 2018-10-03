@@ -1,5 +1,7 @@
 # MARM compiler documentation
 
+MARM is short for marmots because they are really cute.
+
 ## Basics
 
 The MARM compiler translates a high level specification similar but not identical
@@ -15,7 +17,8 @@ the blockchain. Currently the features include:
 - [if branches](#ifs)
 - [function calls](#functions)
 - [expression statements](#expressions)
-- [declaration statements](#declarations) and
+- [declaration statements](#declarations)
+- [creating new contracts](#new) and
 - [procedure declarations](#procedures).
 
 ### General definition and keywords
@@ -42,8 +45,8 @@ Variables of type `address` can store any address (an integer with 32 bytes). Th
 be assigned by calling the specific procedures to create accounts or calling the message sender. 
 ```c
 address a, b;
-a = create(value_amount); // value_amount is of type sarn
-b = msg.account; // stores the associated account of the message sender in b
+a = msg; // stores the associated account of the message sender in b
+b = contract; // stores the address of the own smart contract in c
 ``` 
 
 #### <a name="identifier"></a> Identifiers
@@ -58,7 +61,7 @@ parts of identifiers but not as sole words separated by whitespaces or tabs.
 |:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|
 | `if` | `while` | `break` | `continue` | `else` | 
 | `return` | `int` | `address` | `sarn` | `msg` |
-| | |`contract` | | |
+| | `transfer` | `new` | `contract` | |
 
 ### <a name="comments"></a> Comments
 
@@ -80,7 +83,7 @@ disregarded.
 
 ### <a name="contractdata"></a> Contract data
 At the beginning of every file you can write contract-global variables you later can easily access. 
-You can do so by writing a `contract` block that includes many declaration statements for variables. 
+You can do so by writing a `contract` block that includes many declaration statements for variables.
 For example:
 ```c
 contract {
@@ -160,7 +163,7 @@ prefix notation and there is only one explicit operand.
 
 Until now the unary expressions are only represented by an operator to negate the value of the operand.
 You could as such easily negate an integer value as it was done in the example for integer types.
-The binary expressions contain the addition, subtraction, multiplication and division as well as assignments 
+The binary expressions contain the addition, subtraction, multiplication, division and modulo as well as assignments 
 to variables. Therefore the following code snippets are valid expressions:
 ```bnf
 int a,b,c,d;
@@ -170,6 +173,7 @@ c = b - d
 d = a * (c / d)
 a = -20
 c = -d
+b = a % c // calculates a mod c
 ```
 The grammar is defined by
 ```bnf
@@ -202,8 +206,13 @@ boolex : expr EQ expr
 ```
 #### <a name="lhs"></a> Expressions for accessing variables
 You can access variables simply by entering the variable name. If you want to access information which is 
-encapsulated by the message sender or is a contract-global variable in a contract, you can do so by firstly
-entering `msg` or `contract` and then separated by a `.` (dot) the variable name (or procedure name).
+a contract-global variable, you can do so by simply entering the variable name. Of course this implies that all
+variables (contract-global **and** -local) **must** be unique so that there will never be two variables with the same
+name in one scope (*one scope includes hereby all outer scopes*).
+
+If you want to access one accounts balance you might do so by writing the accounts address (either your contracts by writing
+`contract` or any other account by writing a variable which includes that address) and then separated by a simple dot (`.`)
+`balance`. Otherwise the machine *may* halt.
 
 The grammar is defined by
 ```bnf
@@ -214,7 +223,22 @@ lhsexpression : IDENT
 ```
 #### <a name="prec"></a> Operator precedence
 
-#TODO
+The operators in the following table are listed according to precedence order. 
+The closer to the top of the table an operator appears, the higher its precedence. 
+Operators with higher precedence are evaluated before operators with relatively lower precedence. 
+Operators on the same line have equal precedence. 
+When operators of equal precedence appear in the same expression, a rule must govern which is evaluated first. 
+All binary operators except for the assignment operators are evaluated from left to right; 
+assignment operators are evaluated right to left.
+
+|       Operator       |      Precedence      |
+|:--------------------:|:--------------------:|
+|      unary expr.     |         #, !         |
+| multiplicative expr. |        *, /, %       |
+|    additive expr.    |         +, -         |
+|   comparison expr.   | <, <=, >, >=, ==, != |
+|     logical expr.    |        &&, ||        |
+|   assignment expr.   |           =          |
 
 ### <a name="procedures"></a> Procedure declarations
 
@@ -320,9 +344,16 @@ elseprod  : ELSE statement
 ```
 
 ### <a name="functions"></a> Function calls
-There are two types of function calls: Account creation and calling procedures in a contract.
-The first type (account creation) is called by `create` and takes only one parameter, the amount of Sarns
-the account should initially have.
+There are two types of function calls: Transferring money to another account and calling procedures in a contract.
+The first type (transferring sarns) is called by `transfer` and takes two parameters, the address of the other account
+and the amount of Sarns the account should initially have. *Example:*
+```c 
+address reciever;
+sarn amount;
+
+transfer(reciever, amount);
+```
+By the way if `transfer` fails the machine **will** halt.
 
 The second type is called by entering the procedure name (which might include a `msg.` or an identifier
 in front of the procedure name)
@@ -333,7 +364,6 @@ and takes any number of parameters the procedure defines.
 The grammar for function calls is defined by
 ```bnf
 expr      : lhsexpression LPAR exprlist_opt RPAR
-          | CREATE LPAR exprlist_opt RPAR
 ```
 #### Calling Conventions
 Usually we use the *right-to-left* calling convention for procedure calls. In other words for an example procedure with
@@ -343,6 +373,26 @@ four parameters like
 test_calling_convention(param1, param2, param3, param4);
 ```
 `param1` is the last and `param4` the first value that is pushed to the stack.
+
+### <a name="new"></a> Creating new contracts
+
+Currently we **only** support the creation of the same contract. Basically this means that one contract
+can create a new copy of its own but not of another contract. If you want to implement the latter behavior
+you will have to create new procedures in contracts that create a new copy of their own and issue an inter-contract
+call.
+
+```c
+...
+adr_new = new(balance)(contract_attributevalues...);
+...
+```
+
+In the example above `contract_attributevalues...` should include a list of parameters for every single 
+variable in the contract's `contract` block. The order of the attribute values should be **exactly** 
+like you did define it in the `contract` block. `balance` is the future value of the new contract's 
+implicit attribute `balance`.
+
+`new` returns the address of the new contract block in the chain.
 
 ## Examples
 
@@ -363,39 +413,38 @@ contract {
 	int globalx;
 }
 
+//Testprogram for basic contract features
 int test(int x){
-	address a, b;
+	address a;
 	sarn s; // sarns are nonnegative integers (uint)
 	int i;
 	i = 0;
 	x = 1;
-	s = 4711;
-	// create takes sarns from the balance and creates an account
-	// whose address it returns
-	a = create(s); 
 
-	s = contract.sar;
-	contract.globalx = x;
+	s = sar;
+	globalx = x;
 
 	while(i < 1){
 		x = x % 2;
 		i = i + 1;
 	}
 	//messages come with an associated account
-	msg.account; 
+	msg;
+	// the address of this contract
+	contract; 
+	contract.balance;
 	// a of type address
 	a.balance; 
-	// the address of contract c
-	c.account; 
 
-	// s is sarn, a is address, a receives s sarns from contracts balance
-	a.transfer(s);
-	// call contract a's method with name 'method', paying with s sarns 
-	// from the this contracts and the params 1 and x
-	a.method(s,1,x);
+	// s is sarn, a is address, a receives s sarns from contracts balance<
+	transfer(a,s);
+	
 	s = test2(s, a.methodReturnsBoolean(contract.sar, contract.globalx))
 	
-	b = create(s);
+	// call contract a's method with name 'method', paying with s sarns 
+	//     from the this contracts and the params 1 and x
+	a.method(s)(1,x);
+
 	return x;
 }
 

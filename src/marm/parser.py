@@ -6,7 +6,9 @@ precedence = (
      ('right', 'ASSIGN'),
      ('right', 'HASH', 'NOT'),
      ('right', 'IF_WITHOUT_ELSE'),
-     ('right', 'ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP','MODOP', 'MULOP', 'SUBOP'),
+     ('right', 'ELSE', 'AND', 'OR'),
+     ('right', 'ADDOP', 'SUBOP'),
+     ('right', 'DIVOP','MODOP', 'MULOP'),
 )
 
 
@@ -26,13 +28,18 @@ def p_contractclause(p):
     else:
         p[0]=[]
 def p_contractlist(p):
-    ''' contractlist : paramdecl SEMI contractlist
+    ''' contractlist : contractmemberdecl SEMI contractlist
                      | '''
     if len(p)==4:
         p[3].append(p[1])
         p[0]=p[3]
     else: 
         p[0] = []
+
+def p_contractmemberdecl(p):
+    'contractmemberdecl : type IDENT'
+    p[0] = ast.ContractMemberDecl(p[1], p[2])
+    p[0].set_pos_from(p)
 
 
 def p_procdecllist(p):
@@ -179,26 +186,37 @@ def p_statementERROR(p):
 
 def p_expr(p):
     'expr : INTCONST'
-    p[0] = ast.ConstExpr(p[1], ast.Typename('int'))
+    if p[1]<0:
+        typen = ast.Typename('int')
+    else:
+        typen = ast.Typename('sarn')
+    p[0] = ast.ConstExpr(p[1], typen)
     p[0].set_pos_from(p)
 
 def p_exprSPECIALCONSTANTS_MSG(p):
     'expr : MSG'
-    p[0] = ast.SpecialExpression(p[1], ast.Typename('msg'))
+    p[0] = ast.SpecialExpression(p[1], ast.Typename('address'))
     p[0].set_pos_from(p)
 
 def p_exprSPECIALCONSTANTS_CONTRACT(p):
     'expr : CONTRACT'
-    p[0] = ast.SpecialExpression(p[1], ast.Typename('contract'))
+    p[0] = ast.SpecialExpression(p[1], ast.Typename('address'))
     p[0].set_pos_from(p)
 
 def p_exprFUNCALL(p):
-    '''expr : lhsexpression LPAR exprlist_opt RPAR
-            | CREATE LPAR exprlist_opt RPAR'''
-    if p[1]=='create':
-        p[0] = ast.CreateExpr(p[3])
-    else:
+    '''expr : lhsexpression LPAR exprlist_opt RPAR LPAR exprlist_opt RPAR
+            | lhsexpression LPAR exprlist_opt RPAR
+            | NEW LPAR expr RPAR LPAR exprlist_opt RPAR
+            | TRANSFER LPAR expr COMMA expr RPAR'''
+    if len(p)==7:
+        p[0] = ast.TransferExpr(p[3],p[5])
+    elif len(p)==5:
         p[0] = ast.LocalcallExpr(p[1],p[3])
+    else:
+        if p[1] == 'new':
+            p[0] = ast.NewExpr(p[3], p[6])
+        else:
+            p[0] = ast.ContractcallExpr(p[1],p[3],p[6])
     p[0].set_pos_from(p)
 
 def p_exprlistOPT(p):
@@ -304,27 +322,11 @@ def p_declaratorlist(p):
 
 
 # Error handling
-class ParserError(RuntimeError):
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
-class EofError(ParserError):
-    def __init__(self):
-        super().__init__("Unexpected end of file.")
-
-
-class UnexpectedTokenError(ParserError):
-    def __init__(self, got):
-        from src.marm.lexer import column_number
-        super().__init__("{}:{}.{}: syntax error: unexpected token {}"
-                                        .format(yacc.filename,got.lexer.lineno+1,column_number(got),got))
-
-
 def p_error(t):
     from src.marm.lexer import column_number
     if t is None:
-        raise EofError()
+        yacc.errorhandler.registerError(yacc.filename,
+            0, 0, ("syntax error: unexpected end of file" ))
     else:
         from src.marm.lexer import column_number
         action_str = ' '.join([s for s in yacc.action[yacc.state]])
@@ -364,7 +366,7 @@ if __name__ == "__main__":
         errorhandler = src.marm.marmcompiler.ErrorHandler()
         result = marmparser(args.input.name,args.input.read(),errorhandler)
         print(errorhandler)
-    except ParserError as err:
+    except Exception as err:
         print(err)
     else:
         if result is not None:

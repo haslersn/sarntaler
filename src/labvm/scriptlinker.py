@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# WARNING: CODE DOES NOT WORK FOR MULTILINE-STRINGS
+
 import os
 import sys
 

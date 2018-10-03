@@ -1,0 +1,22 @@
+int phi(int a, int b, int n){
+  if(n==0){
+    return a+b;
+  } else {
+    if(b==0){
+      return alpha(a, n-1);
+    } else {
+      return phi(a, phi(a,b-1,n), n-1);
+    }
+  }
+}
+int alpha(int a, int n){
+  if(n==0){
+    return 0;
+  } else {
+    if(n==1){
+      return 1;
+    } else {
+      return a;
+    }
+  }
+}

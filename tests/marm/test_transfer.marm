@@ -1,0 +1,4 @@
+int give_money(address to, sarn amount){
+    transfer(to, amount);
+    return 1;
+}

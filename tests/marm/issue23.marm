@@ -6,15 +6,14 @@
 contract {
     address owner;
     int followers;
-    sarn balance;
 }
 
 int join(sarn x) { //changed return value from void to int
     if(x > 1) {
-        contract.owner.transfer(1);
-        contract.followers = contract.followers + 1; // ++ is always expanded in MARM!
-        if(power_of_two(contract.followers) == 1) {
-            msg.account.transfer(contract.balance / 2);
+        transfer(owner,1);
+        followers = followers + 1; // ++ is always expanded in MARM!
+        if(power_of_two(followers) == 1) {
+            transfer(msg,balance / 2);
         }
     }
     return 0;

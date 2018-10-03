@@ -1,5 +1,6 @@
 import unittest
 import os.path
+import os
 from src.marm import *
 from sys import stdout
 
@@ -14,12 +15,13 @@ class TestParserMethods(unittest.TestCase):
         errorhandler = marmcompiler.ErrorHandler()
         try:
             with open(os.path.join(self.testdir, filename), mode='r') as testfile:
-                marmcompiler.marmcompiler(filename, testfile.read(),
+                result = marmcompiler.marmcompiler(filename, testfile.read(),
                                           errorhandler=errorhandler, stages=stages)
                 self.assertEqual(errorhandler.roughlyOk(), roughlyOk)
                 self.assertEqual(errorhandler.cleanCode(), cleanCode)
                 self.assertEqual(errorhandler.countErrors(), error_count)
                 self.assertEqual(errorhandler.countFatals(), fatals_count)
+                return result
         except IOError as e:
             self.fail(msg="File error: " + str(e))
 
@@ -47,7 +49,8 @@ class TestParserMethods(unittest.TestCase):
         self.generic_lex("sarn", 'SARN', 'sarn')
         self.generic_lex("msg", 'MSG', 'msg')
         self.generic_lex("contract", 'CONTRACT', 'contract')
-        self.generic_lex("create", 'CREATE', 'create')
+        self.generic_lex("transfer", 'TRANSFER', 'transfer')
+        self.generic_lex("new", 'NEW', 'new')
         self.generic_lex("i", 'IDENT', 'i')
         self.generic_lex("{", 'BEGIN', '{')
         self.generic_lex("}", 'END', '}')
@@ -88,7 +91,7 @@ class TestParserMethods(unittest.TestCase):
         self.generic_lex(")", 'RPAR', ')')
 
     def test_tokens_not_empty(self):
-        self.assertFalse(lexer.tokens.__len__() == 0)
+        self.assertTrue(lexer.tokens.__len__() == 42)
 
     def test_parse_file_error(self):
         """Tests some quite complicated errors"""
@@ -111,7 +114,6 @@ class TestParserMethods(unittest.TestCase):
         """Tests whether some parsable structure results in defined behaviour, should probably fail"""
         self.generic_test("absurd_tests.marm")
 
-
     @unittest.expectedFailure
     def test_parse_file_unimplemented_features(self):
         """Tests whether some new features are actually implemented and should be have any other flaws"""
@@ -121,13 +123,123 @@ class TestParserMethods(unittest.TestCase):
         self.generic_test("valid_types.marm")
 
     def test_typecheck_invalid_1(self):
-        self.generic_test("invalid_types_1.marm", False, False, 2, 0)
+        self.generic_test("invalid_types_1.marm", False, False, 3, 0)
 
     def test_scopes_invalid(self):
         self.generic_test("scopes_invalid.marm", False, False, 4, 0)
 
     def test_gcd(self):
         self.generic_test("gcd.marm")
+
+    @unittest.skipIf(os.name == 'nt', "no crypto module on windows")
+    def generic_run_test(self, filename, expected_result, fnname, params=[]):
+        from subprocess import call
+        from src.blockchain.account import Account, StorageItem
+        from tests.test_scriptinterpreter import empty_mt, example_pubkey
+        from src.scriptinterpreter import ScriptInterpreter
+        code = self.generic_test(filename)
+
+        with open(os.path.join(self.testdir, "test.labvm"), 'w') as testfile:
+            for el in code[1]:
+                print(el, file=testfile)
+
+        stores = []
+        i = 0
+        while i<len(code[3]):
+            name = code[3][i]
+            val = code[4][i]
+            stores.append(StorageItem(name, 'int', 0)) # TODO: addresses
+            i+=1
+
+        call(["rm", os.path.join(self.testdir, "o.out")])
+        call(["python3", "-m", "src.labvm.scriptlinker", os.path.join(self.testdir, "test.labvm"),
+              "-o", os.path.join(self.testdir, "o.out")])
+        with open(os.path.join(self.testdir, "o.out")) as bytecode_file:
+            bytecode = bytecode_file.read()
+
+        acc = Account(example_pubkey, 0, bytecode, 1, stores)
+        mt = empty_mt.put(acc.address, acc.hash)
+        si = ScriptInterpreter(mt, params[::-1]+[fnname, len(params)+1], acc, [], 0)
+        retval = si.execute_script()
+        self.assertTrue(retval is not None)
+        (ignore, retval) = retval
+        self.assertEqual(expected_result, retval)
+
+    def test_gcd_script(self):
+        from math import gcd
+        for (a,b) in [(12,26)]:
+            self.generic_run_test("gcd.marm", gcd(a,b), "gcd", [a, b])
+
+    def test_fibonacci_inefficient(self):
+        fibs = [0,1]
+        def fib(n):
+            nonlocal fibs
+            for i in range(len(fibs),n+1):
+                fibs.append(fibs[i-1] + fibs[i-2])
+            return fibs[n]
+        n = 5
+        self.generic_run_test("fibonacci_inefficient.marm", fib(n), "fib", [n])
+
+    def test_ackermann(self):
+        def phi(a,b,n):
+            if n==0:
+                return a+b
+            elif b==0:
+                return alpha(a,n-1)
+            else:
+                return phi(a, phi(a,b-1,n), n-1)
+        def alpha(a, n):
+            if n==0:
+                return 0
+            elif n==1:
+                return 1
+            else:
+                return a
+        a = 2
+        b = 2
+        n = 3
+        eres = phi(a,b,n)
+        self.generic_run_test("ackermann.marm", eres, "phi", [a,b,n])
+
+    def test_basic_arithmetic(self):
+        self.generic_run_test("basic_arithmetic.marm", 1, "test_basic_arithmetic", [])
+
+    def test_precedence(self):
+        self.generic_run_test("precedence_test.marm", 2, "precedence_test", [])
+
+    def test_address_invalid(self):
+        self.generic_test("test_address_invalid.marm", False, False, 1)
+
+    def test_address_valid(self):
+        self.generic_run_test("test_address_valid.marm", 123, "test_address", [123])
+
+    def test_calling_convention(self):
+        self.generic_run_test("test_calling_convention.marm", 123, "fn1", [2, 3])
+        self.generic_run_test("test_calling_convention.marm", 256, "fn2", [5, 6])
+        self.generic_run_test("test_calling_convention.marm", 357, "fn3", [5, 7])
+
+    def test_contract_global_invalid(self):
+        self.generic_test("test_contract_global_invalid.marm", False, False, 1)
+
+    @unittest.skipIf(os.name == 'nt', "no crypto module on windows")
+    def test_contract_global_valid(self):
+        from src.blockchain.account import StorageItem
+        self.generic_run_test("test_contract_global_valid.marm", 1234, "setmysarn", [1234])
+        self.generic_run_test("test_contract_global_valid.marm", -1085, "setmyint", [-1085])
+
+    def test_loop(self):
+        self.generic_run_test("test_loop.marm", 1, "collatz_step", [2352, 11]) # TODO: 2nd param
+
+    def test_new(self):
+        self.generic_run_test("test_new.marm", 1, "copy_out", [21])
+
+    def test_sarn_ok(self):
+        self.generic_run_test("test_sarn_ok.marm", 12, "test_sarn", [11])
+
+    @unittest.skipIf(True, "DOS test, takes approximately 10m, do not test if you don't want this")
+    def test_DOS(self):
+        self.generic_test("chaos.marm")
+        # self.generic_run_test("chaos.marm", 2, "test", [0])
 
 
 if __name__ == '__main__':

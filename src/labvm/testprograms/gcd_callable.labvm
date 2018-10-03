@@ -1,0 +1,51 @@
+op_pushfp
+3
+op_sub
+2
+op_equ
+2
+op_jumprc
+op_kill
+-1
+op_pushr
+-2
+op_pushr
+0
+op_popabs
+1
+op_popabs
+0
+op_pushabs
+1
+op_pushabs			// load both variables on the stack
+op_equ
+26
+op_jumprc			// if equal, jump to end
+0
+op_pushabs
+1
+op_pushabs
+op_le
+10
+op_jumprc			// if a <= b goto else part
+0				// beginning of if part
+op_pushabs
+1
+op_pushabs
+op_sub				// a - b
+0
+op_popabs			// store in a
+8				// jump to end of if then else
+op_jumpr
+1				// beginning of else part
+op_pushabs
+0
+op_pushabs
+op_sub				// b - a
+1
+op_popabs			// store in b
+-31
+op_jumpr			// jump back to while condition
+0
+op_pushabs
+op_ret

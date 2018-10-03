@@ -1,0 +1,9 @@
+int fn1(int x, int y){
+    return 100 + 10*x + y;
+}
+int fn2(int x, int y){
+    return 200 + 10*x + y;
+}
+int fn3(int x, int y){
+    return 300 + 10*x + y;
+}

@@ -16,6 +16,11 @@ class Scope:
             return self.outer.lookup(name)
         else:
             return None
+    def dump_contract_data(self):
+        if self.outer is not None:
+            return self.outer.dump_contract_data()
+        else:
+            return self.local_vars
     def has_direct_definition(self, name):
         return name in self.local_vars
     def _next_var_index(self):
@@ -63,7 +68,7 @@ class Node:
                 return obj.__dict__
         return json.dumps(self, default=json_default, sort_keys=True, indent=4)
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         return []
 
 
@@ -71,6 +76,11 @@ class Expr(Node):
     """ Non terminal 13 """
     def __str__(self):
         return "[Expr]"
+    def code_gen_LHS(self,errorhandler=None):
+        errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                   "Semantic error:Expression {} is not valid as an LHS expression"%str(self))
+        return None
+
 
 
 class SpecialExpression(Expr):
@@ -83,11 +93,36 @@ class SpecialExpression(Expr):
     def __str__(self):
         return "[SpecialExpr: value="+str(self.value)+"]"
 
-    def analyse_scope(self,scope, errorhandler): pass
+    def analyse_scope(self,scope, errorhandler=None): pass
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
+        
+    def code_gen(self,errorhandler=None):
+        code = []
+        if self.value=='contract':
+            code.append("0 // absolute stack idx for my own contract address")
+            code.append("OP_PUSHABS")
+        elif self.value=='msg':
+            #TODO:  massive conceptual clash
+            code.append("1 // absolute stack idx for my initiating transaction's callstack of address ")
+            code.append("OP_PUSHABS")
+            code.append("OP_UNPACK")
+            # drecks Liste ist invalid fuer das msg konzept
+            #  -> gehe davon aus, dass jetzt [ ADDR , 1 ] drauf liegt,
+            #     andernfalls begehe selbstmord
+            code.append("1")
+            code.append("OP_EQU")
+            code.append("1")
+            code.append("OP_JUMPRC")
+            code.append("OP_KILL")
+            errorhandler.registerWarning(self.pos_filename,self.pos_begin_line,self.pos_begin_col,
+                           "Warning: The use of msg for determining an execution triggering transition's owner is discouraged and may kill the execution, if there is no particular single owner of the transaction ")
+        else:
+            errorhandler.registerFatal(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                          "No code scheme known for specialconstant {} yet!.".format(
+                           self.value))
+        return code
 
-    # TODO code_gen
 
 
 class ConstExpr(Expr):
@@ -100,11 +135,11 @@ class ConstExpr(Expr):
     def __str__(self):
         return "[ConstExpr: value=" + str(self.value) + "]"
 
-    def analyse_scope(self, scope, errorhandler): pass
+    def analyse_scope(self, scope, errorhandler=None): pass
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
 
-    def code_gen(self):
+    def code_gen(self, errorhandle=None):
         if self.marm_type is 'string':
             return ['"'+self.value+'" // const string']
         else:
@@ -122,49 +157,43 @@ class BinExpr(Expr):
     def __str__(self):
         return "[BinExpr: op=" + str(self.op) + ", left=" + str(self.left) + ", right=" + str(self.right) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.left.analyse_scope(scope, errorhandler)
         self.right.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.left.typecheck(errorhandler)
         self.right.typecheck(errorhandler)
         if self.op == '=':
-            if self.left.marm_type != self.right.marm_type:
+            if not Typename.is_assignable(self.left.marm_type,self.right.marm_type):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Tried to assign value of type {} to variable of type {}.".format(
+                                           "Type error: Tried to assign value of type {} to variable of type {}.".format(
                                                self.right.marm_type, self.left.marm_type))
             else:
-                self.marm_type = self.right.marm_type
+                self.marm_type=self.left.marm_type
         elif self.op in ['+', '-', '*', '/', '%']:
-            if self.left.marm_type != 'int':
+            if not Typename.is_assignable("int",self.left.marm_type):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Left operand of {} exspects value of type int, got {}".format(
+                                           "Type error: Left operand of {} needs to be assignable to int, got {}".format(
                                                self.op, self.left.marm_type))
-            if self.right.marm_type != 'int':
+            if not Typename.is_assignable("int",self.right.marm_type):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Right operand of {} exspects value of type int, got {}".format(
+                                           "Type error: Right operand of {} needs to be assignable to int, got {}".format(
                                                self.op, self.right.marm_type))
-            self.marm_type = Typename('int')
+            self.marm_type = Typename.more_general_type(self.right.marm_type,self.left.marm_type)
+            #self.marm_type = Typename('int')
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """Act differently for ASSIGN expressions and mathematical operations """
         code = []
+        code_right = self.right.code_gen(errorhandler)
         if str(self.op) == "=":
-            if type(self.left) == LHS:
-                # create rhs code
-                code_right = self.right.code_gen()
-                left_stackaddress = self.left.code_gen_LHS()
+            left_setcode = self.left.code_gen_LHS(errorhandler)
 
-                code += code_right
-                code += left_stackaddress
-                code.append("OP_POPABS")
-            else:
-                # got an expression on the left side like a+b, which we don't want to allow
-                print("BinExpr.code_gen: got a binary expression like a+b = 5 which we don't want to allow")
+            code += code_right
+            code += left_setcode
         else:
-            code_left = self.left.code_gen()
-            code_right = self.right.code_gen()
+            code_left = self.left.code_gen(errorhandler)
             """Push code_left on stack, then code_right and afterwards the operator """
             code += code_left
             code += code_right
@@ -176,11 +205,177 @@ class BinExpr(Expr):
                 code.append("OP_MUL")
             elif str(self.op) == "/":
                 code.append("OP_DIV")
+            elif str(self.op) == "%":
+                code.append("OP_MOD")
             else:
-                # we should not end up in this case
-                print("BinExpr.code_gen: got an operator that is not valid")
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Operation {} does not have an implementation yet".format(self.op))
         return code
 
+class ContractcallExpr(Expr):
+    def __init__(self, fnname, fee, params):
+        super().__init__()
+        self.fnname = fnname
+        self.params = params
+        self.fee = fee
+
+    def __str__(self):
+        return "[ContractcallExpr: fnname={}, fee={}, params={}]".format(self.fnname,self.fee,self.liststr(self.params))
+
+    def analyse_scope(self, scope, errorhandler=None):
+        self.fnname.analyse_scope(scope, errorhandler)
+        for fees in self.fee:
+            fees.analyse_scope(scope, errorhandler)
+        for param in self.params:
+            param.analyse_scope(scope, errorhandler)
+
+    def typecheck(self, errorhandler=None):
+        self.fnname.typecheck(errorhandler)
+        errorhandler.registerWarning(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Warning: We currently do not check whether a contract call expression actually types.")
+        if not isinstance(self.fnname,StructExpr):
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Error: Contract calls need to be called on a structured expression")
+        if len(self.fee)!=1:
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Error: Contract calls have only a single parameter for the fee part")
+        for i in range(0, len(self.params)):
+            param = self.params[i]
+            param.typecheck(errorhandler)
+        self.marm_type = Typename('generic')
+
+    def code_gen(self, errorhandler=None):
+        structexpr = self.fnname
+        code = []
+        for param in self.params:#[::-1]:
+            code+=param.code_gen()
+        code.append("\""+structexpr.ident+"\"")
+        code.append(len(self.params)+1)
+        code.append("OP_PACK // S3 == params")
+        code+=structexpr.expr.code_gen()
+        code.append("// S2 == contract address")
+        for fe in self.fee:
+            code+=fe.code_gen()
+            break
+        code.append("// S1 == FEE")
+        code.append("OP_TRANSFER")
+        code.append("1")
+        code.append("OP_JUMPRC // if successfull, continue")
+        code.append("OP_KILL")
+        return code
+
+class NewExpr(Expr):
+    def __init__(self, balance, params):
+        super().__init__()
+        self.balance = balance
+        self.params = params
+        self.cd = []
+
+    def __str__(self):
+        return "[NewExpr: balance={}, paramlist={}]".format(self.balance, self.liststr(self.params))
+
+    def analyse_scope(self, scope, errorhandler=None):
+        self.balance.analyse_scope(scope, errorhandler)
+        self.cd = scope.lookup("#contractdata")
+        for param in self.params:
+            param.analyse_scope(scope, errorhandler)
+
+
+    def typecheck(self, errorhandler=None):
+        self.balance.typecheck(errorhandler)
+        for param in self.params:
+            param.typecheck(errorhandler)
+
+        if self.balance.marm_type != 'sarn':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Type Error: balance should be of type sarn, got {}.".format(
+                                            self.balance.marm_type))
+
+        lastidx = 0
+        for idx, param in enumerate(self.params):
+            lastidx = idx
+            if not Typename.is_assignable(self.cd[idx].marm_type,param.marm_type):
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Type Error: {}. parameter should be of type {}, got {}.".format(
+                                               str(len(self.params) - idx),
+                                               str(self.cd[idx].marm_type),
+                                               str(param.marm_type)))
+
+        if lastidx != (len(self.cd) - 1):
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Type Error: Too few arguments. Exprected {}, given {}".format(str(len(self.cd)), str(len(self.params))))
+
+
+        self.marm_type = Typename('address')
+
+    def code_gen(self, errorhandler=None):
+        code = ["//starting account generation"]
+        for param in self.params:
+            code += param.code_gen()
+        code.append(len(self.params)+1)
+        code.append("OP_PACK // list of paramvalues")
+        for data in self.cd:
+            code.append('"'+str(data.name)+'"')
+        code.append(len(self.cd)+1)
+        code.append("OP_PACK // list of paramnames")
+        code.append("0 // ownerflag")
+        code.append("0")
+        code.append("OP_PUSHABS")
+        code.append("OP_GETCODE // code on stack")
+        code.append("0")
+        code.append("OP_PUSHABS")
+        code.append("42424242")
+        code.append("OP_ADD")
+        code.append("OP_GENPUBKEY")
+        code.append("OP_CREATECONTR")
+        code.append("1")
+        code.append("OP_EQU")
+        code.append("1")
+        code.append("OP_JUMPRC")
+        code.append("OP_KILL")
+        code.append("0")
+        code.append("OP_PUSHABS")
+        code.append("42424242")
+        code.append("OP_ADD")
+        code.append("OP_GENPUBKEY")
+        return code
+
+class TransferExpr(Expr):
+    def __init__(self, address, amount):
+        super().__init__()
+        self.address = address
+        self.amount = amount
+
+    def __str__(self):
+        return "[TransferExpr: address={}, amount={}]".format(self.address,self.amount)
+
+    def analyse_scope(self, scope, errorhandler=None):
+        self.address.analyse_scope(scope, errorhandler)
+        self.amount.analyse_scope(scope, errorhandler)
+    def typecheck(self, errorhandler=None):
+        self.address.typecheck(errorhandler)
+        self.amount.typecheck(errorhandler)
+        if self.address.marm_type != 'address':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Type Error: transferring is only valid to addresses")
+        if self.amount.marm_type != 'sarn':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Type Error: transferring is only valid for sarns")
+        self.marm_type = Typename('generic')
+
+    def code_gen(self, errorhandler=None):
+        code = []
+        code.append("0")
+        code.append("OP_PACK // S3 == empty param list")
+        code+=self.address.code_gen(errorhandler)
+        code.append("// S2 == target address")
+        code+=self.amount.code_gen(errorhandler)
+        code.append("// S1 == amount")
+        code.append("OP_TRANSFER")
+        code.append("1")
+        code.append("OP_JUMPRC // if successfull, continue")
+        code.append("OP_KILL")
+        return code
 
 class LocalcallExpr(Expr):
     def __init__(self, fnname, params):
@@ -191,62 +386,44 @@ class LocalcallExpr(Expr):
     def __str__(self):
         return "[LocalcallExpr: fnname={}, params={}]".format(self.fnname,self.liststr(self.params))
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.fnname.analyse_scope(scope, errorhandler)
         for param in self.params:
             param.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.fnname.typecheck(errorhandler)
         if type(self.fnname.marm_type) is Proctype:
             if len(self.params) != len(self.fnname.marm_type.param_types):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Function {} expects {} parameters but gets {}.".format(
+                                           "Type Error: Function {} expects {} parameters but gets {}.".format(
                                                self.fnname, len(self.fnname.marm_type.param_types), len(self.params)))
                 return
             for i in range(0, len(self.params)):
                 param = self.params[i]
                 dparam_type = self.fnname.marm_type.param_types[i]
                 param.typecheck(errorhandler)
-                if param.marm_type != dparam_type:
+                if not Typename.is_assignable(dparam_type,param.marm_type):# != dparam_type:
                     errorhandler.registerError(param.pos_filename, param.pos_begin_line, param.pos_begin_col,
-                                               "Parameter {} of function must be of type {}, got {}.".format(
+                                               "Type Error: Parameter {}  needs to be assignable to {}, got {}.".format(
                                                    i, dparam_type, param.marm_type))
             self.marm_type = self.fnname.marm_type.return_type
         else:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Trying to call expression which is not a function.")
+                                       "Type Error: Trying to call expression which is not a function.")
             return
-    def code_gen(self):
-        """TODO create code for inter-contract call"""
-        code_methodid = self.fnname.code_gen_LHS()
+    def code_gen(self, errorhandler=None):
+        code_methodid = self.fnname.code_gen(errorhandler)
 
         code = []
         for param in self.params:#[::-1]:
-            code+=param.code_gen()
+            code+=param.code_gen(errorhandler)
         code+=code_methodid
-        code.append("OP_CALL // WARNING: We assume a call to be a contract-local call")
+        code.append("OP_CALL")
         for param in self.params:#[::-1]:
             code.append("OP_SWAP")
             code.append("OP_POPVOID")
         return code
-
-
-class CreateExpr(Expr):
-    def __init__(self, params):
-        super().__init__()
-        self.params = params
-
-    def __str__(self):
-        return "[CreateExpr: params={}]".format(self.liststr(self.params))
-
-    def analyse_scope(self, scope, errorhandler):
-        for param in self.params:
-            param.analyse_scope(scope, errorhandler)
-
-    # TODO typecheck
-
-    # TODO code_gen
 
 
 class UnaryExpr(Expr):
@@ -259,59 +436,41 @@ class UnaryExpr(Expr):
     def __str__(self):
         return "[UnaryExpr: op=" + str(self.op) + ", operand=" + str(self.operand) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.operand.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.operand.typecheck(errorhandler)
         if self.op == '#':
             if self.operand.marm_type != 'string':
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Operator '#' expects one argument of type string")
+                                           "Type Error: Operator '#' expects one argument of type string")
             self.marm_type = Typename('int')
         elif self.op == '-':
-            if self.operand.marm_type != 'int':
+            if not Typename.is_assignable('int',self.operand.marm_type):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Operator '-' expects one argument of type int.")
+                                           "Type Error: Operator '-' expects one argument of type int or sarn.")
             else:
                 self.marm_type = Typename('int')
         else:
             errorhandler.registerFatal(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Typechecking failed on unknown operator {}".format(self.op))
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """Act differently on hash and negation, although hash is not yet implemented"""
         code = []
-        if str(self.op) == "HASH":
-            pass  # TODO change when the hashing is decided
-        elif str(self.op) == "SUBOP":
+        if str(self.op) == '#':
+            code_operand = self.operand.code_gen()
+            code += code_operand
+            code.append("OP_HASH")
+        elif str(self.op) == '-':
             code_operand = self.operand.code_gen()
             code += code_operand
             code.append("OP_NEG")
         else:
-            # we should not end up in this case
-            print("UnaryExpr.code_gen: got an operator that is not valid")
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Operation {} does not have an implementation yet".format(self.op))
         return code
-
-
-# class LHSExpr(Expr):
-#     """ p_exprLHS """
-#     def __init__(self, lhs):
-#         super().__init__()
-#         self.lhs = lhs
-
-#     def __str__(self):
-#         return "[LHSExpr: lhs=" + str(self.lhs) + "]"
-
-#     def analyse_scope(self, scope, errorhandler):
-#         self.lhs.analyse_scope(scope, errorhandler)
-
-#     def typecheck(self, errorhandler):
-#         self.lhs.typecheck(errorhandler)
-
-#     def code_gen(self):
-#         """Pushes the address of the identifier stored in the lhs"""
-#         return self.lhs.code_gen()
 
 
 class StructExpr(Expr):
@@ -324,31 +483,37 @@ class StructExpr(Expr):
     def __str__(self):
         return "[StructExpr: expr=" + str(self.expr) + ", ident=" + str(self.ident) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.expr.analyse_scope(scope,errorhandler)
         # TODO: Attributes?
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.expr.typecheck(errorhandler)
-        self.marm_type = self.expr.marm_type.attribute_type(self.ident)
+        self.marm_type = self.expr.marm_type.attribute_type(self.ident, errorhandler)
+        if self.ident=='balance':
+            if self.expr.marm_type!='address':
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Type Error: balance is only valid for addresses ")
+            self.marm_type='sarn'
+
         if self.marm_type is None:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Value of type {} has not attribute named {}".format(
+                                       "Type Error: Value of type {} has no attribute named {}".format(
                                            self.expr.marm_type, self.ident))
 
-    def code_gen(self):
-        """TODO has not yet been decided what this should actually do"""
+    def code_gen(self, errorhandler=None):
         code = []
-        code.append("// code for struct access not implemented yet")
+        code+= self.expr.code_gen()
+        if self.ident=='balance':
+            code.append("OP_GETBAL")
+        else:
+            code.append("\"%s\""% self.ident)
         return code
 
-    def code_gen_LHS(self):
-        """TODO do stuff"""
+    def code_gen_LHS(self, errorhandler=None):
+        errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                    "Type Error: struct access is not a valid LHS of an assignment")
         code = []
-        code.append("// codeLHS for struct access not implemented yet")
-        code += self.expr.code_gen()
-        if self.ident == "balance":
-            code.append("OP_GETBAL")
         return code
 
 
@@ -362,35 +527,51 @@ class LHS(Node):
     def __str__(self):
         return "[LHS: ident=" + str(self.ident) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.definition = scope.lookup(self.ident)
-        if self.definition is None:
+        if self.ident=='balance':
+            pass
+        elif self.definition is None:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Use of undeclared identifier {}.".format(self.ident))
+                                       "Decl-Use Error: Use of undeclared identifier {}.".format(self.ident))
 
-    def typecheck(self, errorhandler):
-        self.marm_type = self.definition.get_marm_type_for(self.ident)
+    def typecheck(self, errorhandler=None):
+        if self.ident=='balance':
+            self.marm_type = Typename('sarn')
+        else:
+            self.marm_type = self.definition.get_marm_type_for(self.ident, errorhandler)
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """Pushes the address of the identifier from the symbol table on the stack"""
         code = []
-        #print(self.definition.__class__)
-        #if isinstance(self.definition,Procdecl):
-        #    ident_addr = self.ident
-        #else:
-        ident_addr = self.definition.get_local_index_for(self.ident)
-        code.append(str(ident_addr) + " // address of local "+self.ident)
-        code.append('OP_PUSHR')
+        if isinstance(self.definition, Procdecl):
+            code.append(self.ident + " // function name")
+        elif isinstance(self.definition, ContractMemberDecl):
+            code.append('"' + self.definition.name + '" // store name')
+            code.append('OP_GETSTOR')
+            pass
+        elif self.ident=='balance':
+            code.append('OP_GETOWNBAL')
+        else:
+            code.append(str(self.definition.get_local_index_for(self.ident,errorhandler))
+                        +" // address of local "+self.ident)
+            code.append('OP_PUSHR')
         return code
 
-    def code_gen_LHS(self):
+    def code_gen_LHS(self, errorhandler=None):
         """Pushes the address of the identifier from the symbol table on the stack"""
-        code = []
+        code = ["OP_DUP"]
         if isinstance(self.definition,Procdecl):
-            ident_addr = self.ident + " // function name"
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Type Error: Procedure {} is not valid as LHS of an assignment".format(self.ident))
+            # raise RuntimeError("Tried to assign procedure name")
+        elif isinstance(self.definition, ContractMemberDecl):
+            code.append('"' + self.definition.name +'" // store name')
+            code.append('OP_SETSTOR')
         else:
-            ident_addr = str(self.definition.get_local_index_for(self.ident))+ " // address of local "+self.ident
-        code.append(ident_addr)
+            code.append(str(self.definition.get_local_index_for(self.ident, errorhandler))
+                        + " // address of local "+self.ident)
+            code.append('OP_POPR')
         return code
 
 
@@ -406,21 +587,57 @@ class Typename(Node):
     def __eq__(self, other):
         if type(other) is Typename:
             return self.typee == other.typee
-        elif type(other) is str: # TODO: replace with better mechanism
+        elif type(other) is str: # replace with better mechanism
             return self.typee == other
-        else: return False
+        else:
+            return False
+    @staticmethod
+    def more_general_type(type1,type2):
+        if type1==type2:
+            return type1
+        if type1=='generic':
+            return type1
+        if type2=='generic':
+            return type2
+        if Typename.is_assignable(type1,type2):
+            return type1
+        if Typename.is_assignable(type2,type1):
+            return type2
+        return None
+    @staticmethod
+    def is_assignable(lhstype,rhstype):
+        if rhstype=='generic':
+            return True
+        if lhstype=='int':
+            return rhstype in ['int','sarn']
+        if lhstype=='sarn':
+            return rhstype=='sarn'
+        if lhstype=='address':
+            return rhstype=='address'
+        if lhstype=='generic':
+            return True
+        return False
 
-    def code_gen(self):
+
+    def code_gen(self, errorhandler=None):
         """Should not be used at all, fails on call"""
         raise NotImplementedError
 
-    def typecheck(self, errorhandler): pass
+    def datalayout(self,errorhandler=None):
+        raise NotImplementedError
 
-    def attribute_type(self, ident):
+    def typecheck(self, errorhandler=None): pass
+
+    def attribute_type(self, ident, errorhandler=None): # TODO: Add **all+* attributes we have available
         if self.typee == 'msg':
             if ident == 'account':
                 return Typename('address')
-        return None # TODO
+        if self.typee == 'address':
+            if ident == 'balance':
+                return Typename('sarn')
+            else:
+                return Typename('generic')
+        return None
 
 
 class Translationunit(Node):
@@ -437,18 +654,30 @@ class Translationunit(Node):
         local_scope = Scope(scope)
         for proc in self.procs:
             local_scope.define(proc.name, proc)
+        for contractdata_el in self.contractdata:
+            contractdata_el.analyse_scope(local_scope, errorhandler)
+        local_scope.define("#contractdata", self.contractdata)
         for proc in self.procs:
             proc.analyse_scope(local_scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         for proc in self.procs:
             proc.set_global_definition_types(errorhandler)
         for proc in self.procs:
             proc.typecheck(errorhandler)
 
-    def code_gen(self):
+    def datalayout(self,errorhandler=None):
+        inits = []
+        names = []
+        layout = [names, inits]
+        for lay in self.contractdata[::-1]:
+            names.append(lay.name)
+            inits.append('0')
+        return layout
+
+    def code_gen(self, errorhandler=None):
         """Calls codegen for every procedure and stores their addresses before"""
-        code = ["dispatcher: // start dispatcher", "OP_SWAP"]
+        code = ["dispatcher: // start dispatcher","OP_POPVOID", "OP_POPVOID", "OP_SWAP"]
         procedures = []
         i = 0
         for proc in self.procs:
@@ -465,17 +694,30 @@ class Translationunit(Node):
         for (i, name, le_param) in procedures:
             code.append("disp_proc" + str(i) + ":")
             code.append("OP_POPVOID")
-            code.append(str(le_param))
+            code.append(str(le_param + 1))
             code.append("OP_EQU")
+            code.append("OP_NOT")
             code.append("disp_fail")
             code.append("OP_JUMPC")
-            code.append("0")
+            #code.append("0")
             code.append(str(name))
             code.append("OP_CALL")
+            code.append("disp_end")
+            code.append("OP_JUMP")
         code.append("disp_fail:")
+        code.append("OP_KILL")
+        code.append("disp_end:")
+        code.append("0 // previously: function name")
+        code.append("OP_SWAP")
+        code.append("0 // previously: number of parameters")
+        code.append("OP_SWAP")
+        code.append("-1")
+        code.append("OP_SWAP")
+        code.append("-1")
+        code.append("OP_SWAP")
         code.append("OP_RET // end dispatcher")
         for procdecl in self.procs:
-            code_proc = procdecl.code_gen()
+            code_proc = procdecl.code_gen(errorhandler)
             code += code_proc
         return code
 
@@ -492,25 +734,50 @@ class Paramdecl(Node):
     def __str__(self):
         return "[Paramdecl: param_type=" + str(self.param_type) + ", name=" + str(self.name) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         if scope.has_direct_definition(self.name):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Multiple parameters have the name {}.".format(self.name)) #TODO
+                                       "Decl-Use Error: Multiple parameters have the name {}.".format(self.name))
         scope.define(self.name, self)
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
 
-    def get_marm_type_for(self, ident):
+    def get_marm_type_for(self, ident, errorhandler=None):
         assert(ident == self.name)
         return self.param_type
 
-    def get_local_index_for(self, ident):
-        return (-2)-self.param_index # TODO: calling convention
+    def get_local_index_for(self, ident, errorhandler=None):
+        return (-1)-self.param_index
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """do nothing"""
         code = []
         return code
+
+class ContractMemberDecl(Node):
+    def __init__(self, member_type, name):
+        super().__init__()
+        self.member_type = member_type
+        self.marm_type = member_type
+        self.name = name
+
+    def __str__(self):
+        return "[ContractMemberDecl: member_type={}, name={}]".format(self.member_type, self.name)
+
+    def analyse_scope(self, scope, errorhandler=None):
+        if self.name=='balance':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Decl-Use Error: balance is not a valid contract member name.".format(self.name))
+        if scope.has_direct_definition(self.name):
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Decl-Use Error: Multiple contract members have the name {}.".format(self.name))
+        scope.define(self.name, self)
+
+    def typecheck(self, errorhandler=None): pass
+
+    def get_marm_type_for(self, ident, errorhandler=None):
+        assert(ident == self.name)
+        return self.marm_type
 
 
 class Proctype:
@@ -518,7 +785,7 @@ class Proctype:
         self.return_type = return_type
         self.param_types = param_types
 
-    def attribute_type(self, ident):
+    def attribute_type(self, ident, errorhandler=None):
         return None
 
 class Procdecl(Node):
@@ -535,7 +802,7 @@ class Procdecl(Node):
         return "[Procdecl: return_type=" + str(self.return_type) + ", name=" + str(self.name) + ", params=" +\
                self.liststr(self.params) + ", body=" + self.liststr(self.body) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         local_scope = Scope(scope)
         local_scope.define("#current_function", self)
         i=0
@@ -547,27 +814,27 @@ class Procdecl(Node):
             statement.analyse_scope(local_scope, errorhandler)
         self.local_depth = local_scope.next_var_index_delta
 
-    def get_marm_type_for(self, ident):
+    def get_marm_type_for(self, ident, errorhandler=None):
         assert(self.name == ident)
         return self.marm_type
 
-    def set_global_definition_types(self, errorhandler):
+    def set_global_definition_types(self, errorhandler=None):
         param_types = []
         for param in self.params:
             param.typecheck(errorhandler)
             param_types.append(param.marm_type)
         self.marm_type = Proctype(self.return_type, param_types)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         for statement in self.body:
             statement.typecheck(errorhandler)
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """Insert the identifiers in the symboltable(?) and generate the code for the body"""
         code = []
         code.append("%s: // start proc %s" %(self.name,self.name))
         for decl in self.body:
-            code += decl.code_gen()
+            code += decl.code_gen(errorhandler)
         return code
 
 
@@ -588,28 +855,28 @@ class StatementDecl(Statement):
         self.typee = typee
         self.decllist = decllist
         self.local_var_indices = None
-        self.init_values = [0]*len(self.decllist) # TODO
+        self.init_values = [0]*len(self.decllist)
 
     def __str__(self):
         return "[StatementDecl: typee=" + str(self.typee) + ", decllist=" + self.liststr(self.decllist) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.local_var_indices = {}
         for decl in self.decllist:
             if scope.has_direct_definition(decl):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Variable {} declared twice".format(decl)) #TODO
+                                           "Decl-Use Error: Variable {} declared twice".format(decl))
             scope.define(decl, self)
             self.local_var_indices[decl] = scope.get_next_var_index()
 
-    def get_marm_type_for(self, ident):
+    def get_marm_type_for(self, ident, errorhandler=None):
         return self.typee
-    def get_local_index_for(self, ident):
+    def get_local_index_for(self, ident, errorhandler=None):
         return 2 + self.local_var_indices[ident]
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """Ignore the type and call code_gen on all declarations, whatever they may do"""
         code = []
         for i in range(0, len(self.decllist)):
@@ -630,20 +897,20 @@ class StatementReturn(Statement):
     def __str__(self):
         return "[StatementReturn: return_value=" + str(self.return_value) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.function = weakref.proxy(scope.lookup("#current_function"))
         self.return_value.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.return_value.typecheck(errorhandler)
-        if self.return_value.marm_type != self.function.marm_type.return_type:
+        if not Typename.is_assignable(self.function.marm_type.return_type,self.return_value.marm_type):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Can't return value of type {} from function with return type {}".format(
+                                       "Type Error: Can't return value of type {} from function with return type {}".format(
                                            self.return_value.marm_type, self.function.marm_type.return_type))
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """Push the return value and do OP_RET"""
-        code = self.return_value.code_gen()
+        code = self.return_value.code_gen(errorhandler)
         code.append("OP_RET")
         return code
 
@@ -661,26 +928,26 @@ class StatementWhile(Statement):
     def __str__(self):
         return "[StatementWhile: boolex=" + str(self.boolex) + ", statement=" + str(self.statement) + "]"
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.boolex.analyse_scope(scope, errorhandler)
         self.statement.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.boolex.typecheck(errorhandler)
         if self.boolex.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Condition in while statement must be of type bool, got {}.".format(
+                                       "Type Error: Condition in while statement must be of type bool, got {}.".format(
                                            self.boolex.marm_type))
         self.statement.typecheck(errorhandler)
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """First gets the bool, then negates it and jumps to end if loop is done. If not it does the body code."""
         code = []
         StatementWhile.label_id += 1
         label_start = "__label_loop_start" + str(StatementWhile.label_id)
         label_end = "__label_loop_end" + str(StatementWhile.label_id)
-        code_boolex = self.boolex.code_gen()
-        code_body = self.statement.code_gen()
+        code_boolex = self.boolex.code_gen(errorhandler)
+        code_body = self.statement.code_gen(errorhandler)
 
         # Start label
         code.append(label_start + ":")
@@ -690,13 +957,13 @@ class StatementWhile(Statement):
         code.append("OP_NOT")
 
         code.append(label_end)
-        code.append("OP_JUMPRC")
+        code.append("OP_JUMPC")
 
         # The loop body
         code += code_body
 
         code.append(label_start)
-        code.append("OP_JUMPR")
+        code.append("OP_JUMP")
 
         code.append(label_end + ":")
         return code
@@ -716,25 +983,25 @@ class StatementIf(Statement):
     def __str__(self):
         return "[StatementIf: boolex={}, statement={}, elseprod={}]".format(self.boolex,self.statement,self.elseprod)
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.boolex.analyse_scope(scope, errorhandler)
         self.statement.analyse_scope(scope, errorhandler)
         if not (self.elseprod is None):
             self.elseprod.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.boolex.typecheck(errorhandler)
         if self.boolex.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Condition in an if statement must be of type bool.")
+                                       "Type Error: Condition in an if statement must be of type bool.")
         self.statement.typecheck(errorhandler)
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """First the else block because less code, jumping accordingly"""
         code = []
         StatementIf.loop_id += 1
-        code_boolex = self.boolex.code_gen()
-        code_true = self.statement.code_gen()
+        code_boolex = self.boolex.code_gen(errorhandler)
+        code_true = self.statement.code_gen(errorhandler)
 
         # Label of true block
         label_true = "__label_if_true" + str(StatementIf.loop_id)
@@ -744,19 +1011,19 @@ class StatementIf(Statement):
         code += code_boolex
 
         code.append(label_true)
-        code.append("OP_JUMPRC")
+        code.append("OP_JUMPC")
 
         if not (self.elseprod is None):
-            code_false = self.elseprod.code_gen()
+            code_false = self.elseprod.code_gen(errorhandler)
 
             # The false body
             code += code_false
 
-        code.append(label_true + ":")
-
         code.append(label_end)
         code.append("OP_JUMP")
+
         # The true body
+        code.append(label_true + ":")
         code += code_true
         code.append(label_end + ":")
 
@@ -772,15 +1039,16 @@ class StatementExpression(Statement):
     def __str__(self):
         return "[StatementExpression: expr={}]".format(self.expr)
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.expr.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.expr.typecheck(errorhandler)
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """Just generate the code for the expr whatever that may be"""
-        code = self.expr.code_gen()
+        code = self.expr.code_gen(errorhandler)
+        code.append("OP_POPVOID")
         return code
 
 
@@ -794,21 +1062,21 @@ class StatementBody(Statement):
     def __str__(self):
         return "[StatementBody: body={}]".format(self.liststr(self.body))
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         local_scope = Scope(scope)
         for statement in self.body:
             statement.analyse_scope(local_scope, errorhandler)
         self.local_depth = local_scope.next_var_index_delta
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         for statement in self.body:
             statement.typecheck(errorhandler)
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """Generate the code for all statements in the body"""
         code = []
         for stmnt in self.body:
-            code += stmnt.code_gen()
+            code += stmnt.code_gen(errorhandler)
         code+=["OP_POPVOID"]*self.local_depth # pop local variables after block
         return code
 
@@ -822,11 +1090,11 @@ class StatementBreak(Statement):
     def __str__(self):
         return "[StatementBreak]"
 
-    def analyse_scope(self, scope, errorhandler): pass
+    def analyse_scope(self, scope, errorhandler=None): pass
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """Push labelname and jump there"""
         code = ["__label_loop_end" + str(StatementWhile.label_id), "OP_JUMP"]
         return code
@@ -841,11 +1109,11 @@ class StatementContinue(Statement):
     def __str__(self):
         return "[StatementContinue]"
 
-    def analyse_scope(self, scope, errorhandler): pass
+    def analyse_scope(self, scope, errorhandler=None): pass
 
-    def typecheck(self, errorhandler): pass
+    def typecheck(self, errorhandler=None): pass
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """Push labelname and jump there"""
         code = ["__label_loop_start" + str(StatementWhile.label_id), "OP_JUMP"]
         return code
@@ -871,31 +1139,32 @@ class BoolexCMP(Boolex):
     def __str__(self):
         return "[BoolexCMP: op={}, left={}, right={}]".format(self.op, self.left, self.right)
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.left.analyse_scope(scope, errorhandler)
         self.right.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.left.typecheck(errorhandler)
         self.right.typecheck(errorhandler)
         if self.left.marm_type != self.right.marm_type:
-            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Trying to compare values of types {} and {}.".format(
+            if not ((Typename.is_assignable(self.left.marm_type,self.right.marm_type)) or (Typename.is_assignable(self.right.marm_type,self.left.marm_type))): 
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Type Error: Trying to compare values of types {} and {}.".format(
                                            self.left.marm_type, self.right.marm_type))
-        if self.left.marm_type not in ['int']: #TODO
-            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Trying to compare two values of type {}.".format(self.left.marm_type))
+        #if self.left.marm_type not in ['int']:
+        #    errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+        #                               "Trying to compare two values of type {}.".format(self.left.marm_type))
         self.marm_type = Typename('bool')
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """Generate code for all types of comparison after executing both sides."""
         code = []
-        code += self.left.code_gen()
-        code += self.right.code_gen()
+        code += self.left.code_gen(errorhandler)
+        code += self.right.code_gen(errorhandler)
         if str(self.op) == "==":
-            code.append("OP_EQ")
+            code.append("OP_EQU")
         elif str(self.op) == "!=":
-            code.append("OP_EQ")
+            code.append("OP_EQU")
             code.append("OP_NOT")
         elif str(self.op) == "<=":
             code.append("OP_LE")
@@ -906,8 +1175,9 @@ class BoolexCMP(Boolex):
         elif str(self.op) == ">":
             code.append("OP_GT")
         else:
-            # we should not end up in this case
-            print("BoolexCMP.code_gen: got an operator that is not valid")
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Operation {} does not have an implementation yet".format(self.op))
+
         return code
 
 
@@ -921,24 +1191,24 @@ class BoolexBinary(Boolex):
     def __str__(self):
         return "[BoolexBinary: op={}, left={}, right={}]".format(self.op,self.left,self.right)
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.left.analyse_scope(scope, errorhandler)
         self.right.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.left.typecheck(errorhandler)
         if self.left.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Left operand of {} must be of type bool.".format(
+                                       "Type Error: Left operand of {} must be of type bool.".format(
                                            self.op))
         self.right.typecheck(errorhandler)
         if self.right.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Right operand of {} must be of type bool.".format(
+                                       "Type Error: Right operand of {} must be of type bool.".format(
                                            self.op))
         self.marm_type = Typename('bool')
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """Push both sides and consume them."""
         code = []
         code += self.left.code_gen()
@@ -948,8 +1218,8 @@ class BoolexBinary(Boolex):
         elif str(self.op) == "&&":
             code.append("OP_AND")
         else:
-            # we should not end up in this case
-            print("BoolexBinary.code_gen: got an operator that is not valid")
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "Operation {} does not have an implementation yet".format(self.op))
         return code
 
 
@@ -962,17 +1232,17 @@ class BoolexNot(Boolex):
     def __str__(self):
         return "[BoolexNot: operand={}]".format(str(self.operand))
 
-    def analyse_scope(self, scope, errorhandler):
+    def analyse_scope(self, scope, errorhandler=None):
         self.operand.analyse_scope(scope, errorhandler)
 
-    def typecheck(self, errorhandler):
+    def typecheck(self, errorhandler=None):
         self.operand.typecheck(errorhandler)
         if self.operand.marm_type != 'bool':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Operand of '!' needs to be of type bool.")
+                                       "Type Error: Operand of '!' needs to be of type bool.")
         self.marm_type = Typename('bool')
 
-    def code_gen(self):
+    def code_gen(self, errorhandler=None):
         """Negate the result of the operand code."""
         code = []
         code += self.operand.code_gen()

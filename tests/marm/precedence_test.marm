@@ -1,0 +1,14 @@
+contract {
+    int aa;
+    int ab;
+    address ac;
+    int ad;
+}
+
+address precedence_test() {
+    aa = 12;
+    ac = contract;
+    ad = 14;
+    ac = new(25)(aa, 13 / 2, ac, ad);
+    return ac;
+}

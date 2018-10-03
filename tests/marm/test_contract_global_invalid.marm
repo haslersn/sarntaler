@@ -1,0 +1,8 @@
+contract{
+  int x;
+}
+int test(){
+  return x;
+  sarn y = x;
+  x = contract;
+}
