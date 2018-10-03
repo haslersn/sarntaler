@@ -22,19 +22,18 @@ class Block:
 
     def __new__(cls, skeleton: 'BlockSkeleton', nonce: bytes):
         target = (2**256 // skeleton._difficulty).to_bytes(32, 'big')
-        to_hash = skeleton.hash + nonce
-        hash = compute_hash(to_hash)
-        if hash > target:
-            raise ValueError("Tried to create block, that doesn't fulfill the difficulty")
-
-        if hash in cls._dict:
-            return cls._dict[hash]
-
         constructed = super().__new__(cls)
         constructed._skeleton = skeleton
         constructed._nonce = nonce
-        constructed._hash = hash
         cls._dict[hash] = constructed
+        constructed._hash = compute_hash(json.dumps(constructed.to_json_compatible()).encode())
+
+        if constructed._hash > target:
+            raise ValueError("Tried to create block, that doesn't fulfill the difficulty")
+
+        if constructed._hash in cls._dict:
+            return cls._dict[hash]
+
         return constructed
 
     @property
