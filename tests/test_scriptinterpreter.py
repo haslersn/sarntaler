@@ -15,6 +15,7 @@ empty_mt = MerkleTrie(MerkleTrieStorage()) # not relevant in this test yet, but 
 example_keypair = generate_keypair()
 example_pubkey = pubkey_from_keypair(example_keypair)
 example_hash = b'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+example_hash2 = b'BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
 
 # ------------- HELPER METHODS -----------
 
@@ -349,6 +350,15 @@ def test_setstor():
     new_acc = Account.get_from_hash(new_state.get(myacc.address))
     assert new_acc.get_storage('myvar') == 42
 
+def test_setstor_hash():
+    myacc = Account(example_pubkey, 278, 'h0x{} "myvar" OP_SETSTOR 1 OP_RET'.format(hexlify(example_hash).decode()), 1, [StorageItem("myvar", "hash", Hash(example_hash2))])
+    my_mt = empty_mt.put(myacc.address, myacc.hash)
+    si = ScriptInterpreter(my_mt, "", myacc, [example_hash], 0)
+    new_state,_ = si.execute_script()
+    assert new_state
+    new_acc = Account.get_from_hash(new_state.get(myacc.address))
+    assert new_acc.get_storage('myvar') == example_hash
+
 def test_setstor_invalid():
     si = ScriptInterpreter(empty_mt, "", Account(example_pubkey, 0, '42 "invalid" OP_SETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 42)]), [example_hash], 0)
     assert not si.execute_script()
@@ -486,3 +496,5 @@ def test_getcode():
     vm = ScriptInterpreter(state, '', calling_acc, [example_hash], 0)
     state = vm.execute_script()
     assert vm.stack[5:] == [code]
+
+test_setstor_hash()
