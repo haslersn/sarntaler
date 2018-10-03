@@ -78,7 +78,7 @@ class WalletHierarchical(Wallet):
 
         # generate so many keys until a key is found, which isn't used in the blockchain
         rpc = RPCClient(rpc_ip, rpc_port)
-        addresses = rpc.get_addresses()  # addresses may be very big maybe searching for transcations is faster
+        addresses = rpc.get_addresses()  # TODO addresses may be very big maybe searching for transactions is faster
         next_key = master_key
 
         while next_key in addresses:
@@ -155,13 +155,20 @@ class RandomKeys:
                 return False
         return True
 
+    def _already_checked(self, keys: List[Key]) -> bool:
+        # check if all keys in given list are in the same order in the self._last_checked
+        keys1 = self._last_checked
+        if len(keys1) == len(keys):
+            return keys == keys1
+        if len(keys) > len(keys1):
+            return False
+        for i in range(len(keys)):
+            if keys1[i] != keys[i]:
+                return False
+        return True
+
     def check_keys(self, keys: List[Key]) -> bool:
-        # print('check')
-        # print('keys')
-        # print('\n'.join([str(k) + str(k.as_bytes(True)) for k in keys]))
-        # print('last checked:')
-        # print('\n'.join([str(k) + str(k.as_bytes(True)) for k in self._last_checked]))
-        if self._last_checked == keys:  # TODO this equals is not working correct, so the check is always executed (time consuming)
+        if self._already_checked(keys):
             return True
         if RandomKeys.check_keys_class(keys):
             self._last_checked = keys

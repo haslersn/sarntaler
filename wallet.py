@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
 """
+This class is replaced with a new wallet class, but this class is working as before.
+The new class is cmd_wallet.py, the calls are the same, but it uses the src/wallet.py
+"""
+
+
+"""
 The wallet allows a user to query account balance, send money, and get status information about a
 miner.
 """

@@ -3,7 +3,7 @@ from src.wallet_hierarchical import WalletHierarchical
 from src.wallet_old import WalletOld
 
 
-def init_Wallet(wallet_path: str, ip_address="localhost", miner_port=40203) -> Wallet:
+def init_wallet(wallet_path: str, ip_address="localhost", miner_port=40203) -> Wallet:
     """
     A factory for the two wallet types.
     :param wallet_path: path to the wallet file. Ending: .wallet -> old Wallet

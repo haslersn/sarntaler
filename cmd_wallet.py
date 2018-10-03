@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(me
 
 from src.transaction import TransactionTarget
 from src.crypto import Key
-from src.wallet_factory import init_Wallet
+from src.wallet_factory import init_wallet
 
 
 def parse_targets() -> Callable[[str], Union[Key, int]]:
@@ -111,7 +111,7 @@ def main():
         print("no wallet specified", file=sys.stderr)
         parser.parse_args(["--help"])
         return"""
-    w = init_Wallet(args.wallet, args.miner_port)
+    w = init_wallet(args.wallet, args.miner_port)
 
 
     if args.command == 'show-transactions':
