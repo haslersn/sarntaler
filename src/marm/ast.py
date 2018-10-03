@@ -294,7 +294,7 @@ class NewExpr(Expr):
         lastidx = 0
         for idx, param in enumerate(self.params):
             lastidx = idx
-            if self.cd[idx].marm_type != param.marm_type:
+            if not Typename.is_assignable(self.cd[idx].marm_type,param.marm_type):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                            "Type Error: {}. parameter should be of type {}, got {}.".format(
                                                str(len(self.params) - idx),
