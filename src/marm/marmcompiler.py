@@ -148,7 +148,7 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
             run_stage(stage)
 
     def run_stage(stage):
-        nonlocal completed_stages, result, errorhandler
+        nonlocal completed_stages, result, errorhandler, datalayout
         try:
             if stage == 'lex':
                 from src.marm.lexer import marmlexer
@@ -270,11 +270,11 @@ if __name__ == "__main__":
         elif args.output_format == 'str':
             args.output.write(str(result))
         elif args.output_format == 'list_str':
-            for el in result:
+            for el in result[1]:
                 args.output.write(str(el))
                 args.output.write("\n")
         elif args.output_format == 'mass':
-            for line in result:
+            for line in result[1]:
                 args.output.write(str(line))
                 args.output.write("\n")
         else:
