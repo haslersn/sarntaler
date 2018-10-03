@@ -129,6 +129,8 @@ class ScriptInterpreter:
         self.acc = calleeAcc
         self.inaddresses = inaddresses
         self.amountspent = amount
+        # initialize the pseudo-rng for op_genpubkey
+        random.seed(self.state.hash)
 
     def to_string(self):
         return " ".join(self.stack)
@@ -681,11 +683,6 @@ class ScriptInterpreter:
         def rand(n) -> bytes:
             return bytes(random.getrandbits(8) for _ in range(n))
 
-        seed = self.__pop_checked(int)
-        if seed is None:
-            logging.warning("OP_GETPUBKEY: seed must exist and be int")
-            return False
-        random.seed(seed)
         keypair = generate_keypair(rand)
         self.stack.append(Pubkey(pubkey_from_keypair(keypair)))
         return True
