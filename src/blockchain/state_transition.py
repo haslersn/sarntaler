@@ -30,7 +30,7 @@ def transit(script_interpreter_cls: type, state : MerkleTrie, transaction : Tran
         acc = acc.add_to_balance(output.value)
         state = state.put(output.address, acc.hash)
         if acc.code is not None:
-            vm = script_interpreter_cls(state, output.params, acc)
+            vm = script_interpreter_cls(state, output.params, acc, [txin.address for txin in tx_inputs], output.value)
             result = vm.execute_script()
             if result is None:
                 logging.warning("state transition: target account code execution failed")

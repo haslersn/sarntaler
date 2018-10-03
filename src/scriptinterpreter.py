@@ -5,6 +5,7 @@ from collections import namedtuple
 from binascii import hexlify, unhexlify
 from datetime import datetime
 from Crypto.PublicKey import RSA
+from typing import List
 
 from src.blockchain.account import Account, StorageItem
 from src.blockchain.crypto import *
@@ -108,10 +109,12 @@ class ScriptInterpreter:
     }
 
 
-    def __init__(self, state: MerkleTrie, params_script: str, acc: Account):
+    def __init__(self, state: MerkleTrie, params_script: str, calleeAcc: Account, inaddresses : List[bytes], amount : int):
         self.state = state
         self.params_script = params_script
-        self.acc = acc
+        self.acc = calleeAcc
+        self.inaddresses = inaddresses
+        self.amountspent = amount
 
     def to_string(self):
         return " ".join(self.stack)
@@ -487,7 +490,7 @@ class ScriptInterpreter:
             return False
 
         result = self.stack.pop()
-        if self.framepointer == -1:
+        if self.stack[self.framepointer] == -1:
             logging.warning("OP_RET: Last Return, gonna exit program " + str(result))
             self.retval = result
             return False
@@ -643,7 +646,7 @@ class ScriptInterpreter:
         self.state = self.state.put(target_address, target_acc.hash)
 
         if target_acc.code is not None:
-            vm = ScriptInterpreter(self.state, params, target_acc)
+            vm = ScriptInterpreter(self.state, params, target_acc, self.acc, amount)
             result = vm.execute_script()
             if result is None:
                 logging.warning("OP_TRANSFER: target account code execution failed")
@@ -798,7 +801,6 @@ class ScriptInterpreter:
         def execute(script: str):
             self.pc = 1
             self.retval = None
-            self.framepointer = -1
             self.program = self._parse_script(script, True)
 
             if self.program is None:
@@ -815,12 +817,22 @@ class ScriptInterpreter:
             return False
 
         logging.warning("executing new script: " + self.acc.code)
+
+        self.stack = []
+        self.stack.append(self.acc.address)
+        self.stack.append(self.inaddresses)
+        self.stack.append(self.amountspent)
+
         if type(self.params_script) == list:
             #logging.warning("params_script iss list " + str(self.params_script))
-            self.stack = self.params_script
+            self.stack.extend(self.params_script)
         else:
             #logging.warning("params script ist script " + self.params_script)
-            self.stack = self._parse_script(self.params_script)
+            self.stack.extend(self._parse_script(self.params_script))
+        self.stack.append(-1)
+        self.framepointer = len(self.stack) - 1
+        self.stack.append(-1)
+
 
         if self.stack is None:
             logging.warning("Parse failed")

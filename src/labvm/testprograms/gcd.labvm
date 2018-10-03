@@ -1,4 +1,8 @@
 0
+op_popabs
+1
+op_popabs
+0
 op_pushabs
 1
 op_pushabs			// load both variables on the stack
