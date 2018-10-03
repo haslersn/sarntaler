@@ -138,6 +138,7 @@ class TestParserMethods(unittest.TestCase):
     @unittest.skipIf(os.name == 'nt', "no crypto module on windows")
     def generic_run_test(self, filename, expected_result, fnname, params=[]):
         from subprocess import call
+        from tests.test_scriptinterpreter import get_account, empty_mt
         from src.scriptinterpreter import ScriptInterpreter
         self.generic_test(filename, print_out=True)
         call(["rm", os.path.join(self.testdir, "o.out")])
@@ -146,21 +147,19 @@ class TestParserMethods(unittest.TestCase):
         with open(os.path.join(self.testdir, "o.out")) as bytecode_file:
             bytecode = bytecode_file.read()
 
-        si = ScriptInterpreter(bytecode, "", bytes(0))
-        for param in params[::-1]:
-            si.stack.append(param)
-        si.stack.append(fnname)
-        si.stack.append(len(params)+1)
-        si.stack.append(-1)
-        si.stack.append(-1)
+        mt, acc = get_account(empty_mt, bytecode)
+        si = ScriptInterpreter(mt, params[::-1]+[fnname, len(params)+1], acc, [bytes(17)], 0)
+        retval = None
         try:
-            si.execute_script()
+            retval = si.execute_script()
         except IndexError:
             #print("Test is successful, but OP_RET does not work up until now")
             from sys import stderr
             print("Result should be {}.".format(expected_result), file=stderr)
             return
-        self.assertEqual(expected_result, si.stack[0])
+        self.assertTrue(retval is not None)
+        (ignore, retval) = retval
+        self.assertEqual(expected_result, retval)
 
     def test_gcd_script(self):
         from math import gcd
