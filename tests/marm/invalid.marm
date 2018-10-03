@@ -4,6 +4,9 @@ int test(int x){
 	int i;
 	i = 0;
 	x = 1;
+	address a;
+	a.balance;
+	i.balance;
 	???;
 	int int int;
 	while(i < 1){

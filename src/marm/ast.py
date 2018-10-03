@@ -98,14 +98,23 @@ class SpecialExpression(Expr):
     def typecheck(self, errorhandler=None): pass
         
     def code_gen(self,errorhandler=None):
-        #TODO replace dummy comments with actual well known indices from the VM Team
         code = []
         if self.value=='contract':
-            code.append("// dummy for my own contract address index on the stack")
+            code.append("0 // absolute stack idx for my own contract address")
             code.append("OP_PUSHABS")
         elif self.value=='msg':
-            code.append("// dummy for my initiating transaction's address index on the stack")
+            #TODO:  massive conceptual clash
+            code.append("1 // absolute stack idx for my initiating transaction's callstack of address ")
             code.append("OP_PUSHABS")
+            code.append("OP_UNPACK")
+            # drecks Liste ist invalid fuer das msg konzept
+            #  -> gehe davon aus, dass jetzt [ ADDR , 1 ] drauf liegt,
+            #     andernfalls begehe selbstmord
+            code.append("1")
+            code.append("OP_EQU")
+            code.append("1")
+            code.append("OP_JUMPRC")
+            code.append("OP_KILL")
         else:
             errorhandler.registerFatal(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                           "No code scheme known for specialconstant {} yet!.".format(
@@ -443,16 +452,22 @@ class StructExpr(Expr):
     def typecheck(self, errorhandler=None):
         self.expr.typecheck(errorhandler)
         self.marm_type = self.expr.marm_type.attribute_type(self.ident, errorhandler)
+        if self.ident=='balance':
+            if self.expr.marm_type!='address':
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                       "balance is only valid for addresses ")
+            self.marm_type='sarn'
+
         if self.marm_type is None:
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                       "Value of type {} has not attribute named {}".format(
+                                       "Value of type {} has no attribute named {}".format(
                                            self.expr.marm_type, self.ident))
 
     def code_gen(self, errorhandler=None):
         code = []
         code+= self.expr.code_gen()
         if self.ident=='balance':
-            code.append("OP_BALANCE")
+            code.append("OP_GETBAL")
         else:
             code.append("\"%s\""% self.ident)
         return code
