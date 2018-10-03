@@ -63,4 +63,6 @@ def generate_keypair():
     return RSA.generate(1024).exportKey()
 
 def pubkey_from_keypair(keypair: bytes):
+    internal_keypair = RSA.importKey(keypair)
+    assert internal_keypair.has_private()
     return RSA.importKey(keypair).publickey().exportKey()

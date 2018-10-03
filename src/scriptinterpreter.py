@@ -18,16 +18,20 @@ import src.crypto as cr
 # TODO: Put the following two classes into crypt.py
 
 class Hash(namedtuple('Hash', [ 'value' ])):
-    pass
+    def __init__(self, value):
+        check_is_hash(value)
 
 class Signature(namedtuple('Signature', [ 'value' ])):
-    pass
+    def __init__(self, value):
+        check_is_signature(value)
 
 class Pubkey(namedtuple('Pubkey', [ 'value' ])):
-    pass
+    def __init__(self, value):
+        check_is_pubkey(value)
 
 class Keypair(namedtuple('Keypair', [ 'value' ])):
-    pass
+    def __init__(self, value):
+        check_is_keypair(value)
 
 
 class ScriptInterpreter:
