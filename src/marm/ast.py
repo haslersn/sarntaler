@@ -274,7 +274,7 @@ class NewExpr(Expr):
 
     def analyse_scope(self, scope, errorhandler=None):
         self.balance.analyse_scope(scope, errorhandler)
-        self.cd = [[n, x.marm_type] for n, x in scope.dump_contract_data().items() if isinstance(x, ContractMemberDecl)]
+        self.cd = scope.lookup("#contractdata")
         for param in self.params:
             param.analyse_scope(scope, errorhandler)
 
@@ -291,11 +291,9 @@ class NewExpr(Expr):
         lastidx = 0
         for idx, param in enumerate(self.params[::-1]):
             lastidx = idx
-            if (self.cd[::-1])[idx][1] != param.marm_type:
+            if (self.cd[::-1])[idx].marm_type != param.marm_type:
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Type Error: {}. parameter should be from type {}".format(str(len(self.params) - idx), str(self.cd[idx][1])))
-            else:
-                self.cd[idx].append(param)
+                                           "Type Error: {}. parameter should be from type {}".format(str(len(self.params) - idx), str(self.cd[idx].marm_type)))
 
         if lastidx != (len(self.cd) - 1):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
@@ -311,7 +309,7 @@ class NewExpr(Expr):
         code.append(len(self.params)+1)
         code.append("OP_PACK // list of paramvalues")
         for data in self.cd:
-            code.append('"'+str(data[0])+'"')
+            code.append('"'+str(data.name)+'"')
         code.append(len(self.cd)+1)
         code.append("OP_PACK // list of paramnames")
         code.append("0 // ownerflag")
@@ -645,6 +643,7 @@ class Translationunit(Node):
             local_scope.define(proc.name, proc)
         for contractdata_el in self.contractdata:
             contractdata_el.analyse_scope(local_scope, errorhandler)
+        local_scope.define("#contractdata", self.contractdata)
         for proc in self.procs:
             proc.analyse_scope(local_scope, errorhandler)
 
