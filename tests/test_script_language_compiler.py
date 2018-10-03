@@ -24,7 +24,7 @@ class TestParserMethods(unittest.TestCase):
                 self.assertEqual(errorhandler.countFatals(), fatals_count)
                 if print_out:
                     with open(os.path.join(self.testdir, "test.labvm"), "w") as output:
-                        for line in result:
+                        for line in result[1]:
                             output.write(str(line))
                             output.write("\n")
         except IOError as e:
