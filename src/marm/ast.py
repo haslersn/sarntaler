@@ -399,7 +399,7 @@ class LocalcallExpr(Expr):
                 param = self.params[i]
                 dparam_type = self.fnname.marm_type.param_types[i]
                 param.typecheck(errorhandler)
-                if param.marm_type != dparam_type:
+                if not Typename.is_assignable(dparam_type,param.marm_type):# != dparam_type:
                     errorhandler.registerError(param.pos_filename, param.pos_begin_line, param.pos_begin_col,
                                                "Parameter {} of function must be of type {}, got {}.".format(
                                                    i, dparam_type, param.marm_type))
