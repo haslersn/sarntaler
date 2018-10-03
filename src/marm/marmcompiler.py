@@ -125,7 +125,7 @@ marmcompiler_stages = ['lex', 'parse', 'analyse_scope', 'typecheck', 'codegen']
 
 
 def marmcompiler(filename, input, errorhandler=None, stages=None):
-    from src.marm.parser import marmparser,ParserError
+    from src.marm.parser import marmparser
     #yacc = yacc.yacc()
     if stages is None:
         stages = ['codegen']
@@ -150,10 +150,10 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
                 from src.marm.lexer import marmlexer
                 result = marmlexer(filename, input, errorhandler)
             elif stage == 'parse':
-                from src.marm.parser import marmparser, ParserError
+                from src.marm.parser import marmparser
                 try:
                     result = marmparser(filename, input, errorhandler)
-                except ParserError as err:
+                except Exception as err:
                     errorhandler.registerFatal(filename,-1,-1, "During parse: "+str(err))
             elif stage == 'analyse_scope':
                 depend_on_stage('parse')
@@ -232,7 +232,12 @@ if __name__ == "__main__":
                         help="Compiler stages to be run, in order. Defaults to codegen. Dependencies are run automatically")
     args = parser.parse_args()
 
-    myinput = args.input.read()
+    myinput = None
+    try:
+        myinput = args.input.read()
+    except Exception as e:
+        print("Can't read file {}: error during read: {}".format(args.input.name, e))
+        exit(1)
 
     result = marmcompiler(args.input.name, myinput, None, args.stages)
 

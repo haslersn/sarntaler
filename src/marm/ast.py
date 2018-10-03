@@ -333,25 +333,6 @@ class LocalcallExpr(Expr):
         return code
 
 
-# class CreateExpr(Expr):
-#     def __init__(self, params):
-#         super().__init__()
-#         self.params = params
-#
-#     def __str__(self):
-#         return "[CreateExpr: params={}]".format(self.liststr(self.params))
-#
-#     def analyse_scope(self, scope, errorhandler):
-#         for param in self.params:
-#             param.analyse_scope(scope, errorhandler)
-#
-#     def typecheck(self, errorhandler):
-#         pass
-#
-#     def code_gen(self):
-#         pass
-
-
 class UnaryExpr(Expr):
     """ p_exprUNARYEXPRESSIONS """
     def __init__(self, op, operand):
@@ -397,26 +378,6 @@ class UnaryExpr(Expr):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Operation {} does not have an implementation yet".format(self.op))
         return code
-
-
-# class LHSExpr(Expr):
-#     """ p_exprLHS """
-#     def __init__(self, lhs):
-#         super().__init__()
-#         self.lhs = lhs
-
-#     def __str__(self):
-#         return "[LHSExpr: lhs=" + str(self.lhs) + "]"
-
-#     def analyse_scope(self, scope, errorhandler):
-#         self.lhs.analyse_scope(scope, errorhandler)
-
-#     def typecheck(self, errorhandler):
-#         self.lhs.typecheck(errorhandler)
-
-#     def code_gen(self):
-#         """Pushes the address of the identifier stored in the lhs"""
-#         return self.lhs.code_gen()
 
 
 class StructExpr(Expr):

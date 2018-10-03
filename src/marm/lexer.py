@@ -155,21 +155,6 @@ def column_number(token):
 
 
 # Error handling
-## class for lexer errors
-class LexerError(RuntimeError):
-    def __init__(self, token):
-        self.line = token.lexer.lineno
-        self.column = column_number(token)
-        self.error_token = token
-        # Useful error message
-        super().__init__("{}:{}.{}: lexical error: Invalid character '{}'."
-                         .format(lexer.filename,
-                                 self.line,
-                                 self.column,
-                                 self.error_token.value[0]))
-
-
-## error handler
 def t_error(t):
     #raise LexerError(t)
     t.lexer.errorhandler.registerError(

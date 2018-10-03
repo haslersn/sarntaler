@@ -6,7 +6,9 @@ precedence = (
      ('right', 'ASSIGN'),
      ('right', 'HASH', 'NOT'),
      ('right', 'IF_WITHOUT_ELSE'),
-     ('right', 'ELSE', 'AND', 'OR', 'ADDOP', 'DIVOP','MODOP', 'MULOP', 'SUBOP'),
+     ('right', 'ELSE', 'AND', 'OR'),
+     ('right', 'ADDOP', 'SUBOP'),
+     ('right', 'DIVOP','MODOP', 'MULOP'),
 )
 
 
@@ -312,27 +314,11 @@ def p_declaratorlist(p):
 
 
 # Error handling
-class ParserError(RuntimeError):
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
-class EofError(ParserError):
-    def __init__(self):
-        super().__init__("Unexpected end of file.")
-
-
-class UnexpectedTokenError(ParserError):
-    def __init__(self, got):
-        from src.marm.lexer import column_number
-        super().__init__("{}:{}.{}: syntax error: unexpected token {}"
-                                        .format(yacc.filename,got.lexer.lineno+1,column_number(got),got))
-
-
 def p_error(t):
     from src.marm.lexer import column_number
     if t is None:
-        raise EofError()
+        yacc.errorhandler.registerError(yacc.filename,
+            0, 0, ("syntax error: unexpected end of file" ))
     else:
         from src.marm.lexer import column_number
         action_str = ' '.join([s for s in yacc.action[yacc.state]])
@@ -372,7 +358,7 @@ if __name__ == "__main__":
         errorhandler = src.marm.marmcompiler.ErrorHandler()
         result = marmparser(args.input.name,args.input.read(),errorhandler)
         print(errorhandler)
-    except ParserError as err:
+    except Exception as err:
         print(err)
     else:
         if result is not None:
