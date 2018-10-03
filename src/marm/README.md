@@ -1,5 +1,7 @@
 # MARM compiler documentation
 
+MARM is short for marmots because they are really cute.
+
 ## Basics
 
 The MARM compiler translates a high level specification similar but not identical
@@ -375,16 +377,13 @@ contract {
 	int globalx;
 }
 
+//Testprogram for basic contract features
 int test(int x){
-	address a, b;
+	address a;
 	sarn s; // sarns are nonnegative integers (uint)
 	int i;
 	i = 0;
 	x = 1;
-	s = 4711;
-	// create takes sarns from the balance and creates an account
-	// whose address it returns
-	a = create(s); 
 
 	s = sar;
 	globalx = x;
@@ -394,20 +393,22 @@ int test(int x){
 		i = i + 1;
 	}
 	//messages come with an associated account
-	msg; 
+	msg;
+	// the address of this contract
+	contract; 
+	contract.balance;
 	// a of type address
 	a.balance; 
-	// the address of contract c
-	contract; 
 
-	// s is sarn, a is address, a receives s sarns from contracts balance
-	a.transfer(s);
-	// call contract a's method with name 'method', paying with s sarns 
-	// from the this contracts and the params 1 and x
-	a.method(s,1,x);
+	// s is sarn, a is address, a receives s sarns from contracts balance<
+	transfer(a,s);
+	
 	s = test2(s, a.methodReturnsBoolean(contract.sar, contract.globalx))
 	
-	b = create(s);
+	// call contract a's method with name 'method', paying with s sarns 
+	//     from the this contracts and the params 1 and x
+	a.method(s)(1,x);
+
 	return x;
 }
 

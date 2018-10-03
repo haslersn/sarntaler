@@ -151,10 +151,12 @@ class TestParserMethods(unittest.TestCase):
             si.stack.append(param)
         si.stack.append(fnname)
         si.stack.append(len(params)+1)
+        si.stack.append(-1)
+        si.stack.append(-1)
         try:
             si.execute_script()
         except IndexError:
-            print("Test is successful, but OP_RET does not work up until now")
+            #print("Test is successful, but OP_RET does not work up until now")
             from sys import stderr
             print("Result should be {}.".format(expected_result), file=stderr)
             return
