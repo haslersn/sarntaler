@@ -1,6 +1,7 @@
 #! /usr/bin/env/python3
 import hashlib
 import logging
+import random
 from collections import namedtuple
 from binascii import hexlify, unhexlify
 from datetime import datetime
@@ -66,6 +67,7 @@ class ScriptInterpreter:
         'OP_CHECKLOCKTIME',
 
         'OP_SWAP',
+        'OP_SWAPANY',
         'OP_DUP',
 
         'OP_PUSHABS',
@@ -115,7 +117,9 @@ class ScriptInterpreter:
         'OP_UNPACK',
 
         'OP_CREATECONTR',
-        'OP_HASH'
+        'OP_HASH',
+        'OP_GENPUBKEY',
+        'OP_GETCODE'
     }
 
 
@@ -258,6 +262,16 @@ class ScriptInterpreter:
 
         self.stack.append(old_first)
         self.stack.append(old_second)
+        return True
+    
+    def op_swapany(self):
+        i = self.__pop_checked(int)
+        if i is None or i < 0 or len(self.stack) < i + 1:
+            logging.warning("OP_SWAPANY: Invalid argument or not enough stack items")
+        sp = len(self.stack) - 1
+        temp = self.stack[sp] # second element from top is at top after __pop_checked()!!
+        self.stack[sp] = self.stack[sp - i]
+        self.stack[sp - i] = temp
         return True
 
     def op_pushabs(self):
@@ -685,6 +699,30 @@ class ScriptInterpreter:
         assert self.state is not None
         self.stack.append(1)
         return True
+    
+    def op_genpubkey(self):
+
+        def rand(n) -> bytes:
+            return bytes(random.getrandbits(8) for _ in range(n))
+
+        seed = self.__pop_checked(int)
+        if seed is None:
+            logging.warning("OP_GETPUBKEY: seed must exist and be int")
+            return False
+        random.seed(seed)
+        keypair = generate_keypair(rand)
+        self.stack.append(Pubkey(pubkey_from_keypair(keypair)))
+    
+    def op_getcode(self):
+        addr = self.__pop_checked(Hash)
+        if addr is None:
+            logging.warning("OP_GETCODE: Address must exist and be a Hash")
+            return False
+        acc = Account.get_from_hash(self.state.get(addr.value))
+        if acc is None:
+            logging.warning("OP_GETCODE: invalid account address")
+            return False
+        self.stack.append(acc.code)
 
     def _parse_numeric_item(self, item: str):
         try:

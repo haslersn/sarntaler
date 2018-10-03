@@ -58,9 +58,9 @@ def verify_sign(pubkey: bytes, hash: bytes, signature: bytes):
     h.update(hash)
     return singer.verify(h, signature)
 
-def generate_keypair():
+def generate_keypair(randfunc=None):
     """ Generate a new key pair. """
-    return RSA.generate(1024).exportKey()
+    return RSA.generate(1024, randfunc).exportKey()
 
 def pubkey_from_keypair(keypair: bytes):
     internal_keypair = RSA.importKey(keypair)

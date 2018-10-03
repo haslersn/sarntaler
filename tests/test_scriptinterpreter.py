@@ -1,10 +1,11 @@
 from binascii import hexlify
 import logging
+import random
 
 from src.blockchain import crypto
 from src.blockchain.account import Account, StorageItem
 from src.crypto import Key
-from src.scriptinterpreter import ScriptInterpreter, Hash
+from src.scriptinterpreter import ScriptInterpreter, Hash, Pubkey
 from src.blockchain.merkle_trie import MerkleTrie, MerkleTrieStorage
 from Crypto.PublicKey import RSA
 
@@ -14,6 +15,8 @@ empty_mt = MerkleTrie(MerkleTrieStorage()) # not relevant in this test yet, but 
 example_keypair = generate_keypair()
 example_pubkey = pubkey_from_keypair(example_keypair)
 
+# ------------- HELPER METHODS -----------
+
 def get_dummy_account():
     return Account(example_pubkey, 0, "", 1, [])
 
@@ -22,6 +25,13 @@ def get_account(mt : MerkleTrie, program : str):
     nmt = mt.put(acc.address, acc.hash)
     return nmt, acc
 
+def script_finalstack_test(script: str, finalstack: list):
+    mt, acc = get_account(empty_mt, script)
+    si = ScriptInterpreter(mt, "", acc, [bytes(17)], 0)
+    si.execute_script()
+    assert si.stack[5:] == finalstack
+ 
+# ------------- ACTUAL TESTS ---------------
 
 def test_passWithOne():
     mt, acc = get_account(empty_mt, "1 OP_RET")
@@ -59,6 +69,13 @@ def test_swapWithOneElement():
     mt, acc = get_account(empty_mt, "OP_POPVOID OP_POPVOID OP_POPVOID OP_POPVOID OP_POPVOID 1 OP_SWAP 1 OP_RET")
     si = ScriptInterpreter(mt, "", acc, [bytes(17)], 0)
     assert not si.execute_script()
+
+def test_swapany():
+    script_finalstack_test('-1 -2 -3 -4 1 OP_SWAPANY 1 OP_RET', [-1, -2, -4, -3])
+    script_finalstack_test('-1 -2 -3 -4 -5 3 OP_SWAPANY 1 OP_RET', [-1, -5, -3, -4, -2])
+    script_finalstack_test('-1 -2 -3 -4 -5 4 OP_SWAPANY 1 OP_RET', [-5, -2, -3, -4, -1])
+    script_finalstack_test('-1 -2 -3 -4 -5 0 OP_SWAPANY 1 OP_RET', [-1, -2, -3, -4, -5])
+
 
 def test_pushFP():
     mt, acc = get_account(empty_mt, "3 2 1 OP_PUSHFP 1 OP_RET")
@@ -204,12 +221,6 @@ def test_popr():
     si.execute_script()  # should store to 1 (framepointer) + 2 (operand) = 3rd element
     assert si.stack[5:] == [0, "storethis", 2, 3, 4]
     emptystack_test('OP_POPR')
-
-def script_finalstack_test(script: str, finalstack: list):
-    mt, acc = get_account(empty_mt, script)
-    si = ScriptInterpreter(mt, "", acc, [bytes(17)], 0)
-    si.execute_script()
-    assert si.stack[5:] == finalstack
 
 def test_div_nonintegers():
     mt, acc = get_account(empty_mt, "a b OP_DIV 1 OP_RET")
@@ -446,3 +457,23 @@ def test_transfer():
     target_acc = Account.get_from_hash(trie.get(target_acc.address))
     assert contract_acc.balance is 90
     assert target_acc.balance is 10
+
+def test_genpubkey():
+    random.seed(12345)
+    def rand(n) -> bytes:
+        return bytes(random.getrandbits(8) for _ in range(n))
+    keypair = generate_keypair(rand)
+    script_finalstack_test("12345 OP_GENPUBKEY 1 OP_RET", [Pubkey(pubkey_from_keypair(keypair))])
+
+def test_getcode():
+    state = MerkleTrie(MerkleTrieStorage())
+    code = '"Hello World" 1 OP_RET'
+    pubkey = pubkey_from_keypair(generate_keypair())
+    address = compute_hash(pubkey)
+    acc = Account(pubkey, 0, code, 0, {}) # this is the account whose code will be requested on the stack
+    state = state.put(address, acc.hash)
+
+    state, calling_acc = get_account(state, 'h0x{} OP_GETCODE 1 OP_RET'.format(hexlify(address).decode()))
+    vm = ScriptInterpreter(state, '', calling_acc, [bytes(17)], 0)
+    state = vm.execute_script()
+    assert vm.stack[5:] == [code]

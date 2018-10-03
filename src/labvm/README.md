@@ -109,6 +109,7 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_KILL | - | kills execution with an error |
 |_**Stack**_|
 | OP_SWAP | | Swaps s_1 and s_2|
+| OP_SWAPANY | s_1 non-negative int, stack at least s_1 + 2 elements high | Consumes s_1 and swaps s_2 with the value at position s_1, relative to s_2. That means, if s_1 is zero it will be swapped with itself, if s_1 is 1 s_2 and s_3 will be swapped etc. |
 | OP_DUP |- | pushes s_1 |
 | OP_PUSHABS | s_1 valid stack index | consumes the highest stack cell. Let n be its value. It pushes the n-th cell of the stack. The lowest stack cell has index 0, the next one 1 and so on. |
 | OP_POPABS  | s_1 valid stack index | consumes the two highest stack cells. Stores s_2 at the absolute stack index s_1 |
@@ -123,12 +124,15 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_PACK | s_1 integer, at least s_1 +1 stack elements | Packs the number of stack elements given in s_1 into a single string separated by spaces, starting from s_2 and consuming them all. The topmost stack element will be the last element in the string. Pushes the resulting String onto the stack. The resulting string can be used e.g. to pass parameters to OP_TRANSFER. Reverse operation: OP_UNPACK
 | OP_UNPACK | s_1 string | Splits the string at s_1 by spaces and pushes the parts onto the stack in the order they appear in the string (i.e. the first element of the string will be furthest down on the stack). Also leaves the number of elements that were pushed in s_1 (excluding s_1 itself). Reverse operation: OP_PACK
 |_**Blockchain**_|
+| OP_HASH | s_1 | Consumes s_1 and puts its hash value on the stack. Works with int, str and the byte-types Hash, Signature, Pubkey and Keypair|
 | OP_GETBAL | s_1 hash | Puts the account balance of the account at address s_1 (which is the hash of the public key) on the stack. If no account is at address s_1, then **-1** is put on the stack.|
 | OP_GETOWNBAL | - | Puts the account balance of the own account on the stack.|
 | OP_GETSTOR | s_1 string | Consumes s_1 and leaves the value of the storage cell referenced by s_1 on the stack. |
 | OP_SETSTOR | s_2 string | Consumes s_1 and s_2 and stores the value of s_2 in the storage cell referenced by s_1. |
 | OP_TRANSFER | s_1 integer, s_2 hash, s_3 list[string] | Consumes s_1 to s_3 and calls the contract at address s_2 (which is a hash of the public key) with the parameters stored in s_3, sending the amount of money specified in s_1. Leaves a success code at s_1 and return value at s_2. The amount of money may be zero but not negative and the parameters may be empty. |
 | OP_CREATECONTR | s_1 pubkey, s_2 string, s_3 boolean, s_4 list[string], s_5 list | Consumes s_1 to s_5 and creates a new account with public key in s_1, contract code in s_2, owner_access flag in s_3. s_4 and s_5 are lists of storage variable names and their initial values, respectively. Leaves a 1 on the stack if the contract creation succeeded, 0 otherwise. |
+| OP_GENPUBKEY | s_1 int | Consumes s_1 and generates a public key using a pseudo-RNG so that the generated key is always the same. The key is pushed to the stack. Do **NOT** use this to create an account without the owner_access flag set to zero, because anyone will be able to generate the corresponding private key!! | 
+| OP_GETCODE | s_1 hash | Consumes s_1 and returns the code of the account with address s_1 onto the stack |
 
 
 Lines are numbered beginning with 1 and empty lines are not counted
