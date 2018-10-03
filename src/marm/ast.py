@@ -888,7 +888,7 @@ class StatementReturn(Statement):
 
     def typecheck(self, errorhandler=None):
         self.return_value.typecheck(errorhandler)
-        if self.return_value.marm_type != self.function.marm_type.return_type:
+        if not Typename.is_assignable(self.function.marm_type.return_type,self.return_value.marm_type):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Can't return value of type {} from function with return type {}".format(
                                            self.return_value.marm_type, self.function.marm_type.return_type))
