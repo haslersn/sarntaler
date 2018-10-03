@@ -201,5 +201,8 @@ class TestParserMethods(unittest.TestCase):
     def test_basic_arithmetic(self):
         self.generic_run_test("basic_arithmetic.marm", 1, "test_basic_arithmetic", [])
 
+    def test_precedence(self):
+        self.generic_run_test("precedence_test.marm", 2, "precedence_test", [])
+
 if __name__ == '__main__':
     unittest.main()

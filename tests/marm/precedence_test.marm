@@ -1,0 +1,19 @@
+int precedence_test() {
+    int a;
+    int b;
+    int c;
+    int d;
+    int e;
+    int f;
+
+    f = 1;
+    b = 9;
+    c = -2;
+    d = 18;
+    e = 5;
+    a = d + b * c; // should be 0
+    if (f > 2 || a <= 0 && b == 9) {
+        e = 2; // should be 2
+    }
+    return e;
+}

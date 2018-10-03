@@ -222,7 +222,22 @@ lhsexpression : IDENT
 ```
 #### <a name="prec"></a> Operator precedence
 
-#TODO
+The operators in the following table are listed according to precedence order. 
+The closer to the top of the table an operator appears, the higher its precedence. 
+Operators with higher precedence are evaluated before operators with relatively lower precedence. 
+Operators on the same line have equal precedence. 
+When operators of equal precedence appear in the same expression, a rule must govern which is evaluated first. 
+All binary operators except for the assignment operators are evaluated from left to right; 
+assignment operators are evaluated right to left.
+
+|       Operator       |      Precedence      |
+|:--------------------:|:--------------------:|
+|      unary expr.     |         #, !         |
+| multiplicative expr. |        *, /, %       |
+|    additive expr.    |         +, -         |
+|   comparison expr.   | <, <=, >, >=, ==, != |
+|     logical expr.    |        &&, ||        |
+|   assignment expr.   |           =          |
 
 ### <a name="procedures"></a> Procedure declarations
 
