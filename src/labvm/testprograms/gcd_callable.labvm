@@ -3,9 +3,10 @@ op_pushfp
 op_sub
 2
 op_equ
-2
+3
 op_jumprc
-op_kill
+-1
+op_ret
 -1
 op_pushr
 -2
