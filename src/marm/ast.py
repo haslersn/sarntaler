@@ -385,11 +385,11 @@ class UnaryExpr(Expr):
     def code_gen(self, errorhandler=None):
         """Act differently on hash and negation, although hash is not yet implemented"""
         code = []
-        if str(self.op) == "HASH":
+        if str(self.op) == '#':
             code_operand = self.operand.code_gen()
             code += code_operand
             code.append("OP_HASH")
-        elif str(self.op) == "SUBOP":
+        elif str(self.op) == '-':
             code_operand = self.operand.code_gen()
             code += code_operand
             code.append("OP_NEG")
