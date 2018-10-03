@@ -27,8 +27,8 @@ int test(int x){
 	// the address of this contract
 	contract; 
 	contract.balance;
-	// a of type address
-	a.balance; 
+	a.balance;
+ 
 	
 
 	// s is sarn, a is address, a receives s sarns from contracts balance<

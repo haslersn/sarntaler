@@ -1,4 +1,6 @@
 int a(int x){
+  contract.balance;
+  x.balance;
   return #12;
 }
 int b(){
