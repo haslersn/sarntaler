@@ -19,7 +19,7 @@ class Scope:
     def dump_contract_data(self):
         if self.outer is not None:
             return self.outer.dump_contract_data()
-        else
+        else:
             return self.local_vars
     def has_direct_definition(self, name):
         return name in self.local_vars
