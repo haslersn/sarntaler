@@ -18,14 +18,13 @@ def node():
     env['FLASK_APP'] = 'src/node/flask_node.py'
     env['FLASK_ENV'] = 'development'
     env['FLASK_DEBUG'] = '1'
-    proc = subprocess.Popen(['python3', '-m', 'flask', 'run'], executable='/bin/sh', env=env, shell=True,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(['python3', '-m', 'flask', 'run'], env=env)
     time.sleep(1)
-    logging.info('NODE: Started with pid {}'.format(proc.pid))
+    print('NODE: Started with pid {}'.format(proc.pid))
     yield
-    logging.info('NODE: Trying to kill process with pid {}'.format(proc.pid))
+    print('NODE: Trying to kill process with pid {}'.format(proc.pid))
     os.kill(proc.pid, signal.SIGTERM)
-    logging.info('NODE: Killed process with pid {}'.format(proc.pid))
+    print('NODE: Killed process with pid {}'.format(proc.pid))
 
 def rest_call(relative_url: str, data: dict = None):
     print()
