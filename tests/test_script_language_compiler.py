@@ -159,7 +159,7 @@ class TestParserMethods(unittest.TestCase):
 
         acc = Account(example_pubkey, 0, bytecode, 1, stores)
         mt = empty_mt.put(acc.address, acc.hash)
-        si = ScriptInterpreter(mt, params[::-1]+[fnname, len(params)+1], acc, [bytes(17)], 0)
+        si = ScriptInterpreter(mt, params[::-1]+[fnname, len(params)+1], acc, [], 0)
         retval = si.execute_script()
         self.assertTrue(retval is not None)
         (ignore, retval) = retval
