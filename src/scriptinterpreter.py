@@ -117,7 +117,8 @@ class ScriptInterpreter:
 
         'OP_CREATECONTR',
         'OP_HASH',
-        'OP_GENPUBKEY'
+        'OP_GENPUBKEY',
+        'OP_GETCODE'
     }
 
 
@@ -696,9 +697,21 @@ class ScriptInterpreter:
         seed = self.__pop_checked(int)
         if seed is None:
             logging.warning("OP_GETPUBKEY: seed must exist and be int")
+            return False
         random.seed(seed)
         keypair = generate_keypair(rand)
         self.stack.append(Pubkey(pubkey_from_keypair(keypair)))
+    
+    def op_getcode(self):
+        addr = self.__pop_checked(Hash)
+        if addr is None:
+            logging.warning("OP_GETCODE: Address must exist and be a Hash")
+            return False
+        acc = Account.get_from_hash(self.state.get(addr.value))
+        if acc is None:
+            logging.warning("OP_GETCODE: invalid account address")
+            return False
+        self.stack.append(acc.code)
 
     def _parse_numeric_item(self, item: str):
         try:

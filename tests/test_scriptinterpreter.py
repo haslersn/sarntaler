@@ -454,3 +454,18 @@ def test_genpubkey():
         return bytes(random.getrandbits(8) for _ in range(n))
     keypair = generate_keypair(rand)
     script_finalstack_test("12345 OP_GENPUBKEY 1 OP_RET", [Pubkey(pubkey_from_keypair(keypair))])
+
+def test_getcode():
+    state = MerkleTrie(MerkleTrieStorage())
+    code = '"Hello World" 1 OP_RET'
+    pubkey = pubkey_from_keypair(generate_keypair())
+    address = compute_hash(pubkey)
+    acc = Account(pubkey, 0, code, 0, {}) # this is the account whose code will be requested on the stack
+    state = state.put(address, acc.hash)
+
+    state, calling_acc = get_account(state, 'h0x{} OP_GETCODE 1 OP_RET'.format(hexlify(address).decode()))
+    vm = ScriptInterpreter(state, '', calling_acc, [bytes(17)], 0)
+    state = vm.execute_script()
+    assert vm.stack[5:] == [code]
+
+test_getcode()
