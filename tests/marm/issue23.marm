@@ -6,7 +6,6 @@
 contract {
     address owner;
     int followers;
-    sarn balance;
 }
 
 int join(sarn x) { //changed return value from void to int
