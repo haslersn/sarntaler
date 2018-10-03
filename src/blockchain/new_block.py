@@ -51,13 +51,13 @@ class Block:
 
     def to_json_compatible(self):
         var = {}
-        var['skeleton'] = skeleton.to_json_compatible()
-        var['nonce'] = hexlify(nonce).decode()
+        var['skeleton'] = self.skeleton.to_json_compatible()
+        var['nonce'] = hexlify(self.nonce).decode()
         return var
 
     @classmethod
     def from_json_compatible(cls, var: dict, transactions: List[Transaction]):
-        skeleton = Skeleton.from_json_compatible(var['skeleton'], transactions)
+        skeleton = BlockSkeleton.from_json_compatible(var['skeleton'], transactions)
         nonce = unhexlify(var['nonce'])
         return cls(skeleton, nonce)
 
@@ -193,10 +193,10 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
             if prev_block is None:
                 raise ValueError('Previous block does not exist')
 
-        miner_address = val['miner_address']
-        timestamp = val['timestamp']
+        miner_address = var['miner_address']
+        timestamp = var['timestamp']
 
         skeleton = BlockSkeleton(prev_block, transactions, miner_address, timestamp)
-        if skeleton.to_json_compatible() != val:
+        if skeleton.to_json_compatible() != var:
             raise ValueError('Block verification failed')
         return skeleton
