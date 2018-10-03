@@ -179,7 +179,8 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
         except ErrorInStage as e:
             raise e
         except Exception as e:
-            errorhandler.registerFatal(filename, -1, -1, "An error occured during stage {}. Exception {}".format(stage, str(e)))
+            errorhandler.registerFatal(filename, -1, -1, "An error occured during stage {}. Exception {}".format(stage, str(e.__traceback__.tb_lineno)))
+            raise e
         if not errorhandler.roughlyOk():
             raise ErrorInStage(stage)
 

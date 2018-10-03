@@ -257,38 +257,73 @@ class NewExpr(Expr):
         super().__init__()
         self.balance = balance
         self.params = params
+        self.cd = []
 
     def __str__(self):
         return "[NewExpr: balance={}, paramlist={}]".format(self.balance, self.liststr(self.params))
 
     def analyse_scope(self, scope, errorhandler=None):
         self.balance.analyse_scope(scope, errorhandler)
+        self.cd = [[n, x.marm_type] for n, x in scope.dump_contract_data().items() if isinstance(x, ContractMemberDecl)]
         for param in self.params:
             param.analyse_scope(scope, errorhandler)
 
+
     def typecheck(self, errorhandler=None):
         self.balance.typecheck(errorhandler)
-        self.params.typecheck(errorhandler)
+        for param in self.params:
+            param.typecheck(errorhandler)
+
         if self.balance.marm_type != 'sarn':
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                        "Type Error: transferring is only valid to addresses")
-        if self.paramlist.marm_type != 'sarn':
+                                        "Type Error: balance should be from type sarn")
+
+        lastidx = 0
+        for idx, param in enumerate(self.params[::-1]):
+            lastidx = idx
+            if (self.cd[::-1])[idx][1] != param.marm_type:
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                           "Type Error: {}. parameter should be from type {}".format(str(len(self.params) - idx), str(self.cd[idx][1])))
+            else:
+                self.cd[idx].append(param)
+
+        if lastidx != (len(self.cd) - 1):
             errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                        "Type Error: transferring is only valid for sarns")
-        self.marm_type = Typename('generic')
+                                       "Error: Too few arguments. Exprected {}, given {}".format(str(len(self.cd)), str(len(self.params))))
+
+
+        self.marm_type = Typename('address')
 
     def code_gen(self, errorhandler=None):
-        code = []
+        code = ["//starting account generation"]
+        for param in self.params:
+            code += param.code_gen()
+        code.append(len(self.params)+1)
+        code.append("OP_PACK // list of paramvalues")
+        for data in self.cd:
+            code.append(str(data[0]))
+        code.append(len(self.cd)+1)
+        code.append("OP_PACK // list of paramnames")
+        code.append("0 // ownerflag")
         code.append("0")
-        code.append("OP_PACK // S3 == empty param list")
-        code+=self.address.code_gen()
-        code.append("// S2 == target address")
-        code+=self.amount.code_gen()
-        code.append("// S1 == amount")
-        code.append("OP_TRANSFER")
+        code.append("OP_PUSHABS")
+        code.append("OP_GETCODE // code on stack")
+        code.append("0")
+        code.append("OP_PUSHABS")
+        code.append("42424242")
+        code.append("OP_ADD")
+        code.append("OP_GENPUBKEY")
+        code.append("OP_CREATECONTR")
         code.append("1")
-        code.append("OP_JUMPRC // if successfull, continue")
+        code.append("OP_EQ")
+        code.append("1")
+        code.append("OP_JUMPRC")
         code.append("OP_KILL")
+        code.append("0")
+        code.append("OP_PUSHABS")
+        code.append("42424242")
+        code.append("OP_ADD")
+        code.append("OP_GENPUBKEY")
         return code
 
 class TransferExpr(Expr):
