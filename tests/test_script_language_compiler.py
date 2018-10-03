@@ -203,6 +203,11 @@ class TestParserMethods(unittest.TestCase):
 
     def test_precedence(self):
         self.generic_run_test("precedence_test.marm", 2, "precedence_test", [])
+    @unittest.skipIf(True, "DOS test, takes approximately 10m, do not test if you don't want this")
+    def test_DOS(self):
+        self.generic_test("chaos.marm")
+        # self.generic_run_test("chaos.marm", 2, "test", [0])
+
 
 if __name__ == '__main__':
     unittest.main()
