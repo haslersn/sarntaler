@@ -2,6 +2,7 @@
 The node stores and verifies the blockchain and offers and interface for the miner and wallet to easily access blockchain data.
 
 ## High-level specification: offered functionality
+`()` = redundant but might be useful as a shortcut
 ### Transactions
 - create new transaction
 - get transaction data by hash
@@ -13,7 +14,7 @@ The node stores and verifies the blockchain and offers and interface for the min
 - get account by address (i.e. public key, balance, code, state)
 
 ### Blockchain
-- get last block
+- (get last block)
 - get any block specified by hash or by index (depth)
 - get all blocks
 - get chain difficulty
