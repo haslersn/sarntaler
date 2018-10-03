@@ -490,6 +490,9 @@ class Typename(Node):
         """Should not be used at all, fails on call"""
         raise NotImplementedError
 
+    def datalayout(self,errorhandler=None):
+        raise NotImplementedError
+
     def typecheck(self, errorhandler=None): pass
 
     def attribute_type(self, ident, errorhandler=None): # TODO: Add **all+* attributes we have available
@@ -528,6 +531,15 @@ class Translationunit(Node):
             proc.set_global_definition_types(errorhandler)
         for proc in self.procs:
             proc.typecheck(errorhandler)
+
+    def datalayout(self,errorhandler=None):
+        inits = []
+        names = []
+        layout = [names, inits]
+        for lay in self.contractdata[::-1]:
+            names.append(lay.name)
+            inits.append('0')
+        return layout
 
     def code_gen(self, errorhandler=None):
         """Calls codegen for every procedure and stores their addresses before"""
