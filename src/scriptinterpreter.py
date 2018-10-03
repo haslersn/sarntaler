@@ -193,7 +193,7 @@ class ScriptInterpreter:
         than one OP_KILL output or an OP_KILL output with more than one pushdata op. """
 
         #DONE
-        logging.warning('Transaction can not be spent!')
+        logging.warning('OP_KILL was executed!')
         return False
 
     # TODO: update to the current parser version
