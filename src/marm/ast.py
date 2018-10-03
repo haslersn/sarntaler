@@ -665,7 +665,10 @@ class Translationunit(Node):
         layout = [names, inits]
         for lay in self.contractdata[::-1]:
             names.append(lay.name)
-            inits.append('0')
+            if lay.marm_type == 'address':
+                inits.append('s0x0')
+            else:
+                inits.append('0')
         return layout
 
     def code_gen(self, errorhandler=None):
