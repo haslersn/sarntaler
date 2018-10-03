@@ -61,6 +61,24 @@ remark: For the highest element on the stack **before the execution** s_1, for t
 
 The stack grows to the top in this figure.
 
+**Stack Layout**
+When a contract is started, the Stack is initialised with the following parameters:
+
+|  |
+| -- |
+|  -1  |
+| -1 | <- FP
+| par 1 |
+| ... |
+| par n |
+| money spent on current call : int |
+| caller addresses : List(Hash) |
+| own account address : Hash |
+
+For testing the amounts of elements, push the FP and subtract 3.
+The only valid way to exit the program is by using a OP_RET on the last stack frame (the one in the picture)
+
+
 Boolean values are ints. 1 represents true and 0 represents false.
 
 
@@ -89,7 +107,7 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_JUMPC | s_1 integer and s_2 integer and line s_1 exists| absolute conditional Jump. Consumes 2 Arguments. If s_2 == 1, PC = s_1 else nothing happens |
 | OP_JUMPRC | s_1 integer and s_2 integer and line s_1 keeps boundaries | relative conditional Jump. Consumes 2 Arguments. If s_2 == 1, PC = PC + s_1 else nothing happens |
 | OP_CALL | s_1 valid code line | consumes s_1, pushes FP, sets FP = SP (points to old FP, pushes PC (return address), jumps |
-| OP_RET | needs a valid stack frame | s_1 will be interpreted as the return value. restores FP and PC, everything on the stack between the return address and the return value gets lost |
+| OP_RET | needs a valid stack frame | s_1 will be interpreted as the return value. restores FP and PC, everything on the stack between the return address and the return value gets lost, if oldfp == -1, stop contract and return highest stack cell |
 | OP_KILL | - | kills execution with an error |
 |_**Stack**_|
 | OP_SWAP | | Swaps s_1 and s_2|
