@@ -1,3 +1,5 @@
+import logging
+
 import typing
 from src.blockchain.new_transaction import *
 from src.blockchain.merkle_trie import MerkleTrie
@@ -10,24 +12,30 @@ def transit(script_interpreter_cls: type, state : MerkleTrie, transaction : Tran
     for input in tx_inputs:
         if not state.contains(input.address):
             # input address does not exist
+            logging.warning("state_transition: input address doesn't exist")
             return None
         acc = Account.get_from_hash(state.get(input.address))
         acc = acc.add_to_balance(- input.value)
         if acc is None:
             # couldn't spend value
+            logging.warning("state_transition: couldn't deduct value from input account")
             return None
         state = state.put(input.address, acc.hash)
 
     for output in tx_outputs:
         if not state.contains(output.address):
-            # output address does not exist
+            logging.warning("state transition: output address does not exist")
             return None
         acc = Account.get_from_hash(state.get(output.address))
         acc = acc.add_to_balance(output.value)
         state = state.put(output.address, acc.hash)
         if acc.code is not None:
-            vm = script_interpreter_cls(state, output.params, acc, transaction.hash)
-            state = vm.execute_script()
+            vm = script_interpreter_cls(state, output.params, acc)
+            result = vm.execute_script()
+            if result is None:
+                logging.warning("state transition: target account code execution failed")
+                return None
+            state = result[0]
 
     if miner_address != bytes(32):
         # Miner gets his fee if the miner_address is not zero

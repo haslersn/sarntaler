@@ -3,10 +3,13 @@ import time
 import json
 from typing import List
 
+from src.scriptinterpreter import ScriptInterpreter
 from src.blockchain.new_transaction import *
 from src.blockchain.account import *
 from src.blockchain.crypto import *
 from src.blockchain.merkle_trie import *
+from src.blockchain.state_transition import transit
+
 class Block:
     _dict = dict()
 
@@ -60,6 +63,7 @@ class Block:
 
 
 class BlockSkeleton: # contains everything a block needs except for a valid nonce
+    genesis_pubkey = b'-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCYzqSGEhl/NbUHJ1rDEp/YQfk5\nvsuCnUpaI30r+J5eeNwOyXyXbvR/J+GtKU5LJfC0llfrJUXjYF2ChQIB2EqtLch6\nTmrZcy3r/TlB6N9GDrISZ+uw5DJ209wRlET6DIgIz+gymlCUv5gc4g2HrWwmRCXi\nvn+WrMSS0ZyZuYMhTQIDAQAB\n-----END PUBLIC KEY-----'
 
     def __new__(cls, prev_block: 'Block', transactions: List[Transaction], miner_address: Account, timestamp = None):
         miner_address == bytes(32) or check_is_hash(miner_address)
@@ -74,13 +78,43 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
             raise ValueError('Unsigned transaction')
 
         # merkle tries
-        state_trie = MerkleTrie(MerkleTrieStorage()) if prev_block is None else prev_block.skeleton.state_trie
+        if prev_block is None:
+            state_trie = MerkleTrie(MerkleTrieStorage())
+            genesis_contract = Account(
+                cls.genesis_pubkey,
+                0,
+                """
+                    5
+                    OP_PACK
+                    OP_DUP
+                    OP_UNPACK
+                    OP_POPVOID
+                    OP_CREATECONTR
+                    2
+                    OP_JUMPRC
+                    OP_KILL
+                    OP_UNPACK
+                    OP_POPVOID
+                    OP_HASH
+                    []
+                    OP_SWAP
+                    OP_GETBAL
+                    OP_TRANSFER
+                    1
+                    OP_RET
+                """,
+                False,
+                [])
+            state_trie = state_trie.put(genesis_contract.address, genesis_contract.hash)
+        else:
+            state_trie = prev_block.skeleton.state_trie
+
         tx_trie = MerkleTrie(MerkleTrieStorage())
         for tx in transactions:
-            state_trie = transit(state, tx, miner_address)
-            tx_trie = tx_trie.put(tx.hash, tx.hash)
+            state_trie = transit(ScriptInterpreter, state_trie, tx, miner_address)
             if state_trie is None:
                 raise ValueError('Invalid transaction')
+            tx_trie = tx_trie.put(tx.hash, tx.hash)
 
         prev_accumulated_difficulty = 0 if prev_block is None else prev_block.skeleton.accumulated_difficulty
 

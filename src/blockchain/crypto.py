@@ -34,11 +34,15 @@ def check_is_hash(hash: bytes):
 
 def check_is_keypair(keypair: bytes):
     if not is_keypair(keypair):
-        raise ValueError('non-zero keypair with length 886 Byte expected')
+        raise ValueError('key pair with length 886 Byte expected')
 
 def check_is_pubkey(pubkey: bytes):
     if not is_pubkey(pubkey):
-        raise ValueError('non-zero pubkey with length 271 Byte expected')
+        raise ValueError('public key with length 271 Byte expected')
+
+def check_is_signature(sig: bytes):
+    if not is_signature(sig):
+        raise ValueError('signature with length 128 Byte expected')
 
 def sign(keypair: bytes, hash: bytes) -> bytes:
     """ Sign a hashed value with the private key. """
