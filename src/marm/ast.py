@@ -16,6 +16,11 @@ class Scope:
             return self.outer.lookup(name)
         else:
             return None
+    def dump_contract_data(self):
+        if self.outer is not None:
+            return self.outer.dump_contract_data()
+        else
+            return self.local_vars
     def has_direct_definition(self, name):
         return name in self.local_vars
     def _next_var_index(self):
