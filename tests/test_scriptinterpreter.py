@@ -355,7 +355,6 @@ def test_create_contr():
     assert new_acc.get_storage('mysig') == init_sig
     assert new_acc.get_storage('myadd') == init_address
 
-
 def test_create_contr_fail():
     pubkey = crypto.pubkey_from_keypair(crypto.generate_keypair())
     myacc = Account(example_pubkey, 278, '[] ["mykey"] 1 "OP_RET" k0x' + hexlify(pubkey).decode() + ' OP_CREATECONTR 1 OP_RET', 1, [])
@@ -373,25 +372,20 @@ def test_unpack_different_types():
     si = ScriptInterpreter(mt, "", acc)
     assert si.execute_script()
 
-def test_checkkeypair_suc():
-    #succsess test
+def test_pubkeyfromkeypair_suc():
+    # success test
     keypair = generate_keypair()
     pubkey = pubkey_from_keypair(keypair)
-    code = "k0x" + hexlify(pubkey).decode() + " k0x" + hexlify(keypair.decode) + " OP_CHECKKEYPAIR 1 OP_RET"
+    code = "k0x" + hexlify(pubkey).decode() + " p0x" + hexlify(keypair).decode() + " OP_PUBKEYFROMKEYPAIR OP_EQU 2 OP_JUMPRC OP_KILL 1 OP_RET"
     si = ScriptInterpreter(empty_mt, "", Account(example_pubkey, 0, code, True, []))
     assert si.execute_script()
 
-def test_checkkeypair_fail():
-    #fail test
-    key1 = RSA.generate(1024)
-    key2 = RSA.generate(1024)
-
-    privKey = key1.exportKey('DER')
-    pubKey = key2.publickey().exportKey('DER')
-    fstr = "K0x" + str(pubKey.hex()) + "\nK0x" + str(privKey.hex()) + "\nop_checkkeypair\n1 OP_RET"
-
-    mt, acc = get_account(empty_mt, fstr)
-    si = ScriptInterpreter(mt, "", acc)
+def test_pubkeyfromkeypair_fail():
+    # fail test
+    keypair = generate_keypair()
+    pubkey = pubkey_from_keypair(generate_keypair())
+    code = "k0x" + hexlify(pubkey).decode() + " p0x" + hexlify(keypair).decode() + " OP_PUBKEYFROMKEYPAIR OP_EQU 2 OP_JUMPRC OP_KILL 1 OP_RET"
+    si = ScriptInterpreter(empty_mt, "", Account(example_pubkey, 0, code, True, []))
     assert not si.execute_script()
 
 def test_transfer():

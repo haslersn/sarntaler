@@ -28,14 +28,17 @@ def check_signature_type(value: bytes):  # TODO length
     return is_signature(value)
 
 
-def check_key_type(value: bytes):  # TODO length
+def check_pubkey_type(value: bytes):  # TODO length
     return is_pubkey(value)
+
+def check_keypair_type(value: bytes):  # TODO length
+    return is_keypair(value)
 
 
 class StorageItem(namedtuple("StorageItem", ["s_name", "s_type", "s_value"])):
     _supported_types = {'int': check_int_type, 'str': check_str_type, 'hash': check_hash_type,
-                        'address': check_address_type, 'signature': check_signature_type,
-                        'key': check_key_type}
+                        'signature': check_signature_type, 'pubkey': check_pubkey_type,
+                        'keypair': check_keypair_type}
 
     def __new__(cls, s_name: str, s_type: str, s_value: object):
         s_type = s_type.lower()
@@ -49,7 +52,7 @@ class StorageItem(namedtuple("StorageItem", ["s_name", "s_type", "s_value"])):
         val = {}
         val["s_name"] = self.s_name
         val["s_type"] = self.s_type
-        if (self.s_type in ['key', 'signature', 'address', 'hash']):
+        if (self.s_type in ['pubkey', 'keypair', 'signature', 'hash']):
             val["s_value"] = hexlify(self.s_value).decode()
         else:
             val["s_value"] = self.s_value

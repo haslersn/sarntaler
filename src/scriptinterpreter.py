@@ -22,7 +22,10 @@ class Hash(namedtuple('Hash', [ 'value' ])):
 class Signature(namedtuple('Signature', [ 'value' ])):
     pass
 
-class Key(namedtuple('Key', [ 'value' ])):
+class Pubkey(namedtuple('Pubkey', [ 'value' ])):
+    pass
+
+class Keypair(namedtuple('Keypair', [ 'value' ])):
     pass
 
 
@@ -48,10 +51,12 @@ class ScriptInterpreter:
     or read the explanation within the op-implementation below:
     """
 
+    types = [ list, int, str, Hash, Signature, Pubkey, Keypair ]
+
     operations = {
         'OP_SHA256',
-        'OP_CHECKKEYPAIR',
-        'OP_CHECKSIG',
+        'OP_PUBKEYFROMKEYPAIR',
+        'OP_VERIFYSIGN',
         'OP_KILL',
         'OP_CHECKLOCKTIME',
 
@@ -121,6 +126,7 @@ class ScriptInterpreter:
     # operation implementations
 
     def __pop_checked(self, t: type):
+        assert t in [ str, int, list, Hash, Signature, Pubkey, Keypair]
         if not self.stack:
             logging.warning("Stack is empty. Expected {}".format(t.__name__))
             return None
@@ -129,7 +135,6 @@ class ScriptInterpreter:
             logging.warning("Wrong type on top of stack. Expected {} but found {}".format(
                 t.__name__, type(top).__name__))
             return None
-        assert t in [ str, int, list, Hash, Signature, Key]
         return top
 
     def op_sha256(self):
@@ -143,52 +148,33 @@ class ScriptInterpreter:
         self.stack.append(Hash(sha256.digest()))
         return True
 
-    def op_checkkeypair(self):
-        """Checks if public-key (1. argument) and privat-key (2. argument) are
-        part of the same key-pair."""
-        privKey = self.__pop_checked(Key)
-        if privKey is None:
+    def op_pubkeyfromkeypair(self):
+        """Pushes a public key obtained from a key pair (1. argument)."""
+        keypair = self.__pop_checked(Keypair)
+        if keypair is None:
             logging.warning("OP_CHECKKEY: Stack is empty or top element not a key")
             return False
-
-        pubKey = self.__pop_checked(Key)
-        if pubKey is None:
-            logging.warning("OP_CHECKKEY: Stack is empty or top element not a key")
-            return False
-
-        privKey = privKey.value
-        pubKey = pubKey.value
-        beforenc = cr.get_random_int(256)
-        enctxt = pubKey.rsa.encrypt(beforenc, 1)[0]
-        afterenc = privKey.rsa.decrypt(enctxt)
-        if beforenc != afterenc:
-            return False
-
+        self.stack.append(Pubkey(pubkey_from_keypair(keypair.value)))
         return True
 
-    def op_checksig(self):
+    def op_verifysign(self):
         # The signature used by OP_CHECKSIG must be a valid signature for
         # this hash and public key.
         #If it is, 1 is returned, 0 otherwise.
-        pubKey = self.__pop_checked(Key)
-        if pubKey is None:
-            logging.warning("OP_CHECKSIG: Stack is empty or top element not a key")
+        pubkey = self.__pop_checked(Pubkey)
+        if pubkey is None:
+            logging.warning("OP_VERIFYSIGN: Stack is empty or top element not a key")
             return False
-        pubKey = pubKey.value
+        hash = self.__pop_checked(Hash)
+        if hash is None:
+            logging.warning("OP_VERIFYSIGN: Stack is empty or top element not a hash")
+            return False
         sig = self.__pop_checked(Signature)
         if sig is None:
-            logging.warning("OP_CHECKSIG: Stack is empty or top element not a signature")
+            logging.warning("OP_VERIFYSIGN: Stack is empty or top element not a signature")
             return False
-        sig = sig.value
-
-        if pubKey.verify_sign(self.tx_hash, sig):
-            self.stack.append(1)
-            return True
-
-        logging.warning("OP_CHECKSIG: Signature not verified")
-        self.stack.append(0)
+        result = 1 if verify_sign(pubkey,hash, sig) else 0
         return True
-
 
     def op_kill(self):
 
@@ -550,7 +536,7 @@ class ScriptInterpreter:
         if len(self.stack) < 5:
             logging.warning("OP_CREATECONTR: Not enough arguments")
             return False
-        pub_key = self.__pop_checked(Key)
+        pub_key = self.__pop_checked(Pubkey)
         code = self.__pop_checked(str)
         owner_access_flag = self.__pop_checked(int)
         storage_var_names = self.__pop_checked(list)
@@ -564,7 +550,7 @@ class ScriptInterpreter:
         storage = list()
         for name, initval in zip(storage_var_names, storage_initial_values):
             typ = type(initval).__name__
-            if type(initval) in [Key, Hash, Signature]:
+            if type(initval) in [Hash, Signature, Pubkey, Keypair]:
                 initval = initval.value
             item = StorageItem(name, typ, initval)
             if item is None:
@@ -639,7 +625,7 @@ class ScriptInterpreter:
             popped = str(popped)
         if type(popped) == str:
             popped = popped.encode()
-        if type(popped) in [Key, Hash, Signature]:
+        if type(popped) in [Hash, Signature, Pubkey, Keypair]:
             popped = popped.value
         self.stack.append(Hash(compute_hash(popped)))
         return True
@@ -697,11 +683,13 @@ class ScriptInterpreter:
         try:
             if len(item) > 2:
                 if item[0:3].lower() == 'k0x':
-                    return Key(unhexlify(item[3:]))
+                    return Pubkey(unhexlify(item[3:]))
                 if item[0:3].lower() == 'h0x':
                     return Hash(unhexlify(item[3:]))
                 if item[0:3].lower() == 's0x':
                     return Signature(unhexlify(item[3:]))
+                if item[0:3].lower() == 'p0x':
+                    return Keypair(unhexlify(item[3:]))
             return int(item, 0)
         except ValueError:
             logging.warning("could not parse " + item)
