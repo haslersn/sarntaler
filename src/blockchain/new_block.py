@@ -25,15 +25,15 @@ class Block:
         constructed = super().__new__(cls)
         constructed._skeleton = skeleton
         constructed._nonce = nonce
-        cls._dict[hash] = constructed
         constructed._hash = compute_hash(json.dumps(constructed.to_json_compatible()).encode())
 
         if constructed._hash > target:
             raise ValueError("Tried to create block, that doesn't fulfill the difficulty")
 
         if constructed._hash in cls._dict:
-            return cls._dict[hash]
+            return cls._dict[constructed._hash]
 
+        cls._dict[constructed._hash] = constructed
         return constructed
 
     @property
@@ -185,7 +185,7 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
 
     def to_json_compatible(self):
         var = {}
-        var['prev_block_hash'] = None if self.prev_block is None else hexlify(self.prev_block.hash).decode()
+        var['prev_block_hash'] = hexlify(self._prev_block_hash).decode()
         var['timestamp'] = self.timestamp
         var['height'] = self.height
         var['difficulty'] = self.difficulty
