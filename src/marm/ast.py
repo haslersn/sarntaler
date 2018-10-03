@@ -673,7 +673,7 @@ class Translationunit(Node):
         for lay in self.contractdata[::-1]:
             names.append(lay.name)
             if lay.marm_type == 'address':
-                inits.append('s0x0')
+                inits.append('h0x0')
             else:
                 inits.append('0')
         return layout
