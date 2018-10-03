@@ -148,7 +148,15 @@ class TestParserMethods(unittest.TestCase):
         while i<len(code[3]):
             name = code[3][i]
             val = code[4][i]
-            stores.append(StorageItem(name, 'int', 0)) # TODO: addresses
+            if val[0] == 'h':
+                from hashlib import sha256
+                from src.scriptinterpreter import Hash
+                h = sha256()
+                h.update(b'initvalue')
+                hh = Hash(h.digest())
+                stores.append(StorageItem(name, type(hh).__name__, hh.value))
+            else:
+                stores.append(StorageItem(name, 'int', 0)) # TODO: addresses
             i+=1
 
         call(["rm", os.path.join(self.testdir, "o.out")])
