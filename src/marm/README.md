@@ -17,7 +17,8 @@ the blockchain. Currently the features include:
 - [if branches](#ifs)
 - [function calls](#functions)
 - [expression statements](#expressions)
-- [declaration statements](#declarations) and
+- [declaration statements](#declarations)
+- [creating new contracts](#new) and
 - [procedure declarations](#procedures).
 
 ### General definition and keywords
@@ -60,7 +61,7 @@ parts of identifiers but not as sole words separated by whitespaces or tabs.
 |:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|
 | `if` | `while` | `break` | `continue` | `else` | 
 | `return` | `int` | `address` | `sarn` | `msg` |
-| | `transfer` | | `contract` | |
+| | `transfer` | `new` | `contract` | |
 
 ### <a name="comments"></a> Comments
 
@@ -372,6 +373,26 @@ four parameters like
 test_calling_convention(param1, param2, param3, param4);
 ```
 `param1` is the last and `param4` the first value that is pushed to the stack.
+
+### <a name="new"></a> Creating new contracts
+
+Currently we **only** support the creation of the same contract. Basically this means that one contract
+can create a new copy of its own but not of another contract. If you want to implement the latter behavior
+you will have to create new procedures in contracts that create a new copy of their own and issue an inter-contract
+call.
+
+```c
+...
+adr_new = new(balance, contract_attributevalues...);
+...
+```
+
+In the example above `contract_attributevalues...` should include a list of parameters for every single 
+variable in the contract's `contract` block. The order of the attribute values should be **exactly** 
+like you did define it in the `contract` block. `balance` is the future value of the new contract's 
+implicit attribute `balance`.
+
+`new` returns the address of the new contract block in the chain.
 
 ## Examples
 
