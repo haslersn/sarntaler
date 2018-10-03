@@ -10,7 +10,7 @@ int test(int x){
 	int i;
 	i = 0;
 	x = 1;
-	//s = 4711;
+	s = 4711;
 	// create takes sarns from the balance and creates an account
 	//     whose address it returns
 	//a = create(s);  NONSENSE

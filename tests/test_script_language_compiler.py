@@ -221,6 +221,7 @@ class TestParserMethods(unittest.TestCase):
     def test_contract_global_invalid(self):
         self.generic_test("test_contract_global_invalid.marm", False, False, 1)
 
+    @unittest.skipIf(os.name == 'nt', "no crypto module on windows")
     def test_contract_global_valid(self):
         from src.blockchain.account import StorageItem
         self.generic_run_test("test_contract_global_valid.marm", 1234, "setmysarn", [1234])

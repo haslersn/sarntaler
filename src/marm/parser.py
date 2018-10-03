@@ -186,7 +186,11 @@ def p_statementERROR(p):
 
 def p_expr(p):
     'expr : INTCONST'
-    p[0] = ast.ConstExpr(p[1], ast.Typename('int'))
+    if p[1]<0:
+        typen = ast.Typename('int')
+    else:
+        typen = ast.Typename('sarn')
+    p[0] = ast.ConstExpr(p[1], typen)
     p[0].set_pos_from(p)
 
 def p_exprSPECIALCONSTANTS_MSG(p):
