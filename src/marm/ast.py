@@ -163,22 +163,23 @@ class BinExpr(Expr):
         self.left.typecheck(errorhandler)
         self.right.typecheck(errorhandler)
         if self.op == '=':
-            if self.left.marm_type != self.right.marm_type:
+            if not Typename.is_assignable(self.left.marm_type,self.right.marm_type):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                            "Tried to assign value of type {} to variable of type {}.".format(
                                                self.right.marm_type, self.left.marm_type))
             else:
-                self.marm_type = self.right.marm_type
+                self.marm_type=self.left.marm_type
         elif self.op in ['+', '-', '*', '/', '%']:
-            if self.left.marm_type != 'int':
+            if not Typename.is_assignable("int",self.left.marm_type):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                            "Left operand of {} exspects value of type int, got {}".format(
                                                self.op, self.left.marm_type))
-            if self.right.marm_type != 'int':
+            if not Typename.is_assignable("int",self.right.marm_type):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                            "Right operand of {} exspects value of type int, got {}".format(
                                                self.op, self.right.marm_type))
-            self.marm_type = Typename('int')
+            self.marm_type = Typename.more_general_type(self.right.marm_type,self.left.marm_type)
+            #self.marm_type = Typename('int')
 
     def code_gen(self, errorhandler=None):
         """Act differently for ASSIGN expressions and mathematical operations """
@@ -442,9 +443,9 @@ class UnaryExpr(Expr):
                                            "Operator '#' expects one argument of type string")
             self.marm_type = Typename('int')
         elif self.op == '-':
-            if self.operand.marm_type != 'int':
+            if not Typename.is_assignable('int',self.operand.marm_type):
                 errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
-                                           "Operator '-' expects one argument of type int.")
+                                           "Operator '-' expects one argument of type int or sarn.")
             else:
                 self.marm_type = Typename('int')
         else:
@@ -579,6 +580,33 @@ class Typename(Node):
             return self.typee == other
         else:
             return False
+    @staticmethod
+    def more_general_type(type1,type2):
+        if type1==type2:
+            return type1
+        if type1=='generic':
+            return type1
+        if type2=='generic':
+            return type2
+        if Typename.is_assignable(type1,type2):
+            return type1
+        if Typename.is_assignable(type2,type1):
+            return type2
+        return None
+    @staticmethod
+    def is_assignable(lhstype,rhstype):
+        if rhstype=='generic':
+            return True
+        if lhstype=='int':
+            return rhstype in ['int','sarn']
+        if lhstype=='sarn':
+            return rhstype=='sarn'
+        if lhstype=='address':
+            return rhstype=='address'
+        if lhstype=='generic':
+            return True
+        return False
+
 
     def code_gen(self, errorhandler=None):
         """Should not be used at all, fails on call"""
@@ -1104,7 +1132,8 @@ class BoolexCMP(Boolex):
         self.left.typecheck(errorhandler)
         self.right.typecheck(errorhandler)
         if self.left.marm_type != self.right.marm_type:
-            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+            if not ((Typename.is_assignable(self.left.marm_type,self.right.marm_type)) or (Typename.is_assignable(self.right.marm_type,self.left.marm_type))): 
+                errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
                                        "Trying to compare values of types {} and {}.".format(
                                            self.left.marm_type, self.right.marm_type))
         #if self.left.marm_type not in ['int']:
