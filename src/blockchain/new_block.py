@@ -84,18 +84,29 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
                 cls.genesis_pubkey,
                 0,
                 """
-                    5
-                    OP_PACK
-                    OP_DUP
-                    OP_UNPACK
-                    OP_POPVOID
+                    OP_PUSHFP
+                    8
+                    OP_EQU
+                    2
+                    OP_JUMPRC
+                    OP_KILL
+                    -1
+                    OP_PUSHR
+                    OP_HASH
+                    -5
+                    OP_PUSHR
+                    -4
+                    OP_PUSHR
+                    -3
+                    OP_PUSHR
+                    -2
+                    OP_PUSHR
+                    -1
+                    OP_PUSHR
                     OP_CREATECONTR
                     2
                     OP_JUMPRC
                     OP_KILL
-                    OP_UNPACK
-                    OP_POPVOID
-                    OP_HASH
                     []
                     OP_SWAP
                     OP_GETOWNBAL
