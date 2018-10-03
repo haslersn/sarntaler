@@ -497,7 +497,10 @@ class Typename(Node):
             if ident == 'account':
                 return Typename('address')
         if self.typee == 'address':
-            return Typename('generic')
+            if ident == 'balance':
+                return Typename('sarn')
+            else:
+                return Typename('generic')
         return None
 
 

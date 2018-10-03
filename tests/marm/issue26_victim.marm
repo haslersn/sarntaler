@@ -4,12 +4,15 @@
  * issue #26.
  */
 contract {
-    sarn balance;
     int public_key;
 }
 
+int check_key_pair(int pub,int priv){
+    // inline LABVM
+}
+
 int unlock(int private_key) {
-    if (check_key_pair(contract.public_key, contract.private_key)) {
-        msg.account.transfer(balance);
+    if (check_key_pair(public_key, private_key)==0) {
+        transfer(msg,contract.balance);
     }
 }
