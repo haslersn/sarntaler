@@ -125,7 +125,7 @@ marmcompiler_stages = ['lex', 'parse', 'analyse_scope', 'typecheck', 'codegen']
 
 
 def marmcompiler(filename, input, errorhandler=None, stages=None):
-    from src.marm.parser import marmparser,ParserError
+    from src.marm.parser import marmparser
     #yacc = yacc.yacc()
     if stages is None:
         stages = ['codegen']
