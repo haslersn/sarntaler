@@ -65,7 +65,7 @@ class Block:
 class BlockSkeleton: # contains everything a block needs except for a valid nonce
     genesis_pubkey = b'-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCYzqSGEhl/NbUHJ1rDEp/YQfk5\nvsuCnUpaI30r+J5eeNwOyXyXbvR/J+GtKU5LJfC0llfrJUXjYF2ChQIB2EqtLch6\nTmrZcy3r/TlB6N9GDrISZ+uw5DJ209wRlET6DIgIz+gymlCUv5gc4g2HrWwmRCXi\nvn+WrMSS0ZyZuYMhTQIDAQAB\n-----END PUBLIC KEY-----'
 
-    def __new__(cls, prev_block: 'Block', transactions: List[Transaction], miner_address: Account, timestamp = None):
+    def __new__(cls, prev_block: 'Block', transactions: List[Transaction], miner_address: bytes, timestamp = None):
         miner_address == bytes(32) or check_is_hash(miner_address)
 
         if timestamp is None:

@@ -880,7 +880,11 @@ class ScriptInterpreter:
                 logging.info("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
                 self.pc = self.pc + 1
                 if not execute_item(item):
-                    logging.warning("execution failed: " + str(item))
+                    if self.retval is None:
+                        logging.warning("execution failed: " + str(item))
+                    else:
+                        logging.warning("gonna return " + str(self.retval))
+                        return True
                     return False
                 logging.warning("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
             return False

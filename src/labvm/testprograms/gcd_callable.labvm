@@ -46,4 +46,6 @@ op_sub				// b - a
 op_popabs			// store in b
 -31
 op_jumpr			// jump back to while condition
+0
+op_pushabs
 op_ret

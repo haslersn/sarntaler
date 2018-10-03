@@ -70,7 +70,7 @@ def test_create_and_call_gcd_account():
             nonce_int += 1
     print('Nonce of gcdblock was {}'.format(nonce_int))
 
-    tx_output = TransactionOutput(example_address, 0, "120 15") 
+    tx_output = TransactionOutput(example_address, 0, "120 16")
     tx_data = TransactionData([], [tx_output], 0, bytes(32))
     tx = Transaction(tx_data)
     skeleton = BlockSkeleton(block, [tx], bytes(32))
