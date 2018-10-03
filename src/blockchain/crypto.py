@@ -13,10 +13,10 @@ def is_hash(hash: bytes) -> bool:
 
 def is_keypair(keypair: bytes) -> bool:
     try:
-        RSA.importKey(keypair)
+        imported = RSA.importKey(keypair)
     except ValueError:
         return False
-    return type(keypair) == bytes and len(keypair) == 886
+    return type(keypair) == bytes and imported.has_private()
 
 def is_pubkey(pubkey: bytes) -> bool:
     try:
