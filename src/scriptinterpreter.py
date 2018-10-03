@@ -547,6 +547,8 @@ class ScriptInterpreter:
             logging.warning("OP_SETSTOR: s_1 not existing or wrong type")
             return False
         var_value = self.stack.pop()
+        if type(var_value) in [Hash, Signature, Pubkey, Keypair]:
+            var_value = var_value.value
         new_acc = self.acc.set_storage(var_name, var_value)
         if new_acc is None:
             logging.warning("OP_SETSTOR: Could not set storage for " + var_name)
