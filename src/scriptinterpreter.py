@@ -688,7 +688,7 @@ class ScriptInterpreter:
         self.state = self.state.put(target_address, target_acc.hash)
 
         if target_acc.code is not None:
-            vm = ScriptInterpreter(self.state, params, target_acc, self.acc, amount)
+            vm = ScriptInterpreter(self.state, params, target_acc, [self.acc.address], amount)
             result = vm.execute_script()
             if result is None:
                 logging.warning("OP_TRANSFER: target account code execution failed")
@@ -892,8 +892,8 @@ class ScriptInterpreter:
         logging.warning("executing new script: " + self.acc.code)
 
         self.stack = []
-        self.stack.append(self.acc.address)
-        self.stack.append(self.inaddresses)
+        self.stack.append(Hash(self.acc.address))
+        self.stack.append([Hash(inaddr) for inaddr in self.inaddresses])
         self.stack.append(self.amountspent)
 
         if type(self.params_script) == list:
