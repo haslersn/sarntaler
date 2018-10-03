@@ -468,4 +468,10 @@ def test_getcode():
     state = vm.execute_script()
     assert vm.stack[5:] == [code]
 
-test_getcode()
+def test_swapany():
+    script_finalstack_test('-1 -2 -3 -4 1 OP_SWAPANY 1 OP_RET', [-1, -2, -4, -3])
+    script_finalstack_test('-1 -2 -3 -4 -5 3 OP_SWAPANY 1 OP_RET', [-1, -5, -3, -4, -2])
+    script_finalstack_test('-1 -2 -3 -4 -5 4 OP_SWAPANY 1 OP_RET', [-5, -2, -3, -4, -1])
+    script_finalstack_test('-1 -2 -3 -4 -5 0 OP_SWAPANY 1 OP_RET', [-1, -2, -3, -4, -5])
+
+test_swapany()

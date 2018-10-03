@@ -109,6 +109,7 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_KILL | - | kills execution with an error |
 |_**Stack**_|
 | OP_SWAP | | Swaps s_1 and s_2|
+| OP_SWAPANY | s_1 non-negative int, stack at least s_1 + 2 elements high | Consumes s_1 and swaps s_2 with the value at position s_1, relative to s_2. That means, if s_1 is zero it will be swapped with itself, if s_1 is 1 s_2 and s_3 will be swapped etc. |
 | OP_DUP |- | pushes s_1 |
 | OP_PUSHABS | s_1 valid stack index | consumes the highest stack cell. Let n be its value. It pushes the n-th cell of the stack. The lowest stack cell has index 0, the next one 1 and so on. |
 | OP_POPABS  | s_1 valid stack index | consumes the two highest stack cells. Stores s_2 at the absolute stack index s_1 |
@@ -132,6 +133,7 @@ Boolean values are ints. 1 represents true and 0 represents false.
 | OP_CREATECONTR | s_1 pubkey, s_2 string, s_3 boolean, s_4 list[string], s_5 list | Consumes s_1 to s_5 and creates a new account with public key in s_1, contract code in s_2, owner_access flag in s_3. s_4 and s_5 are lists of storage variable names and their initial values, respectively. Leaves a 1 on the stack if the contract creation succeeded, 0 otherwise. |
 | OP_GENPUBKEY | s_1 int | Consumes s_1 and generates a public key using a pseudo-RNG so that the generated key is always the same. The key is pushed to the stack. Do **NOT** use this to create an account without the owner_access flag set to zero, because anyone will be able to generate the corresponding private key!! | 
 | OP_GETCODE | s_1 hash | Consumes s_1 and returns the code of the account with address s_1 onto the stack |
+
 
 Lines are numbered beginning with 1 and empty lines are not counted
 

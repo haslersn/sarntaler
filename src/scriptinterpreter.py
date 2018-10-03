@@ -67,6 +67,7 @@ class ScriptInterpreter:
         'OP_CHECKLOCKTIME',
 
         'OP_SWAP',
+        'OP_SWAPANY',
         'OP_DUP',
 
         'OP_PUSHABS',
@@ -261,6 +262,16 @@ class ScriptInterpreter:
 
         self.stack.append(old_first)
         self.stack.append(old_second)
+        return True
+    
+    def op_swapany(self):
+        i = self.__pop_checked(int)
+        if i is None or i < 0 or len(self.stack) < i + 1:
+            logging.warning("OP_SWAPANY: Invalid argument or not enough stack items")
+        sp = len(self.stack) - 1
+        temp = self.stack[sp] # second element from top is at top after __pop_checked()!!
+        self.stack[sp] = self.stack[sp - i]
+        self.stack[sp - i] = temp
         return True
 
     def op_pushabs(self):
