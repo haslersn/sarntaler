@@ -1,0 +1,7 @@
+contract{
+    int version;
+}
+int copy_out(sarn balance){
+    new(balance)(version+1);
+    return 1;
+}

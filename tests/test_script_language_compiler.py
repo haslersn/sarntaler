@@ -137,9 +137,10 @@ class TestParserMethods(unittest.TestCase):
         self.generic_test("gcd.marm")
 
     @unittest.skipIf(os.name == 'nt', "no crypto module on windows")
-    def generic_run_test(self, filename, expected_result, fnname, params=[]):
+    def generic_run_test(self, filename, expected_result, fnname, params=[], stores=[]):
         from subprocess import call
-        from tests.test_scriptinterpreter import get_account, empty_mt
+        from src.blockchain.account import Account
+        from tests.test_scriptinterpreter import empty_mt, example_pubkey
         from src.scriptinterpreter import ScriptInterpreter
         self.generic_test(filename, print_out=True)
         call(["rm", os.path.join(self.testdir, "o.out")])
@@ -148,7 +149,8 @@ class TestParserMethods(unittest.TestCase):
         with open(os.path.join(self.testdir, "o.out")) as bytecode_file:
             bytecode = bytecode_file.read()
 
-        mt, acc = get_account(empty_mt, bytecode)
+        acc = Account(example_pubkey, 0, bytecode, 1, stores)
+        mt = empty_mt.put(acc.address, acc.hash)
         si = ScriptInterpreter(mt, params[::-1]+[fnname, len(params)+1], acc, [bytes(17)], 0)
         retval = si.execute_script()
         self.assertTrue(retval is not None)
@@ -196,6 +198,36 @@ class TestParserMethods(unittest.TestCase):
 
     def test_precedence(self):
         self.generic_run_test("precedence_test.marm", 2, "precedence_test", [])
+
+    def test_address_invalid(self):
+        self.generic_test("test_address_invalid.marm", False, False, 1)
+
+    def test_address_valid(self):
+        self.generic_run_test("test_address_valid.marm", 123, "test_address", [123])
+
+    def test_calling_convention(self):
+        self.generic_run_test("test_calling_convention.marm", 123, "fn1", [2, 3])
+        self.generic_run_test("test_calling_convention.marm", 256, "fn2", [5, 6])
+        self.generic_run_test("test_calling_convention.marm", 357, "fn3", [5, 7])
+
+    def test_contract_global_invalid(self):
+        self.generic_test("test_contract_global_invalid.marm", False, False, 1)
+
+    def test_contract_global_valid(self):
+        from src.blockchain.account import StorageItem
+        stores = [StorageItem("myint", 'int', 0),
+                  StorageItem("mysarn", 'int', 0)]
+        self.generic_run_test("test_contract_global_valid.marm", 1234, "setmysarn", [1234], stores)
+        self.generic_run_test("test_contract_global_valid.marm", -1085, "setmyint", [-1085], stores)
+
+    def test_loop(self):
+        self.generic_run_test("test_loop.marm", 1, "collatz_step", [2352, 11]) # TODO: 2nd param
+
+    def test_new(self):
+        self.generic_run_test("test_new.marm", 1, "copy_out", 21)
+
+    def test_sarn_ok(self):
+        self.generic_run_test("test_sarn_ok.marm", 12, "test_sarn", [11])
 
     @unittest.skipIf(True, "DOS test, takes approximately 10m, do not test if you don't want this")
     def test_DOS(self):

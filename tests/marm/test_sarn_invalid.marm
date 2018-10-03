@@ -1,0 +1,5 @@
+sarn test_sarn(sarn x){
+  sarn y = -1;
+  sarn z = y-2;
+  return 0;
+}
