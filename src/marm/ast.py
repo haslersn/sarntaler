@@ -312,11 +312,11 @@ class NewExpr(Expr):
         code = ["0 //starting account generation"]
         for param in self.params:
             code += param.code_gen()
-        code.append(len(self.params)+1)
+        code.append(len(self.params))
         code.append("OP_PACK // list of paramvalues")
         for data in self.cd:
             code.append('"'+str(data.name)+'"')
-        code.append(len(self.cd)+1)
+        code.append(len(self.cd))
         code.append("OP_PACK // list of paramnames")
         code.append("0 // ownerflag")
         code.append("0")
@@ -324,13 +324,13 @@ class NewExpr(Expr):
         code.append("OP_GETCODE // code on stack")
         code.append("OP_GENPUBKEY")
         code.append("OP_DUP // save pub key locally")
-        code.append("5")
+        code.append("6")
         code.append("OP_SWAPANY")
         code.append("OP_POPVOID")
         code.append("OP_CREATECONTR")
         code.append("1")
         code.append("OP_EQU")
-        code.append("1")
+        code.append("2")
         code.append("OP_JUMPRC")
         code.append("OP_KILL //end")
 
