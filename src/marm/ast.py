@@ -309,7 +309,7 @@ class NewExpr(Expr):
         self.marm_type = Typename('address')
 
     def code_gen(self, errorhandler=None):
-        code = ["//starting account generation"]
+        code = ["0 //starting account generation"]
         for param in self.params:
             code += param.code_gen()
         code.append(len(self.params)+1)
@@ -322,22 +322,18 @@ class NewExpr(Expr):
         code.append("0")
         code.append("OP_PUSHABS")
         code.append("OP_GETCODE // code on stack")
-        code.append("0")
-        code.append("OP_PUSHABS")
-        code.append("42424242")
-        code.append("OP_ADD")
         code.append("OP_GENPUBKEY")
+        code.append("OP_DUP // save pub key locally")
+        code.append("5")
+        code.append("OP_SWAPANY")
+        code.append("OP_POPVOID")
         code.append("OP_CREATECONTR")
         code.append("1")
         code.append("OP_EQU")
         code.append("1")
         code.append("OP_JUMPRC")
-        code.append("OP_KILL")
-        code.append("0")
-        code.append("OP_PUSHABS")
-        code.append("42424242")
-        code.append("OP_ADD")
-        code.append("OP_GENPUBKEY")
+        code.append("OP_KILL //end")
+
         return code
 
 class TransferExpr(Expr):
