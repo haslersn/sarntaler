@@ -55,6 +55,7 @@ class TestParserMethods(unittest.TestCase):
         self.generic_lex("msg", 'MSG', 'msg')
         self.generic_lex("contract", 'CONTRACT', 'contract')
         self.generic_lex("transfer", 'TRANSFER', 'transfer')
+        self.generic_lex("new", 'NEW', 'new')
         self.generic_lex("i", 'IDENT', 'i')
         self.generic_lex("{", 'BEGIN', '{')
         self.generic_lex("}", 'END', '}')
@@ -95,7 +96,7 @@ class TestParserMethods(unittest.TestCase):
         self.generic_lex(")", 'RPAR', ')')
 
     def test_tokens_not_empty(self):
-        self.assertTrue(lexer.tokens.__len__() == 41)
+        self.assertTrue(lexer.tokens.__len__() == 42)
 
     def test_parse_file_error(self):
         """Tests some quite complicated errors"""
@@ -202,6 +203,7 @@ class TestParserMethods(unittest.TestCase):
 
     def test_precedence(self):
         self.generic_run_test("precedence_test.marm", 2, "precedence_test", [])
+
     @unittest.skipIf(True, "DOS test, takes approximately 10m, do not test if you don't want this")
     def test_DOS(self):
         self.generic_test("chaos.marm")

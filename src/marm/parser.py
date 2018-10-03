@@ -202,11 +202,15 @@ def p_exprSPECIALCONSTANTS_CONTRACT(p):
 def p_exprFUNCALL(p):
     '''expr : lhsexpression LPAR exprlist_opt RPAR LPAR exprlist_opt RPAR
             | lhsexpression LPAR exprlist_opt RPAR
+            | NEW LPAR exprlist_opt RPAR LPAR exprlist_opt RPAR
             | TRANSFER LPAR expr COMMA expr RPAR'''
     if len(p)==7:
         p[0] = ast.TransferExpr(p[3],p[5])
     elif len(p)==5:
-        p[0] = ast.LocalcallExpr(p[1],p[3])
+        if p[1] == 'new':
+            p[0] = ast.NewExpr(p[3], p[5])
+        else:
+            p[0] = ast.LocalcallExpr(p[1],p[3])
     else:
         p[0] = ast.ContractcallExpr(p[1],p[3],p[6])
     p[0].set_pos_from(p)

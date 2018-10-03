@@ -5,7 +5,9 @@ int precedence_test() {
     int d;
     int e;
     int f;
+    address addr;
 
+    addr = new(s, c);
     f = 1;
     b = 9;
     c = -2;
@@ -15,5 +17,6 @@ int precedence_test() {
     if (f > 2 || a <= 0 && b == 9) {
         e = 2; // should be 2
     }
+
     return e;
 }

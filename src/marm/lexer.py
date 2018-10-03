@@ -11,7 +11,8 @@ keywords = {
     'sarn':'SARN',
     'msg':'MSG',
     'contract':'CONTRACT',
-    'transfer':'TRANSFER'
+    'transfer':'TRANSFER',
+    'new':'NEW'
     #   'void' : 'VOID',
     #   'goto' : 'GOTO',
     #   'default' : 'DEFAULT',

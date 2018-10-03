@@ -16,6 +16,11 @@ class Scope:
             return self.outer.lookup(name)
         else:
             return None
+    def dump_contract_data(self):
+        if self.outer is not None:
+            return self.outer.dump_contract_data()
+        else:
+            return self.local_vars
     def has_direct_definition(self, name):
         return name in self.local_vars
     def _next_var_index(self):
@@ -241,6 +246,45 @@ class ContractcallExpr(Expr):
             code+=fe.code_gen()
             break
         code.append("// S1 == FEE")
+        code.append("OP_TRANSFER")
+        code.append("1")
+        code.append("OP_JUMPRC // if successfull, continue")
+        code.append("OP_KILL")
+        return code
+
+class NewExpr(Expr):
+    def __init__(self, balance, params):
+        super().__init__()
+        self.balance = balance
+        self.params = params
+
+    def __str__(self):
+        return "[NewExpr: balance={}, paramlist={}]".format(self.balance, self.liststr(self.params))
+
+    def analyse_scope(self, scope, errorhandler=None):
+        self.balance.analyse_scope(scope, errorhandler)
+        for param in self.params:
+            param.analyse_scope(scope, errorhandler)
+
+    def typecheck(self, errorhandler=None):
+        self.balance.typecheck(errorhandler)
+        self.params.typecheck(errorhandler)
+        if self.balance.marm_type != 'sarn':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Type Error: transferring is only valid to addresses")
+        if self.paramlist.marm_type != 'sarn':
+            errorhandler.registerError(self.pos_filename, self.pos_begin_line, self.pos_begin_col,
+                                        "Type Error: transferring is only valid for sarns")
+        self.marm_type = Typename('generic')
+
+    def code_gen(self, errorhandler=None):
+        code = []
+        code.append("0")
+        code.append("OP_PACK // S3 == empty param list")
+        code+=self.address.code_gen()
+        code.append("// S2 == target address")
+        code+=self.amount.code_gen()
+        code.append("// S1 == amount")
         code.append("OP_TRANSFER")
         code.append("1")
         code.append("OP_JUMPRC // if successfull, continue")
@@ -490,6 +534,9 @@ class Typename(Node):
         """Should not be used at all, fails on call"""
         raise NotImplementedError
 
+    def datalayout(self,errorhandler=None):
+        raise NotImplementedError
+
     def typecheck(self, errorhandler=None): pass
 
     def attribute_type(self, ident, errorhandler=None): # TODO: Add **all+* attributes we have available
@@ -528,6 +575,15 @@ class Translationunit(Node):
             proc.set_global_definition_types(errorhandler)
         for proc in self.procs:
             proc.typecheck(errorhandler)
+
+    def datalayout(self,errorhandler=None):
+        inits = []
+        names = []
+        layout = [names, inits]
+        for lay in self.contractdata[::-1]:
+            names.append(lay.name)
+            inits.append('0')
+        return layout
 
     def code_gen(self, errorhandler=None):
         """Calls codegen for every procedure and stores their addresses before"""

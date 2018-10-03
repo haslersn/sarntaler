@@ -134,7 +134,7 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
 
     completed_stages=[]
     result = None
-
+    datalayout = None
     class ErrorInStage(RuntimeError):
         def __init__(self, stage):
             super().__init__("An error occured in stage {}".format(stage))
@@ -166,7 +166,12 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
                 depend_on_stage('parse')
                 depend_on_stage('analyse_scope')
                 depend_on_stage('typecheck')
+                datalayout = result.datalayout(errorhandler)
                 result = result.code_gen(errorhandler)
+                datalayout.insert(0,0)
+                datalayout.insert(0,result)
+                datalayout.insert(0,0)
+                result = datalayout
         except ErrorInStage as e:
             raise e
         except:
@@ -187,7 +192,7 @@ def marmcompiler(filename, input, errorhandler=None, stages=None):
  #   print(coloring(input))
     print(errorhandler.tostring())
     print(errorhandler.to_explanation(input))
-
+    
     return result
 
 def coloring(input):
