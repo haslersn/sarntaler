@@ -1,4 +1,8 @@
 0
+op_popabs
+1
+op_popabs
+0
 op_pushabs
 1
 op_pushabs			// load both variables on the stack
@@ -30,3 +34,4 @@ op_sub				// b - a
 op_popabs			// store in b
 -31
 op_jumpr			// jump back to while condition
+op_ret

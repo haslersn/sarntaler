@@ -6,6 +6,7 @@ __pycache__
 /src/marm/parsetab.py
 .cache
 .pytest_cache
+.vscode
 *.wallet
 *.pem
 *.json.gz

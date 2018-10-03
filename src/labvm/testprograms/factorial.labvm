@@ -23,3 +23,4 @@ FACOPERAND      // put the value that we want the factorial of on the stack
 OP_CALL         // call fac-method
 FACRESULT       // the value of fac(FACOPERAND) will be put here to test the result
 OP_EQU          // check if our calculation was right
+OP_RET
