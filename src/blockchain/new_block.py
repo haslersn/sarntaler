@@ -197,8 +197,8 @@ class BlockSkeleton: # contains everything a block needs except for a valid nonc
     @classmethod
     def from_json_compatible(cls, var: dict, transactions: List[Transaction]):
         # prev_block
-        prev_block_hash = var['prev_block_hash']
-        if prev_block_hash is None:
+        prev_block_hash = unhexlify(var['prev_block_hash'])
+        if prev_block_hash == bytes(32):
             prev_block = None
         else:
             prev_block = Block.get_from_hash(prev_block_hash)
