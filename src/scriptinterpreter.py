@@ -498,7 +498,7 @@ class ScriptInterpreter:
 
         result = self.stack.pop()
         if self.stack[self.framepointer] == -1:
-            logging.warning("OP_RET: Last Return, gonna exit program " + str(result))
+            logging.debug("OP_RET: Returning {}".format(result))
             self.retval = result
             return False
         self.pc = self.stack[self.framepointer + 1] # restore the program counter
@@ -632,7 +632,6 @@ class ScriptInterpreter:
         return True
 
     def op_transfer(self):
-        logging.info("OP_TRANSFER called")
         amount = self.__pop_checked(int)
         target_address = self.__pop_checked(Hash)
         params = self.__pop_checked(list)
@@ -834,12 +833,12 @@ class ScriptInterpreter:
             # Check if item is data or opcode
             if callable(item):
                 # Execute the operation
-                logging.warning(str(item) + " is an opcode")
+                logging.debug('Executing item {}'.format(item))
                 if not item():
                     return False
             else:
                 # Push data onto the stack
-                logging.warning(str(item) + " is data")
+                logging.debug('Pushing data {}'.format(item))
                 self.stack.append(item)
             return True
 
@@ -853,19 +852,19 @@ class ScriptInterpreter:
             while self.pc <= len(self.program):
                 item = self.program[self.pc - 1] # Fetch the next item (given by the program counter)
                 #logging.warning("executing " + str(item))
-                logging.info("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
+                logging.debug("pc = " + str(self.pc) + " " + "item = \'" + str(item) + "\'")
                 self.pc = self.pc + 1
                 if not execute_item(item):
                     if self.retval is None:
-                        logging.warning("execution failed: " + str(item))
+                        logging.warning("Execution if item failed: {}".format(item))
                     else:
-                        logging.warning("gonna return " + str(self.retval))
+                        logging.debug("Returning ".format(self.retval))
                         return True
                     return False
-                logging.warning("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
+                logging.debug("PC: " + str(self.pc) + ", FramePointer: " + str(self.framepointer) + ", Stack: " + str(self.stack))
             return False
 
-        logging.warning("executing new script: " + self.acc.code)
+        logging.debug("Going to execute script: " + self.acc.code)
 
         self.stack = []
         self.stack.append(Hash(self.acc.address))
