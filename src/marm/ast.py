@@ -112,7 +112,7 @@ class SpecialExpression(Expr):
             #     andernfalls begehe selbstmord
             code.append("1")
             code.append("OP_EQU")
-            code.append("1")
+            code.append("2")
             code.append("OP_JUMPRC")
             code.append("OP_KILL")
             errorhandler.registerWarning(self.pos_filename,self.pos_begin_line,self.pos_begin_col,
@@ -259,7 +259,7 @@ class ContractcallExpr(Expr):
             break
         code.append("// S1 == FEE")
         code.append("OP_TRANSFER")
-        code.append("1")
+        code.append("2")
         code.append("OP_JUMPRC // if successfull, continue")
         code.append("OP_KILL")
         return code
@@ -368,7 +368,7 @@ class TransferExpr(Expr):
         code+=self.amount.code_gen(errorhandler)
         code.append("// S1 == amount")
         code.append("OP_TRANSFER")
-        code.append("1")
+        code.append("2")
         code.append("OP_JUMPRC // if successfull, continue")
         code.append("OP_KILL")
         return code
