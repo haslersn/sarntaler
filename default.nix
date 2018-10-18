@@ -50,6 +50,10 @@ let
     treelib
     urwid
     werkzeug
+
+    # not strictly required:
+    pylint
+    autopep8
   ];
 
 in buildEnv {
