@@ -1,13 +1,11 @@
-from binascii import hexlify
 import logging
 import random
+from binascii import hexlify
+from Crypto.PublicKey import RSA
 
-from src.blockchain import crypto
 from src.blockchain.account import Account, StorageItem
-from src.crypto import Key
 from src.scriptinterpreter import ScriptInterpreter, Hash, Pubkey
 from src.blockchain.merkle_trie import MerkleTrie, MerkleTrieStorage
-from Crypto.PublicKey import RSA
 
 from src.blockchain.crypto import *
 
@@ -364,8 +362,8 @@ def test_setstor_invalid():
     assert not si.execute_script()
 
 def test_create_contr():
-    pubkey = crypto.pubkey_from_keypair(crypto.generate_keypair())
-    init_key = crypto.pubkey_from_keypair(crypto.generate_keypair())
+    pubkey = pubkey_from_keypair(generate_keypair())
+    init_key = pubkey_from_keypair(generate_keypair())
     init_sig = bytes([1] * 128)
     init_address = get_dummy_account().address
     myacc = Account(example_pubkey, 278, '[42 k0x' + hexlify(init_key).decode() + ' s0x' + hexlify(init_sig).decode() + ' h0x' + hexlify(init_address).decode() + '] ["myint" "mykey" "mysig" "myadd"] 1 "OP_RET" k0x' + hexlify(pubkey).decode() + ' OP_CREATECONTR 1 OP_RET', 1, [])
@@ -373,14 +371,14 @@ def test_create_contr():
     si = ScriptInterpreter(my_mt, "", myacc, [example_hash], 0)
     new_state, ret_val = si.execute_script()
     assert new_state
-    new_acc = new_state.get(crypto.compute_hash(pubkey))
+    new_acc = new_state.get(compute_hash(pubkey))
     assert new_acc.get_storage('myint') == 42
     assert new_acc.get_storage('mykey') == init_key
     assert new_acc.get_storage('mysig') == init_sig
     assert new_acc.get_storage('myadd') == init_address
 
 def test_create_contr_fail():
-    pubkey = crypto.pubkey_from_keypair(crypto.generate_keypair())
+    pubkey = pubkey_from_keypair(generate_keypair())
     myacc = Account(example_pubkey, 278, '[] ["mykey"] 1 "OP_RET" k0x' + hexlify(pubkey).decode() + ' OP_CREATECONTR 1 OP_RET', 1, [])
     my_mt = empty_mt.put(myacc.address, myacc)
     si = ScriptInterpreter(my_mt, "", myacc, [example_hash], 0)
