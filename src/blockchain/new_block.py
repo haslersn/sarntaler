@@ -127,13 +127,13 @@ class BlockSkeleton:  # contains everything a block needs except for a valid non
         else:
             state_trie = prev_block.skeleton.state_trie
 
-        tx_trie = MerkleTrie(MerkleTrieStorage(bytes))
+        tx_trie = MerkleTrie(MerkleTrieStorage(Transaction))
         for tx in transactions:
             state_trie = transit(
                 ScriptInterpreter, state_trie, tx, miner_address)
             if state_trie is None:
                 raise ValueError('Invalid transaction')
-            tx_trie = tx_trie.put(tx.hash, tx.hash)
+            tx_trie = tx_trie.put(tx.hash, tx)
 
         prev_accumulated_difficulty = 0 if prev_block is None else prev_block.skeleton.accumulated_difficulty
 
