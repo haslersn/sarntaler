@@ -31,6 +31,7 @@ def check_signature_type(value: bytes):  # TODO length
 def check_pubkey_type(value: bytes):  # TODO length
     return is_pubkey(value)
 
+
 def check_keypair_type(value: bytes):  # TODO length
     return is_keypair(value)
 
@@ -76,13 +77,6 @@ class StorageItem(namedtuple("StorageItem", ["s_name", "s_type", "s_value"])):
 
 class Account(namedtuple("Account", ["pub_key", "balance", "code", "owner_access", "storage"])):
     _dict = dict()
-
-    @classmethod
-    def get_from_hash(cls, hash: bytes):
-        if hash in cls._dict:
-            return cls._dict[hash]
-        else:
-            return None
 
     def __new__(cls, pubkey: bytes, balance: int, code: str, owner_access: bool, storage: List[StorageItem]):
         if None in storage:
@@ -132,7 +126,8 @@ class Account(namedtuple("Account", ["pub_key", "balance", "code", "owner_access
     def add_to_balance(self, delta: int):
         new_balance = self.balance + delta
         if new_balance < 0:
-            logging.warning("Invalid balance modification: New balance (" + str(new_balance) + ") would be negative")
+            logging.warning("Invalid balance modification: New balance (" +
+                            str(new_balance) + ") would be negative")
             return None
         return Account(self.pub_key, self.balance + delta, self.code, self.owner_access, self.storage)
 
@@ -153,7 +148,8 @@ class Account(namedtuple("Account", ["pub_key", "balance", "code", "owner_access
         return Account(self.pub_key, self.balance, self.code, self.owner_access, new_storage)
 
     def get_storage(self, var_name: str):
-        find_item = list(filter(lambda storage_item: storage_item.s_name == var_name, self.storage))
+        find_item = list(
+            filter(lambda storage_item: storage_item.s_name == var_name, self.storage))
         if not find_item or len(find_item) != 1:
             logging.warning("can't get storage for variable " + var_name)
             return None

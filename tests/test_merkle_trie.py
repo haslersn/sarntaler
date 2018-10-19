@@ -3,25 +3,30 @@ import json
 from src.blockchain.merkle_trie import *
 from src.blockchain.crypto import compute_hash
 
+
 def gen_key(i):
     return compute_hash(bytes([i]))
+
+
 def gen_value(i):
     return compute_hash(bytes([0, i]))
 
-empty_trie = MerkleTrie(MerkleTrieStorage())
 
-example_trie_keys = [ gen_key(i) for i in range(10) ]
-example_trie_values = [ gen_key(i) for i in range(10) ]
-example_trie = MerkleTrie(MerkleTrieStorage())
+empty_trie = MerkleTrie(MerkleTrieStorage(bytes))
+
+example_trie_keys = [gen_key(i) for i in range(10)]
+example_trie_values = [gen_key(i) for i in range(10)]
+example_trie = MerkleTrie(MerkleTrieStorage(bytes))
 for key, value in zip(example_trie_keys, example_trie_values):
     example_trie = example_trie.put(key, value)
+
 
 def test_put_and_remove():
     key = gen_key(1)
     value = gen_value(1)
 
     # construct
-    trie1 = MerkleTrie(MerkleTrieStorage())
+    trie1 = MerkleTrie(MerkleTrieStorage(bytes))
     assert not trie1.contains(key)
 
     # put
@@ -43,8 +48,9 @@ def test_put_and_remove():
     assert not did_remove
     assert trie3 == trie4
 
+
 def test_put_multiple():
-    trie = MerkleTrie(MerkleTrieStorage())
+    trie = MerkleTrie(MerkleTrieStorage(bytes))
     for i in range(10):
         trie = trie.put(gen_key(i), gen_value(i))
         for j in range(10):
@@ -56,19 +62,25 @@ def test_put_multiple():
                 assert not trie.contains(key)
                 assert trie.get(key) is None
 
+
 def check_serialization(trie):
-    storage = trie.storage  # for deserialization: where to take the shared state from 
+    storage = trie.storage  # for deserialization: where to take the shared state from
     serialized = json.dumps(trie.to_json_compatible([]))
-    deserialized = MerkleTrie.from_json_compatible(json.loads(serialized), storage)
+    deserialized = MerkleTrie.from_json_compatible(
+        json.loads(serialized), storage)
     serialized_again = json.dumps(deserialized.to_json_compatible([]))
     assert trie == deserialized
     assert serialized == serialized_again
 
+
 def test_serialization_empty():
     check_serialization(empty_trie)
+
 
 def test_serialization_full():
     check_serialization(example_trie)
 
+
 def test_get_all():
-    assert example_trie.get_all() == sorted(zip(example_trie_keys, example_trie_values), key = lambda p: p[0])
+    assert example_trie.get_all() == sorted(
+        zip(example_trie_keys, example_trie_values), key=lambda p: p[0])

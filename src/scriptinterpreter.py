@@ -512,7 +512,7 @@ class ScriptInterpreter:
         if address is None:
             logging.warning("OP_GETBAL: Stack is empty")
             return False
-        acc_to_get_bal_from = Account.get_from_hash(self.state.get(address.value))
+        acc_to_get_bal_from = self.state.get(address.value)
         if acc_to_get_bal_from is None:
             self.stack.append(-1)
         else:
@@ -554,7 +554,7 @@ class ScriptInterpreter:
             logging.warning("OP_SETSTOR: Could not set storage for " + var_name)
             return False
         self.acc = new_acc
-        self.state = self.state.put(self.acc.address, self.acc.hash)
+        self.state = self.state.put(self.acc.address, self.acc)
         return True
 
     def op_createcontr(self):
@@ -588,7 +588,7 @@ class ScriptInterpreter:
             self.stack.append(0)
             return True
         new_acc = Account(pub_key.value, 0, code, owner_access_flag, storage)
-        self.state = self.state.put(new_acc.address, new_acc.hash)
+        self.state = self.state.put(new_acc.address, new_acc)
         self.stack.append(1)
         return True
 
@@ -659,12 +659,12 @@ class ScriptInterpreter:
             logging.warning("OP_TRANSFER: couldn't deduct value from input account")
             self.stack.append(0)
             return True
-        self.state = self.state.put(self.acc.address, self.acc.hash)
+        self.state = self.state.put(self.acc.address, self.acc)
 
         # add amount
-        target_acc = Account.get_from_hash(self.state.get(target_address))
+        target_acc = self.state.get(target_address)
         target_acc = target_acc.add_to_balance(amount)
-        self.state = self.state.put(target_address, target_acc.hash)
+        self.state = self.state.put(target_address, target_acc)
 
         if target_acc.code is not None:
             vm = ScriptInterpreter(self.state, params, target_acc, [self.acc.address], amount)
@@ -693,7 +693,7 @@ class ScriptInterpreter:
         if addr is None:
             logging.warning("OP_GETCODE: Address must exist and be a Hash")
             return False
-        acc = Account.get_from_hash(self.state.get(addr.value))
+        acc = self.state.get(addr.value)
         if acc is None:
             logging.warning("OP_GETCODE: invalid account address")
             return False

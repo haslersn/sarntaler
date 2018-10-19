@@ -11,7 +11,7 @@ from Crypto.PublicKey import RSA
 
 from src.blockchain.crypto import *
 
-empty_mt = MerkleTrie(MerkleTrieStorage()) # not relevant in this test yet, but needs to exist
+empty_mt = MerkleTrie(MerkleTrieStorage(Account)) # not relevant in this test yet, but needs to exist
 example_keypair = generate_keypair()
 example_pubkey = pubkey_from_keypair(example_keypair)
 example_hash = b'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
@@ -24,7 +24,7 @@ def get_dummy_account():
 
 def get_account(mt : MerkleTrie, program : str):
     acc = Account(example_pubkey, 0, program, 1, [])
-    nmt = mt.put(acc.address, acc.hash)
+    nmt = mt.put(acc.address, acc)
     return nmt, acc
 
 def script_finalstack_test(script: str, finalstack: list):
@@ -301,7 +301,7 @@ def test_factorial():
 
 def test_getbal():
     my_acc = Account(example_pubkey, 100, "h0x" + hexlify(compute_hash(example_pubkey)).decode() + " OP_GETBAL 1 OP_RET", 1, [])
-    my_mt = empty_mt.put(my_acc.address, my_acc.hash)
+    my_mt = empty_mt.put(my_acc.address, my_acc)
     si = ScriptInterpreter(my_mt, "", my_acc, [example_hash], 0)
     assert si.execute_script()
     assert si.stack[5:] == [my_acc.balance]
@@ -310,8 +310,8 @@ def test_getbal_from_other():
     other_pubkey = pubkey_from_keypair(generate_keypair())
     other_acc = Account(other_pubkey, 555, "1 OP_RET", 1, [])
     my_acc = Account(example_pubkey, 100, "h0x" + hexlify(other_acc.address).decode() + " OP_GETBAL 1 OP_RET", 1, [])
-    my_mt = empty_mt.put(my_acc.address, my_acc.hash)
-    my_mt = my_mt.put(other_acc.address, other_acc.hash)
+    my_mt = empty_mt.put(my_acc.address, my_acc)
+    my_mt = my_mt.put(other_acc.address, other_acc)
     si = ScriptInterpreter(my_mt, "", my_acc, [example_hash], 0)
     assert si.execute_script()
     assert si.stack[5:] == [other_acc.balance]
@@ -320,14 +320,14 @@ def test_getbal_from_non_existent():
     other_pubkey = pubkey_from_keypair(generate_keypair())
     other_acc = Account(other_pubkey, 555, "1 OP_RET", 1, [])
     my_acc = Account(example_pubkey, 100, "h0x" + hexlify(other_acc.address).decode() + " OP_GETBAL 1 OP_RET", 1, [])
-    my_mt = empty_mt.put(my_acc.address, my_acc.hash)
+    my_mt = empty_mt.put(my_acc.address, my_acc)
     si = ScriptInterpreter(my_mt, "", my_acc, [example_hash], 0)
     assert si.execute_script()
     assert si.stack[5:] == [-1]
 
 def test_getownbal():
     my_acc = Account(example_pubkey, 100, "OP_GETOWNBAL 1 OP_RET", 1, [])
-    my_mt = empty_mt.put(my_acc.address, my_acc.hash)
+    my_mt = empty_mt.put(my_acc.address, my_acc)
     si = ScriptInterpreter(my_mt, "", my_acc, [example_hash], 0)
     assert si.execute_script()
     assert si.stack[5:] == [my_acc.balance]
@@ -343,20 +343,20 @@ def test_getstor_invalid():
 
 def test_setstor():
     myacc = Account(example_pubkey, 278, '42 "myvar" OP_SETSTOR 1 OP_RET', 1, [StorageItem('myvar', 'int', 0)])
-    my_mt = empty_mt.put(myacc.address, myacc.hash)
+    my_mt = empty_mt.put(myacc.address, myacc)
     si = ScriptInterpreter(my_mt, "", myacc, [example_hash], 0)
     new_state,_ = si.execute_script()
     assert new_state
-    new_acc = Account.get_from_hash(new_state.get(myacc.address))
+    new_acc = new_state.get(myacc.address)
     assert new_acc.get_storage('myvar') == 42
 
 def test_setstor_hash():
     myacc = Account(example_pubkey, 278, 'h0x{} "myvar" OP_SETSTOR 1 OP_RET'.format(hexlify(example_hash).decode()), 1, [StorageItem("myvar", "hash", example_hash2)])
-    my_mt = empty_mt.put(myacc.address, myacc.hash)
+    my_mt = empty_mt.put(myacc.address, myacc)
     si = ScriptInterpreter(my_mt, "", myacc, [example_hash], 0)
     new_state,_ = si.execute_script()
     assert new_state
-    new_acc = Account.get_from_hash(new_state.get(myacc.address))
+    new_acc = new_state.get(myacc.address)
     assert new_acc.get_storage('myvar') == example_hash
 
 def test_setstor_invalid():
@@ -369,11 +369,11 @@ def test_create_contr():
     init_sig = bytes([1] * 128)
     init_address = get_dummy_account().address
     myacc = Account(example_pubkey, 278, '[42 k0x' + hexlify(init_key).decode() + ' s0x' + hexlify(init_sig).decode() + ' h0x' + hexlify(init_address).decode() + '] ["myint" "mykey" "mysig" "myadd"] 1 "OP_RET" k0x' + hexlify(pubkey).decode() + ' OP_CREATECONTR 1 OP_RET', 1, [])
-    my_mt = empty_mt.put(myacc.address, myacc.hash)
+    my_mt = empty_mt.put(myacc.address, myacc)
     si = ScriptInterpreter(my_mt, "", myacc, [example_hash], 0)
     new_state, ret_val = si.execute_script()
     assert new_state
-    new_acc = Account.get_from_hash(new_state.get(crypto.compute_hash(pubkey)))
+    new_acc = new_state.get(crypto.compute_hash(pubkey))
     assert new_acc.get_storage('myint') == 42
     assert new_acc.get_storage('mykey') == init_key
     assert new_acc.get_storage('mysig') == init_sig
@@ -382,7 +382,7 @@ def test_create_contr():
 def test_create_contr_fail():
     pubkey = crypto.pubkey_from_keypair(crypto.generate_keypair())
     myacc = Account(example_pubkey, 278, '[] ["mykey"] 1 "OP_RET" k0x' + hexlify(pubkey).decode() + ' OP_CREATECONTR 1 OP_RET', 1, [])
-    my_mt = empty_mt.put(myacc.address, myacc.hash)
+    my_mt = empty_mt.put(myacc.address, myacc)
     si = ScriptInterpreter(my_mt, "", myacc, [example_hash], 0)
     assert not si.execute_script()
 
@@ -413,17 +413,17 @@ def test_pubkeyfromkeypair_fail():
     assert not si.execute_script()
 
 def test_transfer():
-    trie = MerkleTrie(MerkleTrieStorage())
+    trie = MerkleTrie(MerkleTrieStorage(Account))
     key1 = generate_keypair()
     key2 = generate_keypair()
 
     target_acc = Account(pubkey_from_keypair(key2), 0, '1 OP_RET', True, {})
     contract_acc = Account(pubkey_from_keypair(key1), 100, "[] h0x" + hexlify(target_acc.address).decode() +" 10 OP_TRANSFER 1 OP_RET", False, {})
 
-    trie = trie.put(contract_acc.address, contract_acc.hash)
-    assert Account.get_from_hash(trie.get(contract_acc.address))
-    trie = trie.put(target_acc.address, target_acc.hash)
-    assert Account.get_from_hash(trie.get(target_acc.address))
+    trie = trie.put(contract_acc.address, contract_acc)
+    assert trie.get(contract_acc.address)
+    trie = trie.put(target_acc.address, target_acc)
+    assert trie.get(target_acc.address)
 
     print(type(trie))
     si = ScriptInterpreter(trie, '', contract_acc, [example_hash], 0)
@@ -432,8 +432,8 @@ def test_transfer():
 
     assert trie
     print("trie:" + str(trie.get(contract_acc.address)))
-    contract_acc = Account.get_from_hash(trie.get(contract_acc.address))
-    target_acc = Account.get_from_hash(trie.get(target_acc.address))
+    contract_acc = trie.get(contract_acc.address)
+    target_acc = trie.get(target_acc.address)
     assert contract_acc.balance is 90
     assert target_acc.balance is 10
 
@@ -445,17 +445,17 @@ def test_op_hash():
     script_finalstack_test('k0x' + hexlify(dummy.pub_key).decode() + ' OP_HASH 1 OP_RET', [Hash(dummy.address)])
 
 def test_transfer():
-    trie = MerkleTrie(MerkleTrieStorage())
+    trie = MerkleTrie(MerkleTrieStorage(Account))
     key1 = generate_keypair()
     key2 = generate_keypair()
 
     target_acc = Account(pubkey_from_keypair(key2), 0, '1 OP_RET', True, {})
     contract_acc = Account(pubkey_from_keypair(key1), 100, "[] h0x" + hexlify(target_acc.address).decode() +" 10 OP_TRANSFER 1 OP_RET", False, {})
 
-    trie = trie.put(contract_acc.address, contract_acc.hash)
-    assert Account.get_from_hash(trie.get(contract_acc.address))
-    trie = trie.put(target_acc.address, target_acc.hash)
-    assert Account.get_from_hash(trie.get(target_acc.address))
+    trie = trie.put(contract_acc.address, contract_acc)
+    assert trie.get(contract_acc.address)
+    trie = trie.put(target_acc.address, target_acc)
+    assert trie.get(target_acc.address)
 
     print(type(trie))
     si = ScriptInterpreter(trie, '', contract_acc, [example_hash], 0)
@@ -464,8 +464,8 @@ def test_transfer():
 
     assert trie
     print("trie:" + str(trie.get(contract_acc.address)))
-    contract_acc = Account.get_from_hash(trie.get(contract_acc.address))
-    target_acc = Account.get_from_hash(trie.get(target_acc.address))
+    contract_acc = trie.get(contract_acc.address)
+    target_acc = trie.get(target_acc.address)
     assert contract_acc.balance is 90
     assert target_acc.balance is 10
 
@@ -473,7 +473,7 @@ def test_genpubkey():
     def rand(n) -> bytes:
         return bytes(random.getrandbits(8) for _ in range(n))
 
-    state = MerkleTrie(MerkleTrieStorage())
+    state = MerkleTrie(MerkleTrieStorage(Account))
     state, acc = get_account(state, "OP_GENPUBKEY OP_GENPUBKEY 1 OP_RET")
     random.seed(state.hash)
     keypair1 = generate_keypair(rand)
@@ -485,12 +485,12 @@ def test_genpubkey():
     #script_finalstack_test(, [Pubkey(pubkey_from_keypair(keypair)), Pubkey(pubkey_from_keypair(keypair))])
 
 def test_getcode():
-    state = MerkleTrie(MerkleTrieStorage())
+    state = MerkleTrie(MerkleTrieStorage(Account))
     code = '"Hello World" 1 OP_RET'
     pubkey = pubkey_from_keypair(generate_keypair())
     address = compute_hash(pubkey)
     acc = Account(pubkey, 0, code, 0, {}) # this is the account whose code will be requested on the stack
-    state = state.put(address, acc.hash)
+    state = state.put(address, acc)
 
     state, calling_acc = get_account(state, 'h0x{} OP_GETCODE 1 OP_RET'.format(hexlify(address).decode()))
     vm = ScriptInterpreter(state, '', calling_acc, [example_hash], 0)
