@@ -1,5 +1,5 @@
-from binascii import hexlify, unhexlify
 from typing import List
+
 from src.blockchain.crypto import *
 
 
@@ -147,7 +147,7 @@ class MerkleTrieStorage:
         if _empty(hash):
             return None
         val = {}
-        val["hash"] = hexlify(hash).decode()
+        val["hash"] = bytes_to_hex(hash)
         if let_know:
             if depth == 64:
                 value = self._value(hash)
@@ -181,7 +181,7 @@ class MerkleTrieStorage:
                 def fn(v): return self._from_json_compatible(v, depth + 1)
                 children = tuple(map(fn, val['children']))
                 hash = self._create_inner_node(children, depth)
-        if hash is not None and hash != unhexlify(val['hash']):
+        if hash is not None and hash != hex_to_bytes(val['hash']):
             raise ValueError('Merkle Trie hash doesn\'t match')
         return hash
 

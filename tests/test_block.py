@@ -9,6 +9,7 @@ example_pubkey2 = pubkey_from_keypair(example_keypair2)
 example_address = compute_hash(example_pubkey)
 example_address2 = compute_hash(example_pubkey2)
 
+
 def test_skeleton_after_genesis():
     skeleton = BlockSkeleton(None, [], bytes(32))
     assert skeleton.height == 1
@@ -16,6 +17,7 @@ def test_skeleton_after_genesis():
     assert len(skeleton.state_trie.get_all()) == 1
     assert skeleton.prev_block == None
     assert skeleton.difficulty == skeleton.accumulated_difficulty
+
 
 def test_mining_blocks():
     block = None
@@ -31,10 +33,11 @@ def test_mining_blocks():
                 nonce_int += 1
         print('Nonce was {}'.format(nonce_int))
 
+
 def test_create_account():
     tx_output = TransactionOutput(compute_hash(BlockSkeleton.genesis_pubkey), 0, """
         [] [] 1 '1 OP_RET' k0x{}
-    """.format(hexlify(example_pubkey).decode()))
+    """.format(bytes_to_hex(example_pubkey)))
     print(tx_output)
     tx_data = TransactionData([], [tx_output], 0, bytes(32))
     tx = Transaction(tx_data)
@@ -55,8 +58,9 @@ def test_create_and_call_gcd_account():
     assert f is not None
     fstr = f.read()
     f.close()
-    tx_output = TransactionOutput(compute_hash(BlockSkeleton.genesis_pubkey), 0, 
-        "[] [] 0 '"  + fstr + "' k0x{}".format(hexlify(example_pubkey).decode()))
+    script = "[] [] 0 '{}' k0x{}".format(fstr, bytes_to_hex(example_pubkey))
+    tx_output = TransactionOutput(compute_hash(
+        BlockSkeleton.genesis_pubkey), 0, script)
     tx_data = TransactionData([], [tx_output], 0, bytes(32))
     tx = Transaction(tx_data)
     skeleton = BlockSkeleton(None, [tx], bytes(32))

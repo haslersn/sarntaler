@@ -1,4 +1,3 @@
-from binascii import hexlify, unhexlify
 import time
 import json
 from typing import List
@@ -54,14 +53,14 @@ class Block:
     def to_json_compatible(self):
         var = {}
         var['skeleton'] = self.skeleton.to_json_compatible()
-        var['nonce'] = hexlify(self.nonce).decode()
+        var['nonce'] = bytes_to_hex(self.nonce)
         return var
 
     @classmethod
     def from_json_compatible(cls, var: dict, transactions: List[Transaction]):
         skeleton = BlockSkeleton.from_json_compatible(
             var['skeleton'], transactions)
-        nonce = unhexlify(var['nonce'])
+        nonce = hex_to_bytes(var['nonce'])
         return cls(skeleton, nonce)
 
 
@@ -193,19 +192,19 @@ class BlockSkeleton:  # contains everything a block needs except for a valid non
 
     def to_json_compatible(self):
         var = {}
-        var['prev_block_hash'] = hexlify(self._prev_block_hash).decode()
+        var['prev_block_hash'] = bytes_to_hex(self._prev_block_hash)
         var['timestamp'] = self.timestamp
         var['height'] = self.height
         var['difficulty'] = self.difficulty
-        var['miner_address'] = hexlify(self.miner_address).decode()
-        var['state_root'] = hexlify(self.state_trie.hash).decode()
-        var['tx_root'] = hexlify(self.tx_trie.hash).decode()
+        var['miner_address'] = bytes_to_hex(self.miner_address)
+        var['state_root'] = bytes_to_hex(self.state_trie.hash)
+        var['tx_root'] = bytes_to_hex(self.tx_trie.hash)
         return var
 
     @classmethod
     def from_json_compatible(cls, var: dict, transactions: List[Transaction]):
         # prev_block
-        prev_block_hash = unhexlify(var['prev_block_hash'])
+        prev_block_hash = hex_to_bytes(var['prev_block_hash'])
         if prev_block_hash == bytes(32):
             prev_block = None
         else:
@@ -213,7 +212,7 @@ class BlockSkeleton:  # contains everything a block needs except for a valid non
             if prev_block is None:
                 raise ValueError('Previous block does not exist')
 
-        miner_address = unhexlify(var['miner_address'])
+        miner_address = hex_to_bytes(var['miner_address'])
         timestamp = var['timestamp']
 
         skeleton = BlockSkeleton(

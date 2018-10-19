@@ -1,11 +1,9 @@
 import json
-from binascii import hexlify, unhexlify
-from src.blockchain.crypto import *
-from typing import List
 import logging
+from typing import List
+from collections import namedtuple
 
 from src.blockchain.crypto import *
-from collections import namedtuple
 
 
 def check_int_type(value: int):
@@ -54,7 +52,7 @@ class StorageItem(namedtuple("StorageItem", ["s_name", "s_type", "s_value"])):
         val["s_name"] = self.s_name
         val["s_type"] = self.s_type
         if (self.s_type in ['pubkey', 'keypair', 'signature', 'hash']):
-            val["s_value"] = hexlify(self.s_value).decode()
+            val["s_value"] = bytes_to_hex(self.s_value)
         else:
             val["s_value"] = self.s_value
         return val
@@ -63,7 +61,7 @@ class StorageItem(namedtuple("StorageItem", ["s_name", "s_type", "s_value"])):
     def from_json_compatible(cls, val):
         """ Create a new StorageItem from its JSON-serializable representation. """
         if (val['s_type'] in ['key', 'signature', 'address', 'hash']):
-            s_value = unhexlify(val['s_value'])
+            s_value = hex_to_bytes(val['s_value'])
         else:
             s_value = val['s_value']
         return cls(val["s_name"], val['s_type'], val["s_value"])
@@ -92,7 +90,7 @@ class Account(namedtuple("Account", ["pub_key", "balance", "code", "owner_access
     def to_json_compatible(self):
         """ Returns a JSON-serializable representation of this object. """
         val = {}
-        val["pub_key"] = hexlify(self.pub_key).decode()
+        val["pub_key"] = bytes_to_hex(self.pub_key)
         val["balance"] = self.balance
         val["code"] = self.code
         val["owner_access"] = self.owner_access
@@ -107,7 +105,7 @@ class Account(namedtuple("Account", ["pub_key", "balance", "code", "owner_access
         storage_items = []
         for item in val["storage"]:
             storage_items.append(StorageItem.from_json_compatible(item))
-        return cls(unhexlify(val["pub_key"]),
+        return cls(hex_to_bytes(val["pub_key"]),
                    val["balance"],
                    val["code"],
                    val["owner_access"],

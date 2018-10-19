@@ -1,9 +1,9 @@
 import json
-
 from collections import namedtuple
-from typing import Tuple # needed for the type hint "Tuple[bytes]"
-from binascii import hexlify, unhexlify
+from typing import Tuple  # needed for the type hint "Tuple[bytes]"
+
 from src.blockchain.crypto import *
+
 
 class TransactionInput(namedtuple("TransactionInput", ["address", "value"])):
 
@@ -16,14 +16,15 @@ class TransactionInput(namedtuple("TransactionInput", ["address", "value"])):
     def to_json_compatible(self):
         """ Returns a JSON-serializable representation of this object. """
         var = {}
-        var["address"] = hexlify(self.address).decode()
+        var["address"] = bytes_to_hex(self.address)
         var["value"] = self.value
         return var
 
     @classmethod
     def from_json_compatible(cls, var):
         """ Create a new TransactionInput from its JSON-serializable representation. """
-        return cls(unhexlify(var["address"]), var["value"])
+        return cls(hex_to_bytes(var["address"]), var["value"])
+
 
 class TransactionOutput(namedtuple("TransactionOutput", ["address", "value", "params"])):
     """
@@ -41,7 +42,7 @@ class TransactionOutput(namedtuple("TransactionOutput", ["address", "value", "pa
     def to_json_compatible(self):
         """ Returns a JSON-serializable representation of this object. """
         val = {}
-        val["address"] = hexlify(self.address).decode()
+        val["address"] = bytes_to_hex(self.address)
         val["value"] = self.value
         val["params"] = self.params
         return val
@@ -49,9 +50,9 @@ class TransactionOutput(namedtuple("TransactionOutput", ["address", "value", "pa
     @classmethod
     def from_json_compatible(cls, val):
         """ Create a new transaction ouptut from its JSON-serializable representation. """
-        return cls( unhexlify(val["address"]),
-                    val["value"],
-                    val["params"])
+        return cls(hex_to_bytes(val["address"]),
+                   val["value"],
+                   val["params"])
 
 
 class TransactionData(namedtuple("TransactionData", ["inputs", "outputs", "fee", "nonce"])):
@@ -89,7 +90,8 @@ class TransactionData(namedtuple("TransactionData", ["inputs", "outputs", "fee",
         for output in outputs:
             val_sum -= output.value
         if fee != val_sum:
-            raise ValueError("Fee must be equal to the total difference of input and output values")
+            raise ValueError(
+                "Fee must be equal to the total difference of input and output values")
 
         return super().__new__(cls, inputs, outputs, fee, nonce)
 
@@ -103,7 +105,7 @@ class TransactionData(namedtuple("TransactionData", ["inputs", "outputs", "fee",
         for output in self.outputs:
             val["outputs"].append(output.to_json_compatible())
         val["fee"] = self.fee
-        val["nonce"] = hexlify(self.nonce).decode()
+        val["nonce"] = bytes_to_hex(self.nonce)
         return val
 
     @classmethod
@@ -116,7 +118,7 @@ class TransactionData(namedtuple("TransactionData", ["inputs", "outputs", "fee",
         for out in val["outputs"]:
             outputs.append(TransactionOutput.from_json_compatible(out))
         fee = val["fee"]
-        nonce = unhexlify(val["nonce"])
+        nonce = hex_to_bytes(val["nonce"])
         return cls(inputs, outputs, fee, nonce)
 
     @property
@@ -145,12 +147,14 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signatures"])):
     def sign(self, index, keypair: bytes):
         """ Signs the transaction input at the given index using the given key """
         if index < 0 or index >= len(self.signatures):
-            raise ValueError("Invalid input index: " + index + ". Either negative or too large")
+            raise ValueError("Invalid input index: " + index +
+                             ". Either negative or too large")
         check_is_keypair(keypair)
         signer_pubkey = pubkey_from_keypair(keypair)
         signer_address = self.tx_data.inputs[index].address
         if signer_address != compute_hash(signer_pubkey):
-            raise ValueError('Keypair not entitled to sign this transaction/index')
+            raise ValueError(
+                'Keypair not entitled to sign this transaction/index')
         new_sig = sign(keypair, tx_data.hash)
         return Transaction(self, tx_data, signatures[0:index:] + (new_sig,) + signatures[index+1:])
 
@@ -169,7 +173,7 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signatures"])):
         val["tx_data"] = self.tx_data.to_json_compatible()
         val["signatures"] = []
         for sig in self.signatures:
-            val["signatures"].append(hexlify(sig).decode())
+            val["signatures"].append(bytes_to_hex(sig))
         return val
 
     @classmethod
@@ -177,5 +181,5 @@ class Transaction(namedtuple("Transaction", ["tx_data", "signatures"])):
         """ Create a new Transaction from its JSON-serializable representation. """
         signatures = []
         for hex_sig in val["signatures"]:
-            signatures.append(unhexlify(hex_sig))
+            signatures.append(hex_to_bytes(hex_sig))
         return cls(TransactionData.from_json_compatible(val["tx_data"]), signatures)

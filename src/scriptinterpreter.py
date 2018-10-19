@@ -3,9 +3,7 @@ import hashlib
 import logging
 import random
 from collections import namedtuple
-from binascii import hexlify, unhexlify
 from datetime import datetime
-from Crypto.PublicKey import RSA
 from typing import List
 
 from src.blockchain.account import Account, StorageItem
@@ -13,7 +11,6 @@ from src.blockchain.crypto import *
 from src.blockchain.merkle_trie import MerkleTrie
 from src.blockchain.new_transaction import TransactionInput, TransactionOutput, TransactionData, Transaction
 from src.blockchain.state_transition import transit
-import src.crypto as cr
 
 
 # TODO: Put the following two classes into crypt.py
@@ -704,13 +701,13 @@ class ScriptInterpreter:
         try:
             if len(item) > 2:
                 if item[0:3].lower() == 'k0x':
-                    return Pubkey(unhexlify(item[3:]))
+                    return Pubkey(hex_to_bytes(item[3:]))
                 if item[0:3].lower() == 'h0x':
-                    return Hash(unhexlify(item[3:]))
+                    return Hash(hex_to_bytes(item[3:]))
                 if item[0:3].lower() == 's0x':
-                    return Signature(unhexlify(item[3:]))
+                    return Signature(hex_to_bytes(item[3:]))
                 if item[0:3].lower() == 'p0x':
-                    return Keypair(unhexlify(item[3:]))
+                    return Keypair(hex_to_bytes(item[3:]))
             return int(item, 0)
         except ValueError:
             logging.warning("could not parse " + item)

@@ -20,6 +20,7 @@ example_address2 = compute_hash(example_pubkey2)
 session = requests.Session()
 url = "http://localhost:5000/"
 
+
 @pytest.fixture(scope='session', autouse=True)
 def node():
     env = os.environ
@@ -34,44 +35,52 @@ def node():
     os.kill(proc.pid, signal.SIGTERM)
     logging.info('NODE: Killed process with pid {}'.format(proc.pid))
 
+
 def rest_call(relative_url: str, data: dict = None):
-    logging.info('rest_call: Trying to access {} with data: {}'.format(relative_url, data))
+    logging.info('rest_call: Trying to access {} with data: {}'.format(
+        relative_url, data))
     json_headers = {"Content-Type": "application/json"}
     if data is None:
         resp = session.post(url + relative_url, headers=json_headers)
     else:
-        resp = session.post(url + relative_url, data=json.dumps(data).encode(), headers=json_headers)
+        resp = session.post(
+            url + relative_url, data=json.dumps(data).encode(), headers=json_headers)
     resp.raise_for_status()
     logging.info('Response: {}'.format(resp.content))
     return None if resp.content == b'' else json.loads(resp.content.decode())
 
+
 def test_get_latest_block(node):
     rest_call('get_latest_block')
 
-def test_add_empty_block(node):
-   skeleton = BlockSkeleton(None, [], bytes(32))
-   nonce_int = 0
-   block = None
-   while block is None:
-       nonce = nonce_int.to_bytes(32, 'big')
-       try:
-           block = Block(skeleton, nonce)
-       except ValueError:
-           nonce_int += 1
-   print('test_add_block: Nonce was {}'.format(nonce_int))
 
-   var = {}
-   var['block'] = block.to_json_compatible()
-   var['transactions'] = [ tx.to_json_compatible() for tx in block.skeleton.transactions ]
-   rest_call('add_block', var)
+def test_add_empty_block(node):
+    skeleton = BlockSkeleton(None, [], bytes(32))
+    nonce_int = 0
+    block = None
+    while block is None:
+        nonce = nonce_int.to_bytes(32, 'big')
+        try:
+            block = Block(skeleton, nonce)
+        except ValueError:
+            nonce_int += 1
+    print('test_add_block: Nonce was {}'.format(nonce_int))
+
+    var = {}
+    var['block'] = block.to_json_compatible()
+    var['transactions'] = [tx.to_json_compatible()
+                           for tx in block.skeleton.transactions]
+    rest_call('add_block', var)
+
 
 def test_create_and_call_gcd_account(node):
     f = open("src/labvm/testprograms/gcd_callable.labvm", "r")
     assert f is not None
     fstr = f.read()
     f.close()
-    tx_output = TransactionOutput(compute_hash(BlockSkeleton.genesis_pubkey), 0, 
-        "[] [] 0 '"  + fstr + "' k0x{}".format(hexlify(example_pubkey).decode()))
+    script = "[] [] 0 '{}' k0x{}".format(fstr, bytes_to_hex(example_pubkey))
+    tx_output = TransactionOutput(compute_hash(
+        BlockSkeleton.genesis_pubkey), 0, script)
     tx_data = TransactionData([], [tx_output], 0, bytes(32))
     tx = Transaction(tx_data)
     skeleton = BlockSkeleton(None, [tx], bytes(32))
@@ -87,7 +96,8 @@ def test_create_and_call_gcd_account(node):
 
     var = {}
     var['block'] = block.to_json_compatible()
-    var['transactions'] = [ tx.to_json_compatible() for tx in block.skeleton.transactions ]
+    var['transactions'] = [tx.to_json_compatible()
+                           for tx in block.skeleton.transactions]
     rest_call('add_block', var)
 
     tx_output = TransactionOutput(example_address, 0, "120 16")
@@ -106,5 +116,6 @@ def test_create_and_call_gcd_account(node):
 
     var = {}
     var['block'] = block.to_json_compatible()
-    var['transactions'] = [ tx.to_json_compatible() for tx in block.skeleton.transactions ]
+    var['transactions'] = [tx.to_json_compatible()
+                           for tx in block.skeleton.transactions]
     rest_call('add_block', var)

@@ -1,7 +1,8 @@
 import pytest
 import json
+
 from src.blockchain.merkle_trie import *
-from src.blockchain.crypto import compute_hash
+from src.blockchain.crypto import *
 
 
 def gen_key(i):
@@ -17,11 +18,11 @@ class example_value:
         return self._hash
 
     def to_json_compatible(self) -> bytes:
-        return hexlify(self._hash).decode()
+        return bytes_to_hex(self._hash)
 
     @classmethod
     def from_json_compatible(cls, hash: bytes):
-        return cls(unhexlify(hash))
+        return cls(hex_to_bytes(hash))
 
     def __eq__(self, other):
         return self._hash == other._hash
