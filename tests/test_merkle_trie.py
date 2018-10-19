@@ -8,15 +8,34 @@ def gen_key(i):
     return compute_hash(bytes([i]))
 
 
+class example_value:
+    def __init__(self, hash: bytes):
+        self._hash = hash
+
+    @property
+    def hash(self):
+        return self._hash
+
+    def to_json_compatible(self) -> bytes:
+        return hexlify(self._hash).decode()
+
+    @classmethod
+    def from_json_compatible(cls, hash: bytes):
+        return cls(unhexlify(hash))
+
+    def __eq__(self, other):
+        return self._hash == other._hash
+
+
 def gen_value(i):
-    return compute_hash(bytes([0, i]))
+    return example_value(compute_hash(bytes([0, i])))
 
 
-empty_trie = MerkleTrie(MerkleTrieStorage(bytes))
+empty_trie = MerkleTrie(MerkleTrieStorage(example_value))
 
 example_trie_keys = [gen_key(i) for i in range(10)]
-example_trie_values = [gen_key(i) for i in range(10)]
-example_trie = MerkleTrie(MerkleTrieStorage(bytes))
+example_trie_values = [gen_value(i) for i in range(10)]
+example_trie = MerkleTrie(MerkleTrieStorage(example_value))
 for key, value in zip(example_trie_keys, example_trie_values):
     example_trie = example_trie.put(key, value)
 
@@ -26,7 +45,7 @@ def test_put_and_remove():
     value = gen_value(1)
 
     # construct
-    trie1 = MerkleTrie(MerkleTrieStorage(bytes))
+    trie1 = MerkleTrie(MerkleTrieStorage(example_value))
     assert not trie1.contains(key)
 
     # put
@@ -50,7 +69,7 @@ def test_put_and_remove():
 
 
 def test_put_multiple():
-    trie = MerkleTrie(MerkleTrieStorage(bytes))
+    trie = MerkleTrie(MerkleTrieStorage(example_value))
     for i in range(10):
         trie = trie.put(gen_key(i), gen_value(i))
         for j in range(10):

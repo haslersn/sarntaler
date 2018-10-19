@@ -52,10 +52,7 @@ class MerkleTrieStorage:
     def _create_leaf_node(self, value):
         if type(value) is not self._stored_type:
             raise ValueError('Leaf doesn\'t match the stored type')
-        if self._stored_type is bytes:
-            hash = compute_hash(value)
-        else:
-            hash = value.hash
+        hash = value.hash
         self._values[hash] = value
         return hash
 
@@ -154,10 +151,7 @@ class MerkleTrieStorage:
         if let_know:
             if depth == 64:
                 value = self._value(hash)
-                if self._stored_type is bytes:
-                    val["value"] = hexlify(value).decode()
-                else:
-                    val["value"] = self._value(hash).to_json_compatible()
+                val["value"] = self._value(hash).to_json_compatible()
             else:
                 children = self._children(hash, depth)
 
@@ -180,11 +174,7 @@ class MerkleTrieStorage:
         hash = None
         if depth == 64:
             if 'value' in val:
-                if self._stored_type is bytes:
-                    value = unhexlify(val['value'])
-                else:
-                    value = self._stored_type.from_json_compatible(
-                        val['value'])
+                value = self._stored_type.from_json_compatible(val['value'])
                 hash = self._create_leaf_node(value)
         else:
             if 'children' in val:
