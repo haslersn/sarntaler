@@ -6,7 +6,7 @@ import time
 import requests
 import logging
 import json
-from src.blockchain.new_block import *
+from src.blockchain.block import *
 
 logging.basicConfig(level=logging.INFO)
 

@@ -1,7 +1,7 @@
 import logging
 
 import typing
-from src.blockchain.new_transaction import *
+from src.blockchain.transaction import *
 from src.blockchain.merkle_trie import MerkleTrie
 from src.blockchain.account import Account
 

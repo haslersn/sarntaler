@@ -9,7 +9,7 @@ from typing import List
 from src.blockchain.account import Account, StorageItem
 from src.blockchain.crypto import *
 from src.blockchain.merkle_trie import MerkleTrie
-from src.blockchain.new_transaction import TransactionInput, TransactionOutput, TransactionData, Transaction
+from src.blockchain.transaction import TransactionInput, TransactionOutput, TransactionData, Transaction
 from src.blockchain.state_transition import transit
 
 

@@ -3,7 +3,7 @@
 import flask
 import json
 
-from src.blockchain.new_block import *
+from src.blockchain.block import *
 from src.blockchain.crypto import *
 
 ########

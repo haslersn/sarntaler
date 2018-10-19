@@ -1,6 +1,6 @@
 import json
 
-from src.blockchain.new_block import *
+from src.blockchain.block import *
 
 example_keypair = generate_keypair()
 example_keypair2 = generate_keypair()

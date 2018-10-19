@@ -3,7 +3,7 @@ import json
 from typing import List
 
 from src.scriptinterpreter import ScriptInterpreter
-from src.blockchain.new_transaction import *
+from src.blockchain.transaction import *
 from src.blockchain.account import *
 from src.blockchain.crypto import *
 from src.blockchain.merkle_trie import *
