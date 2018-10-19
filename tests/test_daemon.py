@@ -8,7 +8,7 @@ import logging
 import json
 
 from src.blockchain.block import *
-from src.node.flask_node import app
+from src.daemon.daemon import app
 
 logging.basicConfig(level=logging.WARNING)
 

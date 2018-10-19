@@ -1,5 +1,5 @@
-# Specification of the REST API offerred by the node
-The node stores and verifies the blockchain and offers an interface for the miner and wallet to easily access blockchain data.
+# Specification of the REST API offerred by the daemon
+The daemon stores and verifies the blockchain and offers an interface for the miner and wallet to easily access blockchain data.
 
 ## High-level specification: offered functionality
 `()` = redundant but might be useful as a shortcut

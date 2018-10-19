@@ -11,14 +11,14 @@ logging.basicConfig(level=logging.WARNING)
 ########
 
 
-class FlaskNode:
+class SarntalerDaemon:
     def __init__(self):
         self._app = flask.Flask(__name__)
         self._latest_block = None  # TODO: Maybe read the serialized blockchain from disk
 
 
-node = FlaskNode()
-app = node._app
+daemon = SarntalerDaemon()
+app = daemon._app
 
 
 def _get_block_by_hash(hash: bytes):
@@ -39,7 +39,7 @@ def get_latest_block():
     """
     Returns the known block with the highest accumulated difficulty
     """
-    return '"None"' if node._latest_block is None else _get_block_by_hash(node._latest_block.hash)
+    return '"None"' if daemon._latest_block is None else _get_block_by_hash(daemon._latest_block.hash)
 
 
 @app.route("/get_block_by_hash", methods=['POST'])
@@ -63,7 +63,7 @@ def add_block():
     block_compat = flask.request.json['block']
     logging.info('Block: {}'.format(block_compat))
     block = Block.from_json_compatible(block_compat, transactions)
-    target = 0 if node._latest_block is None else node._latest_block.skeleton.accumulated_difficulty
+    target = 0 if daemon._latest_block is None else daemon._latest_block.skeleton.accumulated_difficulty
     if block.skeleton.accumulated_difficulty > target:
-        node._latest_block = block
+        daemon._latest_block = block
     return json.dumps(True)
