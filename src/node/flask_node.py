@@ -7,19 +7,17 @@ from src.blockchain.block import *
 from src.blockchain.crypto import *
 
 ########
-rest_port = 5000
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 ########
 
 
 class FlaskNode:
-    def __init__(self, port: int):
+    def __init__(self):
         self._app = flask.Flask(__name__)
-        self._app.run(port=port)
         self._latest_block = None  # TODO: Maybe read the serialized blockchain from disk
 
 
-node = FlaskNode(rest_port)
+node = FlaskNode()
 app = node._app
 
 
@@ -28,7 +26,7 @@ def _get_block_by_hash(hash: bytes):
     block = Block.get_from_hash(hash)
     if block is None:
         logging.info('Requested block is unknown')
-        return ''
+        return '"None"'
     result = {}
     result['block'] = block.to_json_compatible()
     result['transactions'] = [tx.to_json_compatible()
@@ -41,7 +39,7 @@ def get_latest_block():
     """
     Returns the known block with the highest accumulated difficulty
     """
-    return '' if node._latest_block is None else _get_block_by_hash(node._latest_block.hash)
+    return '"None"' if node._latest_block is None else _get_block_by_hash(node._latest_block.hash)
 
 
 @app.route("/get_block_by_hash", methods=['POST'])

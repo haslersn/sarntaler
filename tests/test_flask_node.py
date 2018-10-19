@@ -6,9 +6,11 @@ import time
 import requests
 import logging
 import json
-from src.blockchain.block import *
 
-logging.basicConfig(level=logging.INFO)
+from src.blockchain.block import *
+from src.node.flask_node import app
+
+logging.basicConfig(level=logging.WARNING)
 
 example_keypair = generate_keypair()
 example_keypair2 = generate_keypair()
@@ -17,44 +19,23 @@ example_pubkey2 = pubkey_from_keypair(example_keypair2)
 example_address = compute_hash(example_pubkey)
 example_address2 = compute_hash(example_pubkey2)
 
-session = requests.Session()
-url = "http://localhost:5000/"
+session = app.test_client()
 
 
-@pytest.fixture(scope='session', autouse=True)
-def node():
-    env = os.environ
-    env['FLASK_APP'] = 'src/node/flask_node.py'
-    env['FLASK_ENV'] = 'development'
-    env['FLASK_DEBUG'] = '1'
-    proc = subprocess.Popen(['python3', '-m', 'flask', 'run'], env=env)
-    time.sleep(1)
-    logging.info('NODE: Started with pid {}'.format(proc.pid))
-    yield
-    logging.info('NODE: Trying to kill process with pid {}'.format(proc.pid))
-    os.kill(proc.pid, signal.SIGTERM)
-    logging.info('NODE: Killed process with pid {}'.format(proc.pid))
-
-
-def rest_call(relative_url: str, data: dict = None):
-    logging.info('rest_call: Trying to access {} with data: {}'.format(
-        relative_url, data))
+def query_node(path: str, json_data: dict = None):
+    logging.info('query_node: Trying to access {} with data: {}'.format(
+        path, json_data))
     json_headers = {"Content-Type": "application/json"}
-    if data is None:
-        resp = session.post(url + relative_url, headers=json_headers)
-    else:
-        resp = session.post(
-            url + relative_url, data=json.dumps(data).encode(), headers=json_headers)
-    resp.raise_for_status()
-    logging.info('Response: {}'.format(resp.content))
-    return None if resp.content == b'' else json.loads(resp.content.decode())
+    bytes_data = None if json_data is None else json.dumps(json_data)
+    bytes_resp = session.post(path, data=bytes_data, headers=json_headers).data
+    return json.loads(bytes_resp.decode())
 
 
-def test_get_latest_block(node):
-    rest_call('get_latest_block')
+def test_get_latest_block():
+    query_node('get_latest_block')
 
 
-def test_add_empty_block(node):
+def test_add_empty_block():
     skeleton = BlockSkeleton(None, [], bytes(32))
     nonce_int = 0
     block = None
@@ -70,10 +51,10 @@ def test_add_empty_block(node):
     var['block'] = block.to_json_compatible()
     var['transactions'] = [tx.to_json_compatible()
                            for tx in block.skeleton.transactions]
-    rest_call('add_block', var)
+    query_node('add_block', var)
 
 
-def test_create_and_call_gcd_account(node):
+def test_create_and_call_gcd_account():
     f = open("src/labvm/testprograms/gcd_callable.labvm", "r")
     assert f is not None
     fstr = f.read()
@@ -98,7 +79,7 @@ def test_create_and_call_gcd_account(node):
     var['block'] = block.to_json_compatible()
     var['transactions'] = [tx.to_json_compatible()
                            for tx in block.skeleton.transactions]
-    rest_call('add_block', var)
+    query_node('add_block', var)
 
     tx_output = TransactionOutput(example_address, 0, "120 16")
     tx_data = TransactionData([], [tx_output], 0, bytes(32))
@@ -118,4 +99,4 @@ def test_create_and_call_gcd_account(node):
     var['block'] = block.to_json_compatible()
     var['transactions'] = [tx.to_json_compatible()
                            for tx in block.skeleton.transactions]
-    rest_call('add_block', var)
+    query_node('add_block', var)
