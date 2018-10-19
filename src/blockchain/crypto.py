@@ -77,7 +77,7 @@ def verify_sign(pubkey: bytes, hash: bytes, signature: bytes):
     signer = PKCS1_PSS.new(RSA.importKey(pubkey))
     h = SHA256.new()
     h.update(hash)
-    return singer.verify(h, signature)
+    return signer.verify(h, signature)
 
 
 def generate_keypair(randfunc=None):
