@@ -11,15 +11,6 @@ from src.blockchain.state_transition import transit
 
 
 class Block:
-    _dict = dict()
-
-    @classmethod
-    def get_from_hash(cls, hash: bytes):
-        if hash in cls._dict:
-            return cls._dict[hash]
-        else:
-            return None
-
     def __new__(cls, skeleton: 'BlockSkeleton', nonce: bytes):
         target = (2**256 // skeleton._difficulty).to_bytes(32, 'big')
         constructed = super().__new__(cls)
@@ -28,14 +19,10 @@ class Block:
         constructed._hash = compute_hash(json.dumps(
             constructed.to_json_compatible()).encode())
 
-        if constructed._hash > target:
+        if constructed.hash > target:
             raise ValueError(
                 "Tried to create block, that doesn't fulfill the difficulty")
 
-        if constructed._hash in cls._dict:
-            return cls._dict[constructed._hash]
-
-        cls._dict[constructed._hash] = constructed
         return constructed
 
     @property
@@ -57,9 +44,9 @@ class Block:
         return var
 
     @classmethod
-    def from_json_compatible(cls, var: dict, transactions: List[Transaction]):
+    def from_json_compatible(cls, var: dict, transactions: List[Transaction], prev_block):
         skeleton = BlockSkeleton.from_json_compatible(
-            var['skeleton'], transactions)
+            var['skeleton'], transactions, prev_block)
         nonce = hex_to_bytes(var['nonce'])
         return cls(skeleton, nonce)
 
@@ -151,8 +138,8 @@ class BlockSkeleton:  # contains everything a block needs except for a valid non
         return constructed
 
     @property
-    def prev_block(self):
-        return Block.get_from_hash(self._prev_block_hash)
+    def prev_block_hash(self) -> bytes:
+        return self._prev_block_hash
 
     @property
     def timestamp(self):
@@ -184,7 +171,7 @@ class BlockSkeleton:  # contains everything a block needs except for a valid non
 
     @property
     def transactions(self):
-        return self._transactions
+        return [tx for tx in self._transactions]
 
     @property
     def hash(self):
@@ -196,27 +183,61 @@ class BlockSkeleton:  # contains everything a block needs except for a valid non
         var['timestamp'] = self.timestamp
         var['height'] = self.height
         var['difficulty'] = self.difficulty
+        var['accumulated_difficulty'] = self.accumulated_difficulty
         var['miner_address'] = bytes_to_hex(self.miner_address)
         var['state_root'] = bytes_to_hex(self.state_trie.hash)
         var['tx_root'] = bytes_to_hex(self.tx_trie.hash)
         return var
 
-    @classmethod
-    def from_json_compatible(cls, var: dict, transactions: List[Transaction]):
-        # prev_block
-        prev_block_hash = hex_to_bytes(var['prev_block_hash'])
+
+class Blockchain:
+    def __init__(self):
+        self._heads = set()
+        self._blocks = dict()
+
+    def is_head(self, head: Block) -> bool:
+        return head in self._heads
+
+    def heads(self):
+        return [h for h in self._heads]
+
+    def contains_block_hash(self, hash: bytes) -> bool:
+        return hash in self._blocks
+
+    def get_block(self, hash: bytes):
+        if hash not in self._blocks:
+            return None
+        return self._blocks[hash]
+
+    def push_head(self, head):
+        if head.hash not in self._blocks:
+            if head.skeleton.prev_block_hash != bytes(32):
+                if head.skeleton.prev_block_hash not in self._blocks:
+                    raise ValueError(
+                        'The previous block doesn\'t exist in the blockchain')
+                prev_block = self._blocks[head.skeleton.prev_block_hash]
+                if prev_block in self._heads:
+                    self._heads.remove(prev_block)
+            self._heads.add(head)
+            self._blocks[head.hash] = head
+            return head
+        return self._blocks[head.hash]
+
+    def push_head_from_json_compatible(self, var, transactions: List[Transaction]):
+        prev_block_hash = hex_to_bytes(var['skeleton']['prev_block_hash'])
         if prev_block_hash == bytes(32):
             prev_block = None
         else:
-            prev_block = Block.get_from_hash(prev_block_hash)
-            if prev_block is None:
-                raise ValueError('Previous block does not exist')
-
-        miner_address = hex_to_bytes(var['miner_address'])
-        timestamp = var['timestamp']
-
-        skeleton = BlockSkeleton(
+            if prev_block_hash not in self._blocks:
+                raise ValueError(
+                    'The previous block doesn\'t exist in the blockchain')
+            prev_block = self.get_block(prev_block_hash)
+        miner_address = hex_to_bytes(var['skeleton']['miner_address'])
+        timestamp = var['skeleton']['timestamp']
+        nonce = hex_to_bytes(var['nonce'])
+        block_skeleton = BlockSkeleton(
             prev_block, transactions, miner_address, timestamp)
-        if skeleton.to_json_compatible() != var:
-            raise ValueError('Block verification failed')
-        return skeleton
+        head = Block(block_skeleton, nonce)
+        if head.hash != compute_hash(json.dumps(var).encode()):
+            raise ValueError('The block is invalid (verification failed!)')
+        self.push_head(head)

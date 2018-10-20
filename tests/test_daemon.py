@@ -31,8 +31,8 @@ def query_node(path: str, json_data: dict = None):
     return json.loads(bytes_resp.decode())
 
 
-def test_get_latest_block():
-    query_node('get_latest_block')
+def test_get_highest_block():
+    query_node('get_highest_block')
 
 
 def test_add_empty_block():

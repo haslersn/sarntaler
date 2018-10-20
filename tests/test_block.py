@@ -15,7 +15,7 @@ def test_skeleton_after_genesis():
     assert skeleton.height == 1
     assert skeleton.tx_trie.empty
     assert len(skeleton.state_trie.get_all()) == 1
-    assert skeleton.prev_block == None
+    assert skeleton.prev_block_hash == bytes(32)
     assert skeleton.difficulty == skeleton.accumulated_difficulty
 
 
